@@ -1,7 +1,7 @@
-export default function DashboardPage() {
+export default function MeetingsPage() {
   return (
     <section className="border w-full">
-      <h1>Dashboard</h1>
+      <div>Meetings Page</div>
     </section>
   );
 }

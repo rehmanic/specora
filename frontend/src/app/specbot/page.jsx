@@ -1,4 +1,4 @@
-import InputField from "@/components/specbot/InputFeild";
+import ChatInputFeild from "@/components/common/ChatInputFeild";
 import { Message } from "@/components/specbot/Message";
 import Starter from "@/components/specbot/Starters";
 
@@ -36,7 +36,7 @@ export default function SpecbotPage() {
         ))}
       </div>
       <Starter />
-      <InputField />
+      <ChatInputFeild />
     </div>
   );
 }

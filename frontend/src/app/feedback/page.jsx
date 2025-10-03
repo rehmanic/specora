@@ -1,7 +1,7 @@
-export default function DashboardPage() {
+export default function FeedbackPage() {
   return (
     <section className="border w-full">
-      <h1>Dashboard</h1>
+      <div>Feedback Page</div>
     </section>
   );
 }
