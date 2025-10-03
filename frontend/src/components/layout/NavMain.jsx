@@ -20,12 +20,11 @@ export function NavMain({ items }) {
     <SidebarGroup>
       <SidebarMenu>
         {items.map((item) => {
-          // Check if the item has any subitems
           const hasSubItems = item.items && item.items.length > 0;
 
           return hasSubItems ? (
             <Collapsible
-              key={item.title}
+              key={item.id}
               asChild
               defaultOpen={item.isActive}
               className="group/collapsible"
@@ -41,7 +40,7 @@ export function NavMain({ items }) {
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     {item.items?.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.title}>
+                      <SidebarMenuSubItem key={subItem.id}>
                         <SidebarMenuSubButton asChild>
                           <Link href={subItem.url}>
                             <span>{subItem.title}</span>
@@ -54,7 +53,7 @@ export function NavMain({ items }) {
               </SidebarMenuItem>
             </Collapsible>
           ) : (
-            <SidebarMenuItem key={item.title}>
+            <SidebarMenuItem key={item.id}>
               <SidebarMenuButton tooltip={item.title} asChild>
                 <Link href={item.url}>
                   {item.icon && <item.icon />}

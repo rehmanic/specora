@@ -20,6 +20,7 @@ import {
 const data = {
   navMain: [
     {
+      id: "dashboard",
       title: "Dashboard",
       url: "/dashboard",
       icon: LayoutDashboard,
@@ -27,6 +28,7 @@ const data = {
       items: [],
     },
     {
+      id: "chat",
       title: "Chat",
       url: "/chat",
       icon: MessageSquare,
@@ -34,6 +36,7 @@ const data = {
       items: [],
     },
     {
+      id: "specbot",
       title: "SpecBot",
       url: "/specbot",
       icon: Bot,
@@ -41,6 +44,7 @@ const data = {
       items: [],
     },
     {
+      id: "meetings",
       title: "Meetings",
       url: "/meetings",
       icon: Video,
@@ -48,6 +52,7 @@ const data = {
       items: [],
     },
     {
+      id: "feedback",
       title: "Feedback",
       url: "/feedback",
       icon: MessageCircle,
