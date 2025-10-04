@@ -1,6 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import ChatInputFeild from "@/components/common/ChatInputFeild";
 import { Message } from "@/components/specbot/Message";
 import Starter from "@/components/specbot/Starters";
+import ChatLayout from "@/components/specbot/team/ChatLayout";
+import LeftSidebar from "@/components/specbot/team/LeftSidebar";
 
 export default function SpecbotPage() {
   const messages = [
@@ -22,21 +27,45 @@ export default function SpecbotPage() {
     },
   ];
 
-  return (
-    <div className="flex flex-col h-screen border w-full">
-      {/* Chat messages */}
-      <div className="flex-1 p-4 space-y-3 overflow-y-auto">
-        {messages.map((msg, i) => (
-          <Message
-            key={i}
-            text={msg.text}
-            timestamp={msg.timestamp}
-            isSender={msg.isSender}
-          />
-        ))}
+  let client = true;
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+
+  return client ? (
+    <div className="flex h-screen w-full border">
+      {/* Left Sidebar */}
+      <div className={`${leftSidebarCollapsed ? "w-16" : "w-64"} shrink-0`}>
+        <LeftSidebar
+          collapsed={leftSidebarCollapsed}
+          onToggleCollapse={() =>
+            setLeftSidebarCollapsed(!leftSidebarCollapsed)
+          }
+        />
       </div>
-      <Starter />
-      <ChatInputFeild />
+
+      {/* Chat Area */}
+      <div className="flex flex-col flex-1">
+        {/* Messages */}
+        <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+          {messages.map((msg, i) => (
+            <Message
+              key={i}
+              text={msg.text}
+              timestamp={msg.timestamp}
+              isSender={msg.isSender}
+            />
+          ))}
+        </div>
+
+        {/* Starter + Input */}
+        <div className="border-t">
+          <Starter />
+          <ChatInputFeild />
+        </div>
+      </div>
     </div>
+  ) : (
+    <section className="border w-full">
+      <ChatLayout />
+    </section>
   );
 }
