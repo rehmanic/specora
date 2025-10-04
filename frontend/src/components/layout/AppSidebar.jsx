@@ -1,9 +1,10 @@
 import {
-  LayoutDashboard, // ✅ Dashboard
-  MessageSquare, // ✅ Chat
-  Bot, // ✅ SpecBot
-  Video, // ✅ Meetings
-  MessageCircle, // ✅ Feedback
+  LayoutDashboard,
+  MessageSquare,
+  Bot,
+  Video,
+  MessageCircle, 
+  User2Icon
 } from "lucide-react";
 
 import { NavMain } from "@/components/layout/NavMain";
@@ -56,6 +57,14 @@ const data = {
       title: "Feedback",
       url: "/feedback",
       icon: MessageCircle,
+      isActive: false,
+      items: [],
+    },
+    {
+      id: "users",
+      title: "Users",
+      url: "/users",
+      icon: User2Icon,
       isActive: false,
       items: [],
     },
