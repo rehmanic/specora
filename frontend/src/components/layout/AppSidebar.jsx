@@ -3,8 +3,9 @@ import {
   MessageSquare,
   Bot,
   Video,
-  MessageCircle, 
-  User2Icon
+  MessageCircle,
+  User2Icon,
+  Folder,
 } from "lucide-react";
 
 import { NavMain } from "@/components/layout/NavMain";
@@ -65,6 +66,14 @@ const data = {
       title: "Users",
       url: "/users",
       icon: User2Icon,
+      isActive: false,
+      items: [],
+    },
+    {
+      id: "projects",
+      title: "Projects",
+      url: "/projects",
+      icon: Folder,
       isActive: false,
       items: [],
     },
