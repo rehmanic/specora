@@ -1,3 +1,4 @@
+import React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,34 +11,52 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function AuthForm({ className, variant = "login", ...props }) {
+export default function AuthForm({ className, variant = "login", ...props }) {
   const isLogin = variant === "login";
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>
-            {isLogin ? "Login to your account" : "Create an account"}
-          </CardTitle>
+          <CardTitle>{isLogin ? "Login to your account" : "Create an account"}</CardTitle>
           <CardDescription>
             {isLogin
               ? "Enter your credentials to login to your account"
-              : "Enter details below to create your account"}
+              : "Enter your details below to create your account"}
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           <form>
             <div className="flex flex-col gap-6">
+              {/* Username: required for both login and signup */}
               <div className="grid gap-3">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
+                  id="username"
+                  name="username"
+                  type="text"
+                  placeholder="your username"
                   required
                 />
               </div>
+
+              {/* Email: only for signup (optional) */}
+              {!isLogin && (
+                <div className="grid gap-3">
+                  <Label htmlFor="email">
+                    Email <span className="ml-2 text-sm text-muted-foreground">(optional)</span>
+                  </Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                  />
+                </div>
+              )}
+
+              {/* Password */}
               <div className="grid gap-3">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
@@ -50,31 +69,40 @@ export function AuthForm({ className, variant = "login", ...props }) {
                     </a>
                   )}
                 </div>
-                <Input id="password" type="password" required />
+                <Input id="password" name="password" type="password" required />
               </div>
+
+              {/* Confirm password: signup only */}
               {!isLogin && (
                 <div className="grid gap-3">
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input id="confirmPassword" type="password" required />
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    required
+                  />
                 </div>
               )}
+
               <div className="flex flex-col gap-3">
                 <Button type="submit" className="w-full">
                   {isLogin ? "Login" : "Sign up"}
                 </Button>
               </div>
             </div>
+
             <div className="mt-4 text-center text-sm">
               {isLogin ? (
                 <>
-                  Don&apos;t have an account?{" "}
+                  Don&apos;t have an account?{' '}
                   <a href="/signup" className="underline underline-offset-4">
                     Sign up
                   </a>
                 </>
               ) : (
                 <>
-                  Already have an account?{" "}
+                  Already have an account?{' '}
                   <a href="/login" className="underline underline-offset-4">
                     Login
                   </a>
