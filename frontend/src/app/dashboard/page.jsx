@@ -1,7 +1,0 @@
-export default function DashboardPage() {
-  return (
-    <section className="border w-full">
-      <h1>Dashboard</h1>
-    </section>
-  );
-}

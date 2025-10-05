@@ -1,7 +1,7 @@
-"use client"
+"use client";
 import { ProjectCard } from "@/components/project/ProjectCard";
 
-export default function ProjectsPage() {
+export default function DashboardPage() {
   // Dummy data
   const projects = [
     {
