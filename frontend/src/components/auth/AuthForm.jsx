@@ -18,7 +18,9 @@ export default function AuthForm({ className, variant = "login", ...props }) {
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>{isLogin ? "Login to your account" : "Create an account"}</CardTitle>
+          <CardTitle>
+            {isLogin ? "Login to your account" : "Create an account"}
+          </CardTitle>
           <CardDescription>
             {isLogin
               ? "Enter your credentials to login to your account"
@@ -36,7 +38,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                   id="username"
                   name="username"
                   type="text"
-                  placeholder="your username"
+                  placeholder={isLogin ? undefined : "e.g. saif"}
                   required
                 />
               </div>
@@ -45,13 +47,16 @@ export default function AuthForm({ className, variant = "login", ...props }) {
               {!isLogin && (
                 <div className="grid gap-3">
                   <Label htmlFor="email">
-                    Email <span className="ml-2 text-sm text-muted-foreground">(optional)</span>
+                    Email{" "}
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      (optional)
+                    </span>
                   </Label>
                   <Input
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder="e.g. saif@gmail.com"
                   />
                 </div>
               )}
@@ -69,24 +74,17 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                     </a>
                   )}
                 </div>
-                <Input id="password" name="password" type="password" required />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder={isLogin ? "" : "6–20 characters"}
+                  required
+                />
               </div>
 
-              {/* Confirm password: signup only */}
-              {!isLogin && (
-                <div className="grid gap-3">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    required
-                  />
-                </div>
-              )}
-
               <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full cursor-pointer">
                   {isLogin ? "Login" : "Sign up"}
                 </Button>
               </div>
@@ -95,14 +93,14 @@ export default function AuthForm({ className, variant = "login", ...props }) {
             <div className="mt-4 text-center text-sm">
               {isLogin ? (
                 <>
-                  Don&apos;t have an account?{' '}
+                  Don&apos;t have an account?{" "}
                   <a href="/signup" className="underline underline-offset-4">
                     Sign up
                   </a>
                 </>
               ) : (
                 <>
-                  Already have an account?{' '}
+                  Already have an account?{" "}
                   <a href="/login" className="underline underline-offset-4">
                     Login
                   </a>
