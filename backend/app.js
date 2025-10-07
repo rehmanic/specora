@@ -12,6 +12,7 @@ dotenv.config();
 import authRoutes from "./modules/auth/routes.js";
 import specbotRoutes from "./modules/specbot/routes.js";
 import meetingsRoutes from "./modules/meetings/routes.js";
+import videoRoutes from "./modules/video/routes.js";
 
 // Import database connection
 import { sequelize, testConnection } from "./config/database.js";
@@ -43,6 +44,7 @@ const API_PREFIX = process.env.API_PREFIX || "/api";
 app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/specbot`, specbotRoutes);
 app.use(`${API_PREFIX}/meetings`, meetingsRoutes);
+app.use(`${API_PREFIX}/video`, videoRoutes);
 
 // 404 handler
 app.use((req, res) => {

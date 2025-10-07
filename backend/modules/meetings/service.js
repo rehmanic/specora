@@ -47,10 +47,11 @@ class MeetingsService {
    * Schedule a new meeting
    */
   async scheduleMeeting(meetingData, scheduledByUser = "System") {
-    // Add scheduled_by field
     const dataWithScheduler = {
       ...meetingData,
       scheduled_by: scheduledByUser,
+      meeting_link: null,
+      room_id: null,
     };
 
     const meeting = await meetingsRepository.createMeeting(dataWithScheduler);

@@ -13,14 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, Users, Link2 } from "lucide-react";
+import { Calendar, Clock, Users, Video } from "lucide-react";
 
 export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     stakeholders: "",
-    meeting_link: "",
     scheduled_date: "",
     scheduled_time: "",
   });
@@ -39,7 +38,6 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Combine date and time into ISO string
     const scheduledDateTime = new Date(
       `${formData.scheduled_date}T${formData.scheduled_time}`
     ).toISOString();
@@ -51,19 +49,16 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
         .split(",")
         .map((email) => email.trim())
         .filter((email) => email),
-      meeting_link: formData.meeting_link,
       scheduled_at: scheduledDateTime,
       is_completed: false,
     };
 
     await onSchedule(meetingData);
     
-    // Reset form
     setFormData({
       name: "",
       description: "",
       stakeholders: "",
-      meeting_link: "",
       scheduled_date: "",
       scheduled_time: "",
     });
@@ -167,24 +162,20 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
             </div>
           </div>
 
-          {/* Meeting Link */}
-          <div className="space-y-2">
-            <Label htmlFor="meeting_link" className="flex items-center gap-2">
-              <Link2 className="w-4 h-4" />
-              Meeting Link *
-            </Label>
-            <Input
-              id="meeting_link"
-              name="meeting_link"
-              type="url"
-              placeholder="https://meet.google.com/abc-defg-hij"
-              value={formData.meeting_link}
-              onChange={handleInputChange}
-              required
-            />
-            <p className="text-xs text-muted-foreground">
-              Provide the video conference link (Google Meet, Zoom, Teams, etc.)
-            </p>
+          {/* Video Conference Notice */}
+          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Video className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  Custom Video Room
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                  A secure video conference room will be automatically created for this meeting. 
+                  Participants can join directly from the meeting card.
+                </p>
+              </div>
+            </div>
           </div>
 
           <AlertDialogFooter>

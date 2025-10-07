@@ -31,17 +31,15 @@ const Meeting = sequelize.define(
     },
     meeting_link: {
       type: DataTypes.TEXT,
-      allowNull: false,
-      validate: {
-        isUrl: true,
-      },
+      allowNull: true,
+    },
+    room_id: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
     },
     recording_link: {
       type: DataTypes.TEXT,
       allowNull: true,
-      validate: {
-        isUrl: true,
-      },
     },
     scheduled_at: {
       type: DataTypes.DATE,

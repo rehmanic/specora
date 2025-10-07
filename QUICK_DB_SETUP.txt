@@ -1,0 +1,109 @@
+# 🚀 Quick Database Setup - Run These Commands
+
+**Copy and paste these commands one by one into your psql terminal:**
+
+---
+
+## Step 1: Connect to PostgreSQL
+
+```bash
+psql -U postgres
+# Enter your postgres password when prompted
+```
+
+---
+
+## Step 2: Create Specora User (Copy-Paste All)
+
+```sql
+-- Create user
+CREATE USER specora WITH PASSWORD 'specora_dev_2025';
+
+-- Create database
+CREATE DATABASE specora OWNER specora;
+
+-- Grant privileges
+GRANT ALL PRIVILEGES ON DATABASE specora TO specora;
+
+-- Connect to new database
+\c specora
+
+-- Grant schema privileges
+GRANT ALL ON SCHEMA public TO specora;
+
+-- Set default privileges
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO specora;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO specora;
+
+-- Verify
+\du
+\l
+```
+
+---
+
+## Step 3: Verify Success
+
+You should see output like:
+```
+CREATE ROLE
+CREATE DATABASE
+GRANT
+You are now connected to database "specora" as user "postgres".
+GRANT
+ALTER DEFAULT PRIVILEGES
+ALTER DEFAULT PRIVILEGES
+```
+
+---
+
+## Step 4: Exit psql
+
+```sql
+\q
+```
+
+---
+
+## Step 5: Update Your .env File
+
+Edit `backend/.env` and change:
+
+```env
+DB_USER=specora
+DB_PASSWORD=specora_dev_2025
+```
+
+---
+
+## Step 6: Test Connection
+
+```bash
+cd backend
+node setup-and-seed.js
+```
+
+Expected output:
+```
+✅ Database connection successful!
+✅ Database models synced!
+✅ Seeded 7 meetings successfully!
+```
+
+---
+
+## ✅ Done!
+
+Your database is ready. Now run:
+
+```bash
+# Terminal 1
+cd backend
+npm start
+
+# Terminal 2  
+cd frontend
+npm run dev
+```
+
+Open: `http://localhost:3000/meetings`

@@ -23,12 +23,6 @@ const scheduleMeetingValidation = [
   body("stakeholders.*")
     .isEmail()
     .withMessage("Each stakeholder must be a valid email address"),
-  body("meeting_link")
-    .trim()
-    .notEmpty()
-    .withMessage("Meeting link is required")
-    .isURL()
-    .withMessage("Meeting link must be a valid URL"),
   body("scheduled_at")
     .notEmpty()
     .withMessage("Scheduled date/time is required")

@@ -19,23 +19,22 @@ export default function MeetingsPage() {
   const fetchMeetings = async () => {
     try {
       setIsLoading(true);
-      // TODO: Replace with actual API calls
-      const upcomingResponse = await fetch("/api/meetings/upcoming");
-      const completedResponse = await fetch("/api/meetings/completed");
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      
+      const upcomingResponse = await fetch(`${API_URL}/api/meetings/upcoming`);
+      const completedResponse = await fetch(`${API_URL}/api/meetings/completed`);
 
       if (upcomingResponse.ok && completedResponse.ok) {
         const upcoming = await upcomingResponse.json();
         const completed = await completedResponse.json();
-        setUpcomingMeetings(upcoming);
-        setCompletedMeetings(completed);
+        setUpcomingMeetings(upcoming.meetings || upcoming);
+        setCompletedMeetings(completed.meetings || completed);
       } else {
-        // Use mock data for development
         setUpcomingMeetings(getMockUpcomingMeetings());
         setCompletedMeetings(getMockCompletedMeetings());
       }
     } catch (error) {
       console.error("Error fetching meetings:", error);
-      // Fallback to mock data
       setUpcomingMeetings(getMockUpcomingMeetings());
       setCompletedMeetings(getMockCompletedMeetings());
     } finally {
@@ -45,7 +44,9 @@ export default function MeetingsPage() {
 
   const handleScheduleMeeting = async (meetingData) => {
     try {
-      const response = await fetch("/api/meetings/schedule", {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      
+      const response = await fetch(`${API_URL}/api/meetings/schedule`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -54,21 +55,28 @@ export default function MeetingsPage() {
       });
 
       if (response.ok) {
-        const newMeeting = await response.json();
-        setUpcomingMeetings([...upcomingMeetings, newMeeting]);
+        const result = await response.json();
+        const newMeeting = result.meeting || result;
+        
+        setUpcomingMeetings([newMeeting, ...upcomingMeetings]);
         setIsScheduleModalOpen(false);
         
-        // Send email invitations
-        await fetch("/api/meetings/send-email", {
+        await fetch(`${API_URL}/api/meetings/send-email`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(newMeeting),
+          body: JSON.stringify({ meetingId: newMeeting.id }),
         });
+        
+        alert("Meeting scheduled successfully!");
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.message || "Failed to schedule meeting"}`);
       }
     } catch (error) {
       console.error("Error scheduling meeting:", error);
+      alert("Failed to schedule meeting. Please try again.");
     }
   };
 
@@ -145,8 +153,7 @@ function getMockUpcomingMeetings() {
         "Discuss requirements gathering strategies for the new e-commerce module",
       stakeholders: ["alice@specora.com", "bob@specora.com", "charlie@specora.com"],
       scheduled_by: "John Doe",
-      meeting_link: "https://meet.google.com/abc-defg-hij",
-      scheduled_at: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+      scheduled_at: new Date(Date.now() + 86400000).toISOString(),
       is_completed: false,
     },
     {
@@ -155,8 +162,7 @@ function getMockUpcomingMeetings() {
       description: "Review and validate requirements with stakeholders",
       stakeholders: ["client@company.com", "manager@specora.com"],
       scheduled_by: "Jane Smith",
-      meeting_link: "https://zoom.us/j/123456789",
-      scheduled_at: new Date(Date.now() + 172800000).toISOString(), // 2 days from now
+      scheduled_at: new Date(Date.now() + 172800000).toISOString(),
       is_completed: false,
     },
     {
@@ -165,8 +171,7 @@ function getMockUpcomingMeetings() {
       description: "Assess technical constraints and architecture decisions",
       stakeholders: ["tech-lead@specora.com", "architect@specora.com"],
       scheduled_by: "John Doe",
-      meeting_link: "https://teams.microsoft.com/l/meetup-join/xyz",
-      scheduled_at: new Date(Date.now() + 259200000).toISOString(), // 3 days from now
+      scheduled_at: new Date(Date.now() + 259200000).toISOString(),
       is_completed: false,
     },
   ];
@@ -180,9 +185,8 @@ function getMockCompletedMeetings() {
       description: "Kickoff meeting to gather initial requirements from all stakeholders",
       stakeholders: ["stakeholder1@company.com", "stakeholder2@company.com"],
       scheduled_by: "John Doe",
-      meeting_link: "https://meet.google.com/past-meeting-1",
-      recording_link: "https://drive.google.com/file/d/recording123",
-      scheduled_at: new Date(Date.now() - 604800000).toISOString(), // 1 week ago
+      recording_link: "/recordings/recording_1696123456789.webm",
+      scheduled_at: new Date(Date.now() - 604800000).toISOString(),
       is_completed: true,
     },
     {
@@ -191,9 +195,8 @@ function getMockCompletedMeetings() {
       description: "Prioritize features based on business value and technical complexity",
       stakeholders: ["product-owner@specora.com", "scrum-master@specora.com"],
       scheduled_by: "Jane Smith",
-      meeting_link: "https://zoom.us/j/987654321",
-      recording_link: "https://drive.google.com/file/d/recording456",
-      scheduled_at: new Date(Date.now() - 1209600000).toISOString(), // 2 weeks ago
+      recording_link: "/recordings/recording_1696987654321.webm",
+      scheduled_at: new Date(Date.now() - 1209600000).toISOString(),
       is_completed: true,
     },
   ];
