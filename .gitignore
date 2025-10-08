@@ -70,3 +70,7 @@ backend/uploads/
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# Documentation (except README.md)
+*.md
+!README.md
