@@ -74,3 +74,6 @@ backend/uploads/
 # Documentation (except README.md)
 *.md
 !README.md
+*.bat
+*.txt
+docker-compose.yml
