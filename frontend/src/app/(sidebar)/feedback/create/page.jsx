@@ -1,5 +1,4 @@
 import FeedbackForm from "@/components/feedback/FeedbackForm";
-import Link from "next/link";
 
 export default function CreateFeedbackPage() {
   return (
