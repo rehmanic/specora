@@ -1,5 +1,5 @@
 "use client";
-import { ProjectCard } from "@/components/project/ProjectCard";
+import { ProjectCard } from "../../../components/project/ProjectCard";
 
 export default function DashboardPage() {
   // Dummy data
