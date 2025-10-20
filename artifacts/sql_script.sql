@@ -1,146 +1,155 @@
--- =====================================================
+------------------------------------------------------------
 -- EXTENSIONS
--- =====================================================
+------------------------------------------------------------
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- =====================================================
--- ENUM TYPES
--- =====================================================
-CREATE TYPE project_status AS ENUM ('draft','active','on_hold','completed','archived');
-
--- =====================================================
+------------------------------------------------------------
 -- USERS TABLE
--- =====================================================
+------------------------------------------------------------
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'user',
-    permissions TEXT[] DEFAULT '{}',
-    email VARCHAR(100) UNIQUE,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'client',
+    permissions JSONB DEFAULT '[]', -- Flexible JSON permissions
+    email VARCHAR(255) UNIQUE NOT NULL,
     profile_pic_url TEXT,
-    display_name VARCHAR(100),
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    display_name VARCHAR(150),
+    is_active BOOLEAN DEFAULT TRUE,
     last_login_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- =====================================================
+------------------------------------------------------------
 -- PROJECTS TABLE
--- =====================================================
+------------------------------------------------------------
 CREATE TABLE projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(150) NOT NULL,
-    slug VARCHAR(160) UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
     description TEXT,
     cover_image_url TEXT,
     icon_url TEXT,
-    status project_status NOT NULL DEFAULT 'draft',
+    status VARCHAR(50) DEFAULT 'active',
     start_date DATE,
-    end_date DATE CHECK (end_date IS NULL OR end_date >= start_date),
-    tags JSONB,
+    end_date DATE,
+    tags JSONB DEFAULT '[]', -- List of tags
     created_by UUID REFERENCES users(id) ON DELETE SET NULL,
     updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
-    is_archived BOOLEAN NOT NULL DEFAULT FALSE,
-    member_count INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    is_archived BOOLEAN DEFAULT FALSE,
+    member_count INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_projects_status ON projects (status);
-CREATE INDEX idx_projects_created_by ON projects (created_by);
-CREATE INDEX idx_projects_tags ON projects USING GIN (tags);
+------------------------------------------------------------
+-- USERS_PROJECTS (JOIN TABLE for M:N relation)
+------------------------------------------------------------
+CREATE TABLE users_projects (
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    role VARCHAR(50) DEFAULT 'member', -- e.g., owner, contributor, viewer
+    joined_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, project_id)
+);
 
--- =====================================================
+------------------------------------------------------------
 -- SPECBOT CHATS TABLE
--- =====================================================
+------------------------------------------------------------
 CREATE TABLE specbot_chats (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    title VARCHAR(150),
-    last_interaction_at TIMESTAMPTZ DEFAULT now(),
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    title VARCHAR(255),
+    members JSONB DEFAULT '[]', -- Store user IDs or metadata
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- =====================================================
--- GROUP CHATS TABLE
--- =====================================================
+------------------------------------------------------------
+-- GROUP CHAT TABLE
+------------------------------------------------------------
 CREATE TABLE group_chats (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(150) NOT NULL,
-    creator_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    project_id UUID UNIQUE REFERENCES projects(id) ON DELETE CASCADE,
+    members JSONB DEFAULT '[]', -- Store user IDs or metadata
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- =====================================================
--- GROUP CHAT MEMBERS TABLE (JOIN TABLE)
--- =====================================================
-CREATE TABLE group_chat_members (
-    group_chat_id UUID REFERENCES group_chats(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    role VARCHAR(50) DEFAULT 'member',
-    joined_at TIMESTAMPTZ DEFAULT now(),
-    PRIMARY KEY (group_chat_id, user_id)
+------------------------------------------------------------
+-- FEEDBACKS TABLE
+------------------------------------------------------------
+CREATE TABLE feedbacks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    title VARCHAR(255),
+    description TEXT,
+    status VARCHAR(50) DEFAULT 'open', -- e.g., open, in_review, resolved
+    form_structure JSONB, -- Structure of feedback form
+    response JSONB, -- Submitted feedback data
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- =====================================================
--- MESSAGES TABLE (USED BY BOTH SPECBOT & GROUP CHATS)
--- =====================================================
+------------------------------------------------------------
+-- MEETINGS TABLE
+------------------------------------------------------------
+CREATE TABLE meetings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    title VARCHAR(255),
+    description TEXT,
+    type VARCHAR(50) DEFAULT 'online', -- online, offline, hybrid
+    status VARCHAR(50) DEFAULT 'scheduled', -- scheduled, ongoing, completed
+    link TEXT, -- meeting link
+    room_id VARCHAR(100), -- For integrated meeting rooms
+    scheduled_at TIMESTAMPTZ,
+    started_at TIMESTAMPTZ,
+    ended_at TIMESTAMPTZ,
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    is_recurring BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+------------------------------------------------------------
+-- RECORDINGS TABLE
+------------------------------------------------------------
+CREATE TABLE recordings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    meeting_id UUID REFERENCES meetings(id) ON DELETE CASCADE,
+    title VARCHAR(255),
+    participants JSONB DEFAULT '[]', -- Store list of participants or user info
+    recording_url TEXT,
+    transcript_url TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+------------------------------------------------------------
+-- REQUIREMENTS TABLE
+------------------------------------------------------------
+CREATE TABLE requirements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    priority VARCHAR(50) DEFAULT 'medium', -- low, medium, high
+    status VARCHAR(50) DEFAULT 'pending', -- pending, approved, completed
+    metadata JSONB DEFAULT '{}', -- Additional info (e.g., tags, attachments)
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+------------------------------------------------------------
+-- MESSAGES TABLE
+------------------------------------------------------------
 CREATE TABLE messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    chat_id UUID NOT NULL,
-    chat_type VARCHAR(20) NOT NULL CHECK (chat_type IN ('specbot', 'group')),
+    chat_type VARCHAR(50) NOT NULL CHECK (chat_type IN ('specbot', 'group')),
+    chat_id UUID NOT NULL, -- references depends on chat_type
     sender_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    message_text TEXT,
-    is_edited BOOLEAN DEFAULT FALSE,
-    starter_message BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    content TEXT NOT NULL,
+    metadata JSONB DEFAULT '{}', -- For attachments, reactions, etc.
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
-
-CREATE INDEX idx_messages_chat_type ON messages (chat_type);
-CREATE INDEX idx_messages_sender_id ON messages (sender_id);
-
--- =====================================================
--- TRIGGERS TO AUTO-UPDATE updated_at
--- =====================================================
-CREATE OR REPLACE FUNCTION trg_set_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at := now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Apply trigger to all timestamped tables
-CREATE TRIGGER trg_users_updated_at
-BEFORE UPDATE ON users
-FOR EACH ROW
-EXECUTE PROCEDURE trg_set_updated_at();
-
-CREATE TRIGGER trg_projects_updated_at
-BEFORE UPDATE ON projects
-FOR EACH ROW
-EXECUTE PROCEDURE trg_set_updated_at();
-
-CREATE TRIGGER trg_specbot_chats_updated_at
-BEFORE UPDATE ON specbot_chats
-FOR EACH ROW
-EXECUTE PROCEDURE trg_set_updated_at();
-
-CREATE TRIGGER trg_group_chats_updated_at
-BEFORE UPDATE ON group_chats
-FOR EACH ROW
-EXECUTE PROCEDURE trg_set_updated_at();
-
-CREATE TRIGGER trg_messages_updated_at
-BEFORE UPDATE ON messages
-FOR EACH ROW
-EXECUTE PROCEDURE trg_set_updated_at();
-
--- =====================================================
--- END OF SCRIPT
--- =====================================================
