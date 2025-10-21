@@ -1,0 +1,52 @@
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import prisma from "../../../prisma/prismaClient.js";
+
+export const signup = async (req, res) => {
+  try {
+    const { username, email, password, display_name } = req.body;
+
+    const existingUser = await prisma.users.findFirst({
+      where: { OR: [{ username }, { email }] },
+    });
+    if (existingUser)
+      return res.status(400).json({ message: "User already exists" });
+
+    const password_hash = await bcrypt.hash(password, 10);
+
+    const user = await prisma.users.create({
+      data: { username, email, password_hash, display_name },
+    });
+
+    res
+      .status(201)
+      .json({
+        message: "User registered",
+        user: { id: user.id, username: user.username },
+      });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await prisma.users.findUnique({ where: { email } });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) return res.status(400).json({ message: "Invalid credentials" });
+
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+
+    res.json({ token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
