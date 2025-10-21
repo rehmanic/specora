@@ -18,18 +18,7 @@ if (process.env.NODE_ENV === "development") {
 
 // Basic route
 app.get("/", (req, res) => {
-  res.json({ message: "API is running..." });
-});
-
-// Handle 404
-app.use((req, res) => {
-  res.status(404).json({ error: "Not Found" });
-});
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Internal Server Error" });
+  res.json({ message: "root API is running..." });
 });
 
 export default app; 
