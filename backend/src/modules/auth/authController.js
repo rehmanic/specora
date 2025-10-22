@@ -18,12 +18,19 @@ export const signup = async (req, res) => {
       data: { username, email, password_hash, display_name },
     });
 
-    res
-      .status(201)
-      .json({
-        message: "User registered",
-        user: { id: user.id, username: user.username },
-      });
+    res.status(201).json({
+      message: "User registered",
+      user: {
+        username: user.username,
+        email: user.email,
+        display_name: user.display_name,
+        role: user.role,
+        profile_pic_url: user.profile_pic_url,
+        permissions: user.permissions,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -34,10 +41,12 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await prisma.users.findUnique({ where: { email } });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user)
+      return res.status(400).json({ message: "Invalid credentials" });
 
     const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) return res.status(400).json({ message: "Invalid credentials" });
+    if (!valid)
+      return res.status(400).json({ message: "Invalid credentials" });
 
     const token = jwt.sign(
       { userId: user.id, role: user.role },
@@ -45,7 +54,20 @@ export const login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
-    res.json({ token });
+    // Send back token + user details
+    res.json({
+      token,
+      user: {
+        username: user.username,
+        email: user.email,
+        display_name: user.display_name,
+        role: user.role,
+        profile_pic_url: user.profile_pic_url,
+        permissions: user.permissions,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

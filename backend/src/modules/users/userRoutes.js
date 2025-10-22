@@ -1,36 +1,22 @@
-import express from 'express';
+import express from "express";
 import {
+  createUser,
   getAllUsers,
-  getUserById,
+  getUserByUsername,
   updateUser,
-  deleteUser
-} from '../users/userController.js';
-import { authenticateToken } from '../../middlewares/authMiddleware.js';
+  deleteUser,
+} from "../users/userController.js";
+import { authenticateToken } from "../../middlewares/authMiddleware.js";
+import requireManager from "../../middlewares/roleCheck.js";
 
 const router = express.Router();
-
-// All routes are protected
 router.use(authenticateToken);
 
-/**
- * Route structure:
- * GET    /api/users/          -> get all users (admin only)
- * GET    /api/users/:id       -> get single user by ID
- * PUT    /api/users/me        -> update current user's profile
- * DELETE /api/users/:id       -> delete user (admin only)
- */
 
-// Example admin check middleware
-const requireAdmin = (req, res, next) => {
-  if (req.user.role !== 'manager') {
-    return res.status(403).json({ message: 'Manager access required' });
-  }
-  next();
-};
-
-router.get('/', requireAdmin, getAllUsers);
-router.get('/:id', requireAdmin, getUserById);
-router.put('/me', updateUser);
-router.delete('/:id', requireAdmin, deleteUser);
+router.post("/create", requireManager, createUser);
+router.get("/:username", requireManager, getUserByUsername);
+router.get("/", requireManager, getAllUsers);
+router.put("/:username", updateUser);
+router.delete("/:username", requireManager, deleteUser);
 
 export default router;
