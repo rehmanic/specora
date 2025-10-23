@@ -4,7 +4,7 @@ import prisma from "../../../prisma/prismaClient.js";
 
 export const signup = async (req, res) => {
   try {
-    const { username, email, password, display_name } = req.body;
+    const { username, email, password } = req.body;
 
     const existingUser = await prisma.users.findFirst({
       where: { OR: [{ username }, { email }] },
@@ -15,7 +15,7 @@ export const signup = async (req, res) => {
     const password_hash = await bcrypt.hash(password, 10);
 
     const user = await prisma.users.create({
-      data: { username, email, password_hash, display_name },
+      data: { username, email, password_hash },
     });
 
     res.status(201).json({
@@ -38,9 +38,9 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    const user = await prisma.users.findUnique({ where: { email } });
+    const user = await prisma.users.findUnique({ where: { username } });
     if (!user)
       return res.status(400).json({ message: "Invalid credentials" });
 

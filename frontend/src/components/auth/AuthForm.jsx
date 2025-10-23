@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,9 +12,57 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import useAuthStore from "@/store/authStore";
+import { useRouter } from "next/navigation";
 
 export default function AuthForm({ className, variant = "login", ...props }) {
   const isLogin = variant === "login";
+  const { login, loading, error } = useAuthStore();
+  const router = useRouter();
+
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+
+  const [localError, setLocalError] = useState(null);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLocalError(null);
+
+    try {
+      if (isLogin) {
+        await login({
+          username: formData.username,
+          password: formData.password,
+        });
+        router.push("/dashboard"); // redirect after successful login
+      } else {
+        // signup
+        const res = await fetch("http://localhost:5000/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Signup failed");
+
+        alert("Signup successful! Please login.");
+        router.push("/login");
+      }
+    } catch (err) {
+      setLocalError(err.message);
+    }
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -29,34 +79,31 @@ export default function AuthForm({ className, variant = "login", ...props }) {
         </CardHeader>
 
         <CardContent>
-          <form>
+          <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
-              {/* Username: required for both login and signup */}
+              {/* Username */}
               <div className="grid gap-3">
                 <Label htmlFor="username">Username</Label>
                 <Input
                   id="username"
                   name="username"
                   type="text"
-                  placeholder={isLogin ? undefined : "e.g. saif"}
+                  value={formData.username}
+                  onChange={handleChange}
                   required
                 />
               </div>
 
-              {/* Email: only for signup (optional) */}
+              {/* Email only for signup */}
               {!isLogin && (
                 <div className="grid gap-3">
-                  <Label htmlFor="email">
-                    Email{" "}
-                    <span className="ml-2 text-sm text-muted-foreground">
-                      (optional)
-                    </span>
-                  </Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="e.g. saif@gmail.com"
+                    value={formData.email}
+                    onChange={handleChange}
                   />
                 </div>
               )}
@@ -78,14 +125,30 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                   id="password"
                   name="password"
                   type="password"
-                  placeholder={isLogin ? "" : "6–20 characters"}
+                  value={formData.password}
+                  onChange={handleChange}
                   required
                 />
               </div>
 
+              {/* Error display */}
+              {(localError || error) && (
+                <p className="text-red-600 text-sm">{localError || error}</p>
+              )}
+
               <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full cursor-pointer">
-                  {isLogin ? "Login" : "Sign up"}
+                <Button
+                  type="submit"
+                  className="w-full cursor-pointer"
+                  disabled={loading}
+                >
+                  {loading
+                    ? isLogin
+                      ? "Logging in..."
+                      : "Signing up..."
+                    : isLogin
+                    ? "Login"
+                    : "Sign up"}
                 </Button>
               </div>
             </div>

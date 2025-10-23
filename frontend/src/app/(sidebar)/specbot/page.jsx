@@ -6,8 +6,11 @@ import { Message } from "@/components/specbot/Message";
 import Starter from "@/components/specbot/Starters";
 import ChatLayout from "@/components/specbot/team/ChatLayout";
 import LeftSidebar from "@/components/specbot/team/LeftSidebar";
+import useUserStore from "@/store/authStore";
 
 export default function SpecbotPage() {
+  const { user } = useUserStore();
+
   const messages = [
     { text: "Hey! How’s it going?", timestamp: "10:00 AM", isSender: false },
     {
@@ -27,10 +30,9 @@ export default function SpecbotPage() {
     },
   ];
 
-  let client = true;
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
 
-  return client ? (
+  return user.role === "client" ? (
     <div className="flex h-screen w-full border">
       {/* Left Sidebar */}
       <div className={`${leftSidebarCollapsed ? "w-16" : "w-64"} shrink-0`}>

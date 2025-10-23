@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Message } from "@/components/chat/Message";
 import ChatInputFeild from "@/components/common/ChatInputFeild";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function ChatPage() {
   const [menuOpenId, setMenuOpenId] = useState(null);
@@ -42,16 +43,20 @@ export default function ChatPage() {
   ];
 
   return (
-    <section className="flex flex-col h-screen border w-full p-4 space-y-3 overflow-y-auto">
-      {messages.map((msg) => (
-        <Message
-          key={msg.id}
-          {...msg}
-          menuOpenId={menuOpenId}
-          setMenuOpenId={setMenuOpenId}
-        />
-      ))}
-      <ChatInputFeild />
-    </section>
+    <ProtectedRoute
+      allowedRoles={["manager", "client", "requirements_engineer"]}
+    >
+      <section className="flex flex-col h-screen border w-full p-4 space-y-3 overflow-y-auto">
+        {messages.map((msg) => (
+          <Message
+            key={msg.id}
+            {...msg}
+            menuOpenId={menuOpenId}
+            setMenuOpenId={setMenuOpenId}
+          />
+        ))}
+        <ChatInputFeild />
+      </section>
+    </ProtectedRoute>
   );
 }

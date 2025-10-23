@@ -6,7 +6,8 @@ import bcrypt from "bcrypt";
  */
 export const createUser = async (req, res) => {
   try {
-    const { username, email, password, role, display_name, profile_pic_url } = req.body;
+    const { username, email, password, role, display_name, profile_pic_url } =
+      req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -40,12 +41,13 @@ export const createUser = async (req, res) => {
       },
     });
 
-    res.status(201).json({ message: "User created successfully", user: newUser });
+    res
+      .status(201)
+      .json({ message: "User created successfully", user: newUser });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 /**
  * 2. Get a single user by Username (admin only)
@@ -60,19 +62,19 @@ export const getUserByUsername = async (req, res) => {
         username: true,
         email: true,
         role: true,
+        permissions: true,
         display_name: true,
         profile_pic_url: true,
         created_at: true,
-        updated_at: true
-      }
+        updated_at: true,
+      },
     });
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 /**
  * 3. Get all users (admin only)
@@ -88,8 +90,8 @@ export const getAllUsers = async (req, res) => {
         display_name: true,
         profile_pic_url: true,
         created_at: true,
-        updated_at: true
-      }
+        updated_at: true,
+      },
     });
     res.json(users);
   } catch (err) {
@@ -97,18 +99,40 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-
 /**
  * 4. Update current user's profile
  */
 export const updateUser = async (req, res) => {
   try {
     const { username } = req.params;
-    const { display_name, profile_pic_url } = req.body;
+    const {
+      display_name,
+      email,
+      profile_pic_url,
+      role,
+      permissions,
+      password,
+    } = req.body;
+
+    const dataToUpdate = {
+      display_name,
+      email,
+      profile_pic_url,
+      role,
+    };
+
+    if (permissions) {
+      dataToUpdate.permissions =
+        typeof permissions === "string" ? JSON.parse(permissions) : permissions;
+    }
+
+    if (password) {
+      dataToUpdate.password_hash = await bcrypt.hash(password, 10);
+    }
 
     const updatedUser = await prisma.users.update({
-      where: {username : username },
-      data: { display_name, profile_pic_url },
+      where: { username },
+      data: dataToUpdate,
       select: {
         id: true,
         username: true,
@@ -116,11 +140,12 @@ export const updateUser = async (req, res) => {
         role: true,
         display_name: true,
         profile_pic_url: true,
-        updated_at: true
-      }
+        permissions: true,
+        updated_at: true,
+      },
     });
 
-    res.json({ message: 'Profile updated', user: updatedUser });
+    res.json({ message: "Profile updated", user: updatedUser });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -133,7 +158,7 @@ export const deleteUser = async (req, res) => {
   try {
     const { username } = req.params;
     await prisma.users.delete({ where: { username } });
-    res.json({ message: 'User deleted successfully' });
+    res.json({ message: "User deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

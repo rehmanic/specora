@@ -1,3 +1,5 @@
+"use client";
+
 import {
   LayoutDashboard,
   MessageSquare,
@@ -18,69 +20,71 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import useUserStore from "@/store/authStore";
 
-const data = {
-  navMain: [
-    {
-      id: "dashboard",
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: LayoutDashboard,
-      isActive: true,
-      items: [],
-    },
-    {
-      id: "chat",
-      title: "Chat",
-      url: "/chat",
-      icon: MessageSquare,
-      isActive: false,
-      items: [],
-    },
-    {
-      id: "specbot",
-      title: "SpecBot",
-      url: "/specbot",
-      icon: Bot,
-      isActive: false,
-      items: [],
-    },
-    {
-      id: "meetings",
-      title: "Meetings",
-      url: "/meetings",
-      icon: Video,
-      isActive: false,
-      items: [],
-    },
-    {
-      id: "feedback",
-      title: "Feedback",
-      url: "/feedback",
-      icon: MessageCircle,
-      isActive: false,
-      items: [],
-    },
-    {
-      id: "users",
-      title: "Users",
-      url: "/users",
-      icon: UsersRound,
-      isActive: false,
-      items: [],
-    },
-    {
-      id: "project_settings",
-      title: "Settings",
-      url: "/settings",
-      icon: Settings,
-      isActive: false,
-      items: [],
-    },
-  ],
-};
+const baseNav = [
+  {
+    id: "dashboard",
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    id: "chat",
+    title: "Chat",
+    url: "/chat",
+    icon: MessageSquare,
+  },
+  {
+    id: "specbot",
+    title: "SpecBot",
+    url: "/specbot",
+    icon: Bot,
+  },
+  {
+    id: "meetings",
+    title: "Meetings",
+    url: "/meetings",
+    icon: Video,
+  },
+  {
+    id: "feedback",
+    title: "Feedback",
+    url: "/feedback",
+    icon: MessageCircle,
+  },
+  {
+    id: "users",
+    title: "Users",
+    url: "/users",
+    icon: UsersRound,
+  },
+  {
+    id: "project_settings",
+    title: "Settings",
+    url: "/settings",
+    icon: Settings,
+  },
+];
 
 export function AppSidebar({ ...props }) {
+  const { user } = useUserStore();
+
+  // Role-based filtering
+  let filteredNav = [];
+
+  if (user) {
+    if (user.role === "manager") {
+      filteredNav = baseNav;
+    } else if (
+      user.role === "client" ||
+      user.role === "requirements_engineer"
+    ) {
+      filteredNav = baseNav.filter(
+        (item) => item.id !== "users" && item.id !== "project_settings"
+      );
+    }
+  }
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -88,7 +92,7 @@ export function AppSidebar({ ...props }) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={filteredNav} />
       </SidebarContent>
 
       <SidebarFooter>
