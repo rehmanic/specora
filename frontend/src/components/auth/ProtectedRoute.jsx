@@ -15,7 +15,11 @@ export default function ProtectedRoute({
   useEffect(() => {
     // If not logged in
     if (!user) {
-      router.replace("/dashboard");
+      setTimeout(() => {
+        if (!useUserStore.getState().user) {
+          router.replace("/login");
+        }
+      }, 2000);
       return;
     }
 

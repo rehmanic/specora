@@ -10,6 +10,7 @@ import useUserStore from "@/store/authStore";
 
 export default function SpecbotPage() {
   const { user } = useUserStore();
+  const isClient = user?.role === "client";
 
   const messages = [
     { text: "Hey! How’s it going?", timestamp: "10:00 AM", isSender: false },
@@ -32,7 +33,7 @@ export default function SpecbotPage() {
 
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
 
-  return user.role === "client" ? (
+  return isClient ? (
     <div className="flex h-screen w-full border">
       {/* Left Sidebar */}
       <div className={`${leftSidebarCollapsed ? "w-16" : "w-64"} shrink-0`}>

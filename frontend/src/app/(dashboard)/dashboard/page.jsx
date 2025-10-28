@@ -1,37 +1,21 @@
 "use client";
+import { useEffect } from "react";
+import useProjectsStore from "@/store/projectsStore";
+import useAuthStore from "@/store/authStore";
 import { ProjectCard } from "@/components/project/ProjectCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
-  // Dummy data
-  const projects = [
-    {
-      id: 1,
-      name: "Project Alpha",
-      createdAt: "2025-01-10",
-      icon: "🚀",
-    },
-    {
-      id: 2,
-      name: "UI Redesign",
-      createdAt: "2025-02-14",
-      icon: "🎨",
-    },
-    {
-      id: 3,
-      name: "Backend Service",
-      createdAt: "2025-03-01",
-      icon: "⚙️",
-    },
-    {
-      id: 4,
-      name: "Mobile App",
-      createdAt: "2025-03-20",
-      icon: "📱",
-    },
-  ];
+  const { projects, loading, fetchProjects } = useProjectsStore();
+  const { token } = useAuthStore();
+
+  useEffect(() => {
+    if (token) fetchProjects(token);
+  }, [token, fetchProjects]);
+
+  if (loading) return <p className="p-6">Loading projects...</p>;
 
   return (
     <div className="p-6">
@@ -43,15 +27,18 @@ export default function DashboardPage() {
           </Button>
         </Link>
       </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {projects.map((project) => (
-          <ProjectCard
-            key={project.id}
-            name={project.name}
-            createdAt={project.createdAt}
-            icon={project.icon}
-            onClick={() => console.log("Clicked", project.name)}
-          />
+          <Link href="/specbot" key={project.id}>
+            <ProjectCard
+              key={project.id}
+              name={project.name}
+              createdAt={project.created_at}
+              icon={project.icon}
+              onClick={() => console.log("Clicked", project.name)}
+            />
+          </Link>
         ))}
       </div>
     </div>
