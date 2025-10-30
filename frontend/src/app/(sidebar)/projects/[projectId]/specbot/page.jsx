@@ -34,7 +34,7 @@ export default function SpecbotPage() {
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
 
   return isClient ? (
-    <div className="flex h-screen w-full border">
+    <div className="flex flex-1 w-full min-h-0 overflow-hidden">
       {/* Left Sidebar */}
       <div className={`${leftSidebarCollapsed ? "w-16" : "w-64"} shrink-0`}>
         <LeftSidebar
@@ -46,7 +46,7 @@ export default function SpecbotPage() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1 min-h-0">
         {/* Messages */}
         <div className="flex-1 p-4 space-y-3 overflow-y-auto">
           {messages.map((msg, i) => (
@@ -67,7 +67,7 @@ export default function SpecbotPage() {
       </div>
     </div>
   ) : (
-    <section className="border w-full">
+    <section className="border w-full flex-1 min-h-0 overflow-hidden">
       <ChatLayout />
     </section>
   );
