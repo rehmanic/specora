@@ -30,7 +30,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {projects.map((project) => (
-          <Link href="/specbot" key={project.id}>
+          <Link href={`/projects/${project.slug}/chat`} key={project.id}>
             <ProjectCard
               key={project.id}
               name={project.name}
