@@ -5,74 +5,116 @@ const Meeting = sequelize.define(
   "Meeting",
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
-      autoIncrement: true,
+      field: 'meeting_id'
     },
-    name: {
-      type: DataTypes.STRING(150),
-      allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
+    title: {
+      type: DataTypes.STRING(200),
+      allowNull: false
     },
     description: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: true
     },
-    stakeholders: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
+    meetingType: {
+      type: DataTypes.ENUM('virtual', 'in-person', 'hybrid'),
       allowNull: false,
-      defaultValue: [],
+      defaultValue: 'virtual',
+      field: 'meeting_type'
     },
-    scheduled_by: {
+    status: {
+      type: DataTypes.ENUM('scheduled', 'in-progress', 'completed', 'cancelled'),
+      allowNull: false,
+      defaultValue: 'scheduled'
+    },
+    meetingLink: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      field: 'meeting_link'
+    },
+    roomId: {
       type: DataTypes.STRING(100),
-      allowNull: false,
-    },
-    meeting_link: {
-      type: DataTypes.TEXT,
       allowNull: true,
+      unique: true,
+      field: 'room_id'
     },
-    room_id: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-    },
-    recording_link: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    scheduled_at: {
+    scheduledAt: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW,
+      field: 'scheduled_at'
     },
-    is_completed: {
+    startedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'started_at'
+    },
+    endedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'ended_at'
+    },
+    durationMinutes: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 60,
+      field: 'duration_minutes'
+    },
+    location: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    createdBy: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      field: 'created_by'
+    },
+    scheduledByName: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: 'scheduled_by_name'
+    },
+    projectId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      field: 'project_id'
+    },
+    isRecurring: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+      field: 'is_recurring'
     },
-    // Future AI/NLP integration fields
-    transcript_summary: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    requirement_extraction: {
+    recurrencePattern: {
       type: DataTypes.JSONB,
       allowNull: true,
+      field: 'recurrence_pattern'
     },
+    // AI/NLP integration fields
+    transcriptSummary: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'transcript_summary'
+    },
+    requirementExtraction: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      field: 'requirement_extraction'
+    }
   },
   {
     tableName: "meetings",
     timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
     underscored: true,
     indexes: [
-      {
-        fields: ["is_completed"],
-      },
-      {
-        fields: ["scheduled_at"],
-      },
-    ],
+      { fields: ['status'] },
+      { fields: ['scheduled_at'] },
+      { fields: ['created_by'] },
+      { fields: ['room_id'] }
+    ]
   }
 );
 
