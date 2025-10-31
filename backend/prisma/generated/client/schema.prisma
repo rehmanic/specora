@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model feedbacks {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String?   @db.VarChar(255)
+  description    String?
+  status         String?   @default("open") @db.VarChar(50)
+  form_structure Json?
+  response       Json?
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  project_id     String?   @db.Uuid
+  projects       projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model group_chats {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  members    Json?     @default("[]")
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  project_id String?   @unique @db.Uuid
+  projects   projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model meetings {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title        String?      @db.VarChar(255)
+  description  String?
+  type         String?      @default("online") @db.VarChar(50)
+  status       String?      @default("scheduled") @db.VarChar(50)
+  link         String?
+  room_id      String?      @db.VarChar(100)
+  scheduled_at DateTime?    @db.Timestamptz(6)
+  started_at   DateTime?    @db.Timestamptz(6)
+  ended_at     DateTime?    @db.Timestamptz(6)
+  is_recurring Boolean?     @default(false)
+  participants Json?        @default("[]")
+  created_at   DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime?    @default(now()) @db.Timestamptz(6)
+  created_by   String?      @db.Uuid
+  project_id   String?      @db.Uuid
+  users        users?       @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+  projects     projects?    @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  recordings   recordings[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model messages {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chat_type  String    @db.VarChar(50)
+  chat_id    String    @db.Uuid
+  content    String
+  metadata   Json?     @default("{}")
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  sender_id  String?   @db.Uuid
+  users      users?    @relation(fields: [sender_id], references: [id], onUpdate: NoAction)
+}
+
+model projects {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String          @db.VarChar(255)
+  slug            String          @unique @db.VarChar(255)
+  description     String?
+  cover_image_url String?         @default("https://freepik.com/vector/api-illustration")
+  icon_url        String?         @default("https://flaticon.com/icon/backlog")
+  status          String?         @default("active") @db.VarChar(50)
+  start_date      DateTime?       @db.Date
+  end_date        DateTime?       @db.Date
+  tags            Json?           @default("[]")
+  members         Json?           @default("[]")
+  created_at      DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?       @default(now()) @db.Timestamptz(6)
+  created_by      String?         @db.Uuid
+  feedbacks       feedbacks[]
+  group_chats     group_chats?
+  meetings        meetings[]
+  users           users?          @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+  requirements    requirements[]
+  specbot_chats   specbot_chats[]
+}
+
+model recordings {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String?   @db.VarChar(255)
+  recording_url  String?
+  transcript_url String?
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+  meeting_id     String?   @db.Uuid
+  meetings       meetings? @relation(fields: [meeting_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model requirements {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String    @db.VarChar(255)
+  description String?
+  priority    String?   @default("medium") @db.VarChar(50)
+  status      String?   @default("pending") @db.VarChar(50)
+  metadata    Json?     @default("{}")
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  project_id  String?   @db.Uuid
+  projects    projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model specbot_chats {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title      String?   @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  user_id    String?   @db.Uuid
+  project_id String?   @db.Uuid
+  projects   projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username        String          @unique @db.VarChar(100)
+  password_hash   String
+  role            String          @default("client") @db.VarChar(50)
+  permissions     Json?           @default("[]")
+  email           String          @unique @db.VarChar(255)
+  profile_pic_url String?         @default("https://cdn-icons-png.flaticon.com/128/1077/1077012.png")
+  display_name    String?         @db.VarChar(150)
+  created_at      DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?       @default(now()) @db.Timestamptz(6)
+  meetings        meetings[]
+  messages        messages[]
+  projects        projects[]
+  specbot_chats   specbot_chats[]
+}
+
+enum project_status {
+  draft
+  active
+  on_hold
+  completed
+  archived
+}

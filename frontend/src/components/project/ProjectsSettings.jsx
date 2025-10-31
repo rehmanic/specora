@@ -47,7 +47,6 @@ export default function ProjectSettings() {
     description:
       "Complete overhaul of the company website with modern design and improved UX",
     status: "active",
-    visibility: "team",
     startDate: "2025-01-15",
     endDate: "2025-06-30",
     tags: ["design", "frontend", "high-priority"],
@@ -56,7 +55,7 @@ export default function ProjectSettings() {
       slack: true,
       updates: false,
     },
-    teamMembers: [
+    Members: [
       {
         id: "1",
         name: "Sarah Chen",
@@ -107,7 +106,7 @@ export default function ProjectSettings() {
   const removeMember = (id) =>
     setProject((prev) => ({
       ...prev,
-      teamMembers: prev.teamMembers.filter((m) => m.id !== id),
+      Members: prev.Members.filter((m) => m.id !== id),
     }));
 
   return (
@@ -116,7 +115,7 @@ export default function ProjectSettings() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Project Settings</h1>
         <p className="text-muted-foreground">
-          Manage your project details, team members, and configurations
+          Manage your project details, members, and configurations
         </p>
       </div>
 
@@ -192,35 +191,17 @@ export default function ProjectSettings() {
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="visibility">Visibility</Label>
-            <Select
-              value={project.visibility}
-              onValueChange={(value) =>
-                handleProjectUpdate("visibility", value)
-              }
-            >
-              <SelectTrigger id="visibility">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="private">Private</SelectItem>
-                <SelectItem value="team">Team</SelectItem>
-                <SelectItem value="public">Public</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </CardContent>
       </Card>
 
-      {/* Team Members */}
+      {/* Members */}
       <Card>
         <CardHeader>
-          <CardTitle>Team Members</CardTitle>
+          <CardTitle>Members</CardTitle>
           <CardDescription>Manage who has access</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {project.teamMembers.map((member) => (
+          {project.Members.map((member) => (
             <div
               key={member.id}
               className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border p-3 rounded-lg"
@@ -261,12 +242,12 @@ export default function ProjectSettings() {
 
           <div className="flex flex-col sm:flex-row gap-2">
             <Input
-              placeholder="Enter email to invite"
+              placeholder="Enter user name to add"
               value={newMemberEmail}
               onChange={(e) => setNewMemberEmail(e.target.value)}
               className="flex-1"
             />
-            <Button onClick={() => setNewMemberEmail("")}>Invite Member</Button>
+            <Button onClick={() => setNewMemberEmail("")}>Add Member</Button>
           </div>
         </CardContent>
       </Card>
@@ -302,36 +283,6 @@ export default function ProjectSettings() {
             />
             <Button onClick={addTag}>Add Tag</Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Notifications */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>
-            Configure how you receive project updates
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {["email", "slack", "updates"].map((key) => (
-            <div key={key} className="flex items-center justify-between">
-              <div>
-                <Label className="capitalize">{key} Notifications</Label>
-                <p className="text-sm text-muted-foreground">
-                  {key === "updates"
-                    ? "Receive daily project summaries"
-                    : key === "slack"
-                    ? "Get notified in Slack channels"
-                    : "Receive updates via email"}
-                </p>
-              </div>
-              <Switch
-                checked={project.notifications[key]}
-                onCheckedChange={() => handleNotificationToggle(key)}
-              />
-            </div>
-          ))}
         </CardContent>
       </Card>
 
