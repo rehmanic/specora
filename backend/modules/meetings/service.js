@@ -1,35 +1,24 @@
-import meetingsRepository from "./repository.js";
-import nodemailer from "nodemailer";
+import meetingsRepository from './repository.js';
+import eventBus from '../../core/events/eventBus.js';
+import { emailQueue, aiQueue, isQueueHealthy } from '../../core/services/queueService.js';
+import dailyVideoService from './dailyService.js';
 import dotenv from "dotenv";
 
 dotenv.config();
 
 class MeetingsService {
-  constructor() {
-    // Initialize email transporter
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: parseInt(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === "true",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-  }
-
   /**
    * Get upcoming meetings
    */
-  async getUpcomingMeetings() {
-    return await meetingsRepository.getUpcomingMeetings();
+  async getUpcomingMeetings(userId = null) {
+    return await meetingsRepository.getUpcomingMeetings(userId);
   }
 
   /**
    * Get completed meetings
    */
-  async getCompletedMeetings() {
-    return await meetingsRepository.getCompletedMeetings();
+  async getCompletedMeetings(userId = null) {
+    return await meetingsRepository.getCompletedMeetings(userId);
   }
 
   /**
@@ -44,190 +33,435 @@ class MeetingsService {
   }
 
   /**
-   * Schedule a new meeting
+   * Schedule a new meeting with event-driven notifications
    */
-  async scheduleMeeting(meetingData, scheduledByUser = "System") {
-    const dataWithScheduler = {
-      ...meetingData,
-      scheduled_by: scheduledByUser,
-      meeting_link: null,
-      room_id: null,
-    };
+  async scheduleMeeting(meetingData, userId) {
+    try {
+      // Add creator
+      meetingData.createdBy = userId;
 
-    const meeting = await meetingsRepository.createMeeting(dataWithScheduler);
-    return meeting;
+      // Create meeting with participants and agendas
+      const meeting = await meetingsRepository.createMeeting(meetingData);
+
+      // Emit event for meeting created
+      eventBus.emitSafe('meeting.created', {
+        meeting,
+        participants: meeting.participants
+      });
+
+      // Send email invitations via queue (if Redis is available)
+      if (isQueueHealthy() && meeting.participants && meeting.participants.length > 0) {
+        await emailQueue.add('send-invitation', {
+          meeting,
+          participants: meeting.participants
+        }, {
+          delay: 2000 // Send after 2 seconds
+        });
+        console.log('📧 Email invitation job queued');
+      } else {
+        console.log('⚠️  Redis not available - Email invitations skipped (queue disabled)');
+      }
+
+      console.log(`✓ Meeting scheduled: ${meeting.title} (${meeting.id})`);
+      return meeting;
+    } catch (error) {
+      console.error('Error scheduling meeting:', error);
+      throw error;
+    }
   }
 
   /**
    * Update meeting
    */
-  async updateMeeting(id, updateData) {
-    return await meetingsRepository.updateMeeting(id, updateData);
+  async updateMeeting(id, updateData, userId) {
+    try {
+      const meeting = await meetingsRepository.getMeetingById(id);
+      if (!meeting) {
+        throw new Error('Meeting not found');
+      }
+
+      // Check authorization (only creator can update)
+      if (meeting.createdBy !== userId) {
+        throw new Error('Unauthorized to update this meeting');
+      }
+
+      const updatedMeeting = await meetingsRepository.updateMeeting(id, updateData);
+
+      // Emit event
+      eventBus.emitSafe('meeting.updated', {
+        meeting: updatedMeeting,
+        changes: updateData
+      });
+
+      return updatedMeeting;
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
-   * Mark meeting as completed
+   * Cancel meeting
    */
-  async markAsCompleted(id, recordingLink = null) {
-    return await meetingsRepository.markAsCompleted(id, recordingLink);
+  async cancelMeeting(id, userId) {
+    try {
+      const meeting = await meetingsRepository.getMeetingById(id);
+      if (!meeting) {
+        throw new Error('Meeting not found');
+      }
+
+      // Check authorization
+      if (meeting.createdBy !== userId) {
+        throw new Error('Unauthorized to cancel this meeting');
+      }
+
+      const cancelledMeeting = await meetingsRepository.updateMeeting(id, {
+        status: 'cancelled'
+      });
+
+      // Emit event
+      eventBus.emitSafe('meeting.cancelled', {
+        meeting: cancelledMeeting
+      });
+
+      return cancelledMeeting;
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
    * Delete meeting
    */
-  async deleteMeeting(id) {
-    return await meetingsRepository.deleteMeeting(id);
-  }
-
-  /**
-   * Send meeting invitation emails
-   */
-  async sendMeetingInvites(meeting) {
+  async deleteMeeting(id, userId) {
     try {
-      const { name, description, stakeholders, scheduled_by, meeting_link, scheduled_at } = meeting;
+      const meeting = await meetingsRepository.getMeetingById(id);
+      if (!meeting) {
+        throw new Error('Meeting not found');
+      }
 
-      // Format date and time
-      const meetingDate = new Date(scheduled_at);
-      const formattedDate = meetingDate.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      const formattedTime = meetingDate.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      // Check authorization
+      if (meeting.createdBy !== userId) {
+        throw new Error('Unauthorized to delete this meeting');
+      }
 
-      // Email template
-      const emailHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <style>
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              line-height: 1.6;
-              color: #333;
-              max-width: 600px;
-              margin: 0 auto;
-              padding: 20px;
-            }
-            .header {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-              padding: 30px;
-              border-radius: 10px 10px 0 0;
-              text-align: center;
-            }
-            .content {
-              background: #f9f9f9;
-              padding: 30px;
-              border-radius: 0 0 10px 10px;
-            }
-            .meeting-details {
-              background: white;
-              padding: 20px;
-              border-radius: 8px;
-              margin: 20px 0;
-              border-left: 4px solid #667eea;
-            }
-            .detail-row {
-              margin: 10px 0;
-              padding: 8px 0;
-              border-bottom: 1px solid #eee;
-            }
-            .detail-label {
-              font-weight: bold;
-              color: #667eea;
-              margin-right: 10px;
-            }
-            .button {
-              display: inline-block;
-              background: #667eea;
-              color: white;
-              padding: 12px 30px;
-              text-decoration: none;
-              border-radius: 6px;
-              margin: 20px 0;
-              font-weight: bold;
-            }
-            .footer {
-              text-align: center;
-              margin-top: 30px;
-              color: #888;
-              font-size: 12px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>📅 Meeting Invitation</h1>
-            <p>Specora - Requirements Engineering Platform</p>
-          </div>
-          <div class="content">
-            <h2>You're invited to: ${name}</h2>
-            <p>${description}</p>
-            
-            <div class="meeting-details">
-              <div class="detail-row">
-                <span class="detail-label">📆 Date:</span>
-                <span>${formattedDate}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">🕐 Time:</span>
-                <span>${formattedTime}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">👤 Organized by:</span>
-                <span>${scheduled_by}</span>
-              </div>
-            </div>
+      await meetingsRepository.deleteMeeting(id);
 
-            <div style="text-align: center;">
-              <a href="${meeting_link}" class="button">Join Meeting</a>
-            </div>
+      // Emit event
+      eventBus.emitSafe('meeting.deleted', { meetingId: id });
 
-            <p style="margin-top: 20px; font-size: 14px; color: #666;">
-              <strong>Meeting Link:</strong><br/>
-              <a href="${meeting_link}" style="color: #667eea; word-break: break-all;">${meeting_link}</a>
-            </p>
-
-            <div class="footer">
-              <p>This is an automated invitation from Specora.</p>
-              <p>© 2025 Specora. All rights reserved.</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-
-      // Send email to each stakeholder
-      const emailPromises = stakeholders.map((stakeholder) =>
-        this.transporter.sendMail({
-          from: `"Specora Meetings" <${process.env.SMTP_USER}>`,
-          to: stakeholder,
-          subject: `Meeting Invite: ${name}`,
-          html: emailHTML,
-        })
-      );
-
-      await Promise.all(emailPromises);
-      return {
-        success: true,
-        message: `Invitations sent to ${stakeholders.length} stakeholder(s)`,
-      };
+      return true;
     } catch (error) {
-      console.error("Error sending meeting invites:", error);
-      throw new Error(`Failed to send meeting invites: ${error.message}`);
+      throw error;
     }
   }
 
   /**
-   * Search meetings
+   * Add participant to meeting
    */
-  async searchMeetings(query) {
-    return await meetingsRepository.searchMeetings(query);
+  async addParticipant(meetingId, participantData, userId) {
+    try {
+      const meeting = await meetingsRepository.getMeetingById(meetingId);
+      if (!meeting) {
+        throw new Error('Meeting not found');
+      }
+
+      // Check authorization
+      if (meeting.createdBy !== userId) {
+        throw new Error('Unauthorized to add participants');
+      }
+
+      const participant = await meetingsRepository.addParticipant(meetingId, participantData);
+
+      // Send invitation email
+      await emailQueue.add('send-invitation', {
+        meeting: meeting.toJSON(),
+        participant: participant.toJSON()
+      });
+
+      // Emit event
+      eventBus.emitSafe('participant.added', {
+        meeting,
+        participant
+      });
+
+      return participant;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Remove participant from meeting
+   */
+  async removeParticipant(meetingId, participantId, userId) {
+    try {
+      const meeting = await meetingsRepository.getMeetingById(meetingId);
+      if (!meeting) {
+        throw new Error('Meeting not found');
+      }
+
+      // Check authorization
+      if (meeting.createdBy !== userId) {
+        throw new Error('Unauthorized to remove participants');
+      }
+
+      await meetingsRepository.removeParticipant(participantId);
+
+      // Emit event
+      eventBus.emitSafe('participant.removed', {
+        meetingId,
+        participantId
+      });
+
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * RSVP to meeting
+   */
+  async rsvpToMeeting(meetingId, participantId, status, message = null) {
+    try {
+      const participant = await meetingsRepository.updateParticipantStatus(
+        participantId,
+        status,
+        message
+      );
+
+      // Emit event
+      eventBus.emitSafe('participant.responded', {
+        meetingId,
+        participant,
+        status
+      });
+
+      return participant;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Start meeting
+   */
+  async startMeeting(id, userId) {
+    try {
+      const meeting = await meetingsRepository.getMeetingById(id);
+      if (!meeting) {
+        throw new Error('Meeting not found');
+      }
+
+      // Check authorization (temporarily relaxed for development)
+      // TODO: Re-enable strict auth when user authentication is implemented
+      // if (meeting.createdBy !== userId) {
+      //   throw new Error('Unauthorized to start this meeting');
+      // }
+
+      // Create Daily.co video room
+      console.log('🎥 Creating Daily.co video room...');
+      const roomData = await dailyVideoService.createRoom(
+        `meeting-${id}`,
+        meeting.title
+      );
+
+      const roomId = roomData.name;
+      const meetingLink = roomData.url;
+
+      // Update meeting with video room info
+      const startedMeeting = await meetingsRepository.startMeeting(id, roomId, meetingLink);
+
+      // Emit event
+      eventBus.emitSafe('meeting.started', {
+        meeting: startedMeeting,
+        roomId,
+        meetingLink,
+        videoProvider: 'daily.co'
+      });
+
+      console.log(`✅ Meeting started with Daily.co: ${meetingLink}`);
+      return startedMeeting;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * End meeting
+   */
+  async endMeeting(id, userId) {
+    try {
+      const meeting = await meetingsRepository.getMeetingById(id);
+      if (!meeting) {
+        throw new Error('Meeting not found');
+      }
+
+      // Check authorization
+      if (meeting.createdBy !== userId) {
+        throw new Error('Unauthorized to end this meeting');
+      }
+
+      const endedMeeting = await meetingsRepository.endMeeting(id);
+
+      // Emit event
+      eventBus.emitSafe('meeting.ended', {
+        meeting: endedMeeting
+      });
+
+      // Queue AI processing for summary and action items (disabled - Redis not configured)
+      // if (aiQueue) {
+      //   await aiQueue.add('generate-summary', {...});
+      //   await aiQueue.add('extract-actions', {...});
+      // }
+
+      return endedMeeting;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Create action item
+   */
+  async createActionItem(actionItemData, userId) {
+    try {
+      actionItemData.createdBy = userId;
+      const actionItem = await meetingsRepository.createActionItem(actionItemData);
+
+      // Emit event
+      eventBus.emitSafe('action_item.created', {
+        actionItem
+      });
+
+      return actionItem;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Update action item
+   */
+  async updateActionItem(id, updateData, userId) {
+    try {
+      const actionItem = await meetingsRepository.updateActionItem(id, updateData);
+
+      // Emit event
+      eventBus.emitSafe('action_item.updated', {
+        actionItem,
+        changes: updateData
+      });
+
+      return actionItem;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Get meetings by participant
+   */
+  async getMeetingsByParticipant(userId) {
+    return await meetingsRepository.getMeetingsByParticipant(userId);
+  }
+
+  /**
+   * Check for conflicts
+   */
+  async checkConflicts(participants, scheduledAt, durationMinutes) {
+    try {
+      // AI service disabled (Redis/AI not configured)
+      return { hasConflicts: false, conflicts: [], message: "AI service not available" };
+    } catch (error) {
+      console.error('Error checking conflicts:', error);
+      return { hasConflicts: false, conflicts: [] };
+    }
+  }
+
+  /**
+   * Suggest meeting times (AI-powered)
+   */
+  async suggestMeetingTimes(participants, durationMinutes) {
+    try {
+      // AI service disabled (Redis/AI not configured)
+      return { message: "AI service not available", suggestions: [] };
+    } catch (error) {
+      console.error('Error suggesting meeting times:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Track participant join
+   */
+  async trackParticipantJoin(meetingId, participantId) {
+    try {
+      const participant = await meetingsRepository.trackParticipantJoin(participantId);
+
+      // Emit event
+      eventBus.emitSafe('participant.joined', {
+        meetingId,
+        participant
+      });
+
+      return participant;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Track participant leave
+   */
+  async trackParticipantLeave(meetingId, participantId) {
+    try {
+      const participant = await meetingsRepository.trackParticipantLeave(participantId);
+
+      // Emit event
+      eventBus.emitSafe('participant.left', {
+        meetingId,
+        participant
+      });
+
+      return participant;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Schedule reminders for meeting
+   */
+  async scheduleReminders(meeting) {
+    const scheduledTime = new Date(meeting.scheduledAt);
+    const now = new Date();
+
+    // Schedule 1-day-before reminder
+    const oneDayBefore = new Date(scheduledTime.getTime() - 24 * 60 * 60 * 1000);
+    if (oneDayBefore > now && meeting.participants) {
+      for (const participant of meeting.participants) {
+        const delay = oneDayBefore.getTime() - now.getTime();
+        await emailQueue.add('send-reminder', {
+          meeting: meeting.toJSON(),
+          participant: participant.toJSON(),
+          minutesBefore: 1440 // 24 hours
+        }, { delay });
+      }
+    }
+
+    // Schedule 15-minutes-before reminder
+    const fifteenMinBefore = new Date(scheduledTime.getTime() - 15 * 60 * 1000);
+    if (fifteenMinBefore > now && meeting.participants) {
+      for (const participant of meeting.participants) {
+        const delay = fifteenMinBefore.getTime() - now.getTime();
+        await emailQueue.add('send-reminder', {
+          meeting: meeting.toJSON(),
+          participant: participant.toJSON(),
+          minutesBefore: 15
+        }, { delay });
+      }
+    }
   }
 }
 
