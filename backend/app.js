@@ -5,6 +5,7 @@ import cors from "cors";
 import authRoutes from "./src/modules/auth/authRoutes.js";
 import userRoutes from "./src/modules/users/userRoutes.js";
 import projectRoutes from "./src/modules/projects/projectsRoutes.js";
+import feedbackRoutes from "./src/modules/feedback/routes.js";
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/feedback", feedbackRoutes);
 
 // 404 handler
 app.use((req, res) => {

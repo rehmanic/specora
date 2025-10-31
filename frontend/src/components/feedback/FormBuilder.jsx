@@ -15,10 +15,31 @@ const FormBuilder = () => {
       haveCommercialLicense: true,
     });
 
-    creator.saveSurveyFunc = (saveNo, callback) => {
+    creator.saveSurveyFunc = async (saveNo, callback) => {
       const formJSON = creator.JSON;
-      console.log("Form JSON:", formJSON);
-      callback(saveNo, true);
+
+      try {
+        // ✅ API Call Here
+        const res = await fetch("http://localhost:4000/feedback", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: formJSON.title || "Untitled Form",
+            status: "Open",
+            formJson: formJSON,
+          }),
+        });
+
+        const result = await res.json();
+        console.log("✅ Saved:", result);
+
+        callback(saveNo, true);
+      } catch (err) {
+        console.log("❌ Save Error:", err);
+        callback(saveNo, false);
+      }
     };
 
     creatorRef.current = creator;
