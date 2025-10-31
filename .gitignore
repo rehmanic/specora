@@ -72,6 +72,7 @@ backend/uploads/
 # pnpm-lock.yaml
 
 # Documentation (except README.md)
+Documentation .mds
 *.md
 !README.md
 *.bat
