@@ -35,36 +35,41 @@ export default function MeetingCard({ meeting, type }) {
   };
 
   const handleJoinMeeting = async () => {
-    // If meeting already has a link, just navigate to it
-    if (meeting.meeting_link) {
-      const roomId = meeting.meeting_link.split('/').pop();
-      router.push(`/meetings/room/${roomId}`);
-      return;
-    }
-
-    // Otherwise create a new room
     try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      
+      // Call the start meeting endpoint
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/video/create-room`,
+        `${API_URL}/api/meetings/${meeting.id}/start`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            meetingId: meeting.id,
-            hostId: "user_123",
-            hostName: meeting.scheduled_by,
-          }),
         }
       );
 
       if (response.ok) {
-        const data = await response.json();
-        router.push(`/meetings/room/${data.roomId}`);
+        const result = await response.json();
+        const meetingData = result.data || result.meeting;
+        
+        // Navigate to the meeting room using the room ID from response
+        if (meetingData?.meeting_link) {
+          const roomId = meetingData.meeting_link.split('/').pop();
+          router.push(`/meetings/room/${roomId}`);
+        } else if (result.roomId) {
+          router.push(`/meetings/room/${result.roomId}`);
+        } else {
+          console.error("No room ID in response:", result);
+          alert("Failed to start meeting. Please try again.");
+        }
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.message || "Failed to start meeting"}`);
       }
     } catch (error) {
-      console.error("Error creating room:", error);
+      console.error("Error starting meeting:", error);
+      alert("Failed to start meeting. Please try again.");
     }
   };
 

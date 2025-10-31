@@ -46,7 +46,7 @@ export default function MeetingsPage() {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       
-      const response = await fetch(`${API_URL}/api/meetings/schedule`, {
+      const response = await fetch(`${API_URL}/api/meetings`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

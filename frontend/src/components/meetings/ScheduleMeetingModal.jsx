@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, Users, Video } from "lucide-react";
+import { Calendar, Clock, Users, Video, X } from "lucide-react";
 
 export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
   const [formData, setFormData] = useState({
@@ -70,12 +70,24 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-2xl">
-            Schedule New Meeting
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            Fill in the details below to schedule a meeting and send invitations to stakeholders.
-          </AlertDialogDescription>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <AlertDialogTitle className="text-2xl">
+                Schedule New Meeting
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Fill in the details below to schedule a meeting and send invitations to stakeholders.
+              </AlertDialogDescription>
+            </div>
+            <button
+              onClick={onClose}
+              className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+              disabled={isSubmitting}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </button>
+          </div>
         </AlertDialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
