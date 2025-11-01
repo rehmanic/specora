@@ -1,6 +1,7 @@
 import express from "express";
 import { body } from "express-validator";
 import meetingsController from "./controller.js";
+import webhookController from "./webhookController.js";
 // import { authenticate } from "../../core/middlewares/auth.js"; // TODO: Enable when auth is ready
 
 const router = express.Router();
@@ -72,6 +73,13 @@ const createMeetingValidation = [
 // ======================
 // MEETING CRUD ROUTES
 // ======================
+
+/**
+ * @route   POST /api/meetings/webhook/daily
+ * @desc    Handle Daily.co webhooks
+ * @access  Public (authenticated via Daily.co webhook signature)
+ */
+router.post("/webhook/daily", webhookController.handleDailyWebhook);
 
 /**
  * @route   GET /api/meetings/upcoming

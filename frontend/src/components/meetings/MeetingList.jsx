@@ -2,7 +2,7 @@
 import MeetingCard from "./MeetingCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function MeetingList({ meetings, isLoading, type }) {
+export default function MeetingList({ meetings, isLoading, type, onRefresh }) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -46,7 +46,12 @@ export default function MeetingList({ meetings, isLoading, type }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
       {meetings.map((meeting) => (
-        <MeetingCard key={meeting.id} meeting={meeting} type={type} />
+        <MeetingCard 
+          key={meeting.id} 
+          meeting={meeting} 
+          type={type}
+          onDelete={onRefresh}
+        />
       ))}
     </div>
   );

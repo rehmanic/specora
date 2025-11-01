@@ -31,22 +31,26 @@ class DailyService {
     }
 
     try {
+      const requestBody = {
+        // Don't specify name - let Daily.co auto-generate to avoid naming conflicts
+        privacy: 'public', // Changed to public for easier access
+        properties: {
+          enable_screenshare: true,
+          enable_chat: true,
+          enable_recording: 'cloud',
+          start_video_off: false,
+          start_audio_off: false,
+          owner_only_broadcast: false,
+          enable_prejoin_ui: true,
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // Expires in 24 hours
+        }
+      };
+
+      console.log('📤 Daily.co Request:', JSON.stringify(requestBody, null, 2));
+
       const response = await axios.post(
         `${this.baseUrl}/rooms`,
-        {
-          name: roomName,
-          privacy: 'private',
-          properties: {
-            enable_screenshare: true,
-            enable_chat: true,
-            enable_recording: 'cloud',
-            start_video_off: false,
-            start_audio_off: false,
-            owner_only_broadcast: false,
-            enable_prejoin_ui: true,
-            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // Expires in 24 hours
-          }
-        },
+        requestBody,
         {
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
@@ -65,8 +69,11 @@ class DailyService {
         dailyRoomId: response.data.id
       };
     } catch (error) {
-      console.error('Error creating Daily.co room:', error.response?.data || error.message);
-      throw new Error(`Failed to create video room: ${error.response?.data?.error || error.message}`);
+      console.error('❌ Error creating Daily.co room:');
+      console.error('   Status:', error.response?.status);
+      console.error('   Data:', JSON.stringify(error.response?.data, null, 2));
+      console.error('   Message:', error.message);
+      throw new Error(`Failed to create video room: ${error.response?.data?.error || error.response?.data?.info || error.message}`);
     }
   }
 

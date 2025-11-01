@@ -22,11 +22,16 @@ class EmailService {
   generateCalendarInvite(meeting) {
     const calendar = ical({ name: 'Specora Meeting' });
     
+    let description = meeting.description || '';
+    if (meeting.meetingLink) {
+      description += `\n\nJoin meeting: ${meeting.meetingLink}`;
+    }
+    
     calendar.createEvent({
       start: new Date(meeting.scheduledAt),
       end: new Date(new Date(meeting.scheduledAt).getTime() + meeting.durationMinutes * 60000),
       summary: meeting.title,
-      description: meeting.description || '',
+      description: description,
       location: meeting.location || meeting.meetingLink || 'Virtual',
       url: meeting.meetingLink,
       uid: meeting.id,
@@ -115,7 +120,25 @@ class EmailService {
                     <span class="value">${meeting.location}</span>
                   </div>
                 ` : ''}
+                
+                ${meeting.meetingLink ? `
+                  <div class="detail-row">
+                    <span class="label">🎥 Meeting Link:</span>
+                    <span class="value"><a href="${meeting.meetingLink}" style="color: #4F46E5; text-decoration: none; font-weight: bold;">${meeting.meetingLink}</a></span>
+                  </div>
+                ` : ''}
               </div>
+
+              ${meeting.meetingLink ? `
+                <div style="text-align: center; margin: 20px 0;">
+                  <a href="${meeting.meetingLink}" style="display: inline-block; padding: 15px 40px; background: #4F46E5; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                    🎥 Join Meeting
+                  </a>
+                  <p style="color: #6b7280; font-size: 12px; margin-top: 10px;">
+                    Click the button above to join the video meeting
+                  </p>
+                </div>
+              ` : ''}
 
               <div class="buttons">
                 <a href="${acceptUrl}" class="button btn-accept">✓ Accept</a>
@@ -200,8 +223,20 @@ class EmailService {
 // Queue processors
 emailQueue.process('send-invitation', async (job) => {
   const emailService = new EmailService();
-  const { meeting, participant } = job.data;
-  await emailService.sendMeetingInvitation(meeting, participant);
+  const { meeting, participant, participants } = job.data;
+  
+  // Handle both single participant and multiple participants
+  if (participant) {
+    await emailService.sendMeetingInvitation(meeting, participant);
+  } else if (participants && Array.isArray(participants)) {
+    for (const p of participants) {
+      try {
+        await emailService.sendMeetingInvitation(meeting, p);
+      } catch (error) {
+        console.error(`Failed to send invitation to ${p.email}:`, error.message);
+      }
+    }
+  }
 });
 
 emailQueue.process('send-reminder', async (job) => {

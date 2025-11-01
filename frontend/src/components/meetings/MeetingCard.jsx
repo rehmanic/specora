@@ -4,14 +4,21 @@ import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, Video, ExternalLink, Play, Copy, Check } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Calendar, Clock, Users, Video, ExternalLink, Play, Copy, Check, Trash2, MoreVertical } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import VideoPlayer from "@/components/video/VideoPlayer";
 
-export default function MeetingCard({ meeting, type }) {
+export default function MeetingCard({ meeting, type, onDelete }) {
   const router = useRouter();
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -35,10 +42,17 @@ export default function MeetingCard({ meeting, type }) {
   };
 
   const handleJoinMeeting = async () => {
+    // If meeting link already exists, open it directly
+    if (meeting.meeting_link) {
+      window.open(meeting.meeting_link, '_blank');
+      return;
+    }
+
+    // Otherwise, start the meeting first
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       
-      // Call the start meeting endpoint
+      // Call the start meeting endpoint to create Daily.co room
       const response = await fetch(
         `${API_URL}/api/meetings/${meeting.id}/start`,
         {
@@ -53,15 +67,14 @@ export default function MeetingCard({ meeting, type }) {
         const result = await response.json();
         const meetingData = result.data || result.meeting;
         
-        // Navigate to the meeting room using the room ID from response
+        // Open the Daily.co meeting link directly in a new tab
         if (meetingData?.meeting_link) {
-          const roomId = meetingData.meeting_link.split('/').pop();
-          router.push(`/meetings/room/${roomId}`);
-        } else if (result.roomId) {
-          router.push(`/meetings/room/${result.roomId}`);
+          window.open(meetingData.meeting_link, '_blank');
+          // Reload the page to show the updated meeting with the link
+          window.location.reload();
         } else {
-          console.error("No room ID in response:", result);
-          alert("Failed to start meeting. Please try again.");
+          console.error("No meeting link in response:", result);
+          alert("Failed to get meeting link. Please try again.");
         }
       } else {
         const error = await response.json();
@@ -81,6 +94,42 @@ export default function MeetingCard({ meeting, type }) {
     }
   };
 
+  const handleDeleteMeeting = async () => {
+    if (!confirm(`Are you sure you want to delete "${meeting.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      
+      const response = await fetch(`${API_URL}/api/meetings/${meeting.id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        // Call the parent component's onDelete callback to refresh the list
+        if (onDelete) {
+          onDelete(meeting.id);
+        } else {
+          // Fallback: reload the page
+          window.location.reload();
+        }
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.message || "Failed to delete meeting"}`);
+      }
+    } catch (error) {
+      console.error("Error deleting meeting:", error);
+      alert("Failed to delete meeting. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Card className="hover:shadow-lg transition-shadow duration-200 cursor-pointer group">
       <CardHeader>
@@ -93,11 +142,30 @@ export default function MeetingCard({ meeting, type }) {
               {meeting.description}
             </CardDescription>
           </div>
-          {type === "completed" && (
-            <Badge variant="secondary" className="ml-2">
-              Completed
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {type === "completed" && (
+              <Badge variant="secondary">
+                Completed
+              </Badge>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={handleDeleteMeeting}
+                  disabled={isDeleting}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {isDeleting ? "Deleting..." : "Delete Meeting"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </CardHeader>
 
@@ -168,7 +236,7 @@ export default function MeetingCard({ meeting, type }) {
               variant="link"
               size="sm"
               className="h-auto p-0 text-xs"
-              onClick={handleJoinMeeting}
+              onClick={() => window.open(meeting.meeting_link, '_blank')}
             >
               <ExternalLink className="w-3 h-3 mr-1" />
               Click to join meeting

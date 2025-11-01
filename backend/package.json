@@ -9,7 +9,11 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "setup-webhook": "node scripts/setup-daily-webhook.js",
+    "manage-webhooks": "node scripts/manage-webhooks.js",
+    "test-email": "node scripts/test-email.js",
+    "check-queue": "node scripts/check-queue-status.js"
   },
   "author": "rehman",
   "license": "MIT",

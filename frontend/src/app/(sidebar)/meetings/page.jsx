@@ -58,16 +58,20 @@ export default function MeetingsPage() {
         const result = await response.json();
         const newMeeting = result.meeting || result;
         
-        setUpcomingMeetings([newMeeting, ...upcomingMeetings]);
+        // Close modal first
         setIsScheduleModalOpen(false);
         
-        await fetch(`${API_URL}/api/meetings/send-email`, {
+        // Refresh the meetings list to get updated data from backend
+        await fetchMeetings();
+        
+        // Send email notifications in background
+        fetch(`${API_URL}/api/meetings/send-email`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ meetingId: newMeeting.id }),
-        });
+        }).catch(err => console.error("Email send error:", err));
         
         alert("Meeting scheduled successfully!");
       } else {
@@ -113,6 +117,7 @@ export default function MeetingsPage() {
           meetings={upcomingMeetings}
           isLoading={isLoading}
           type="upcoming"
+          onRefresh={fetchMeetings}
         />
       </div>
 
@@ -130,6 +135,7 @@ export default function MeetingsPage() {
           meetings={completedMeetings}
           isLoading={isLoading}
           type="completed"
+          onRefresh={fetchMeetings}
         />
       </div>
 

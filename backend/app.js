@@ -5,6 +5,7 @@ import cors from "cors";
 import sequelize from "./config/database.js";
 import "./database/models/index.js"; // Load model associations
 import { isQueueHealthy } from "./core/services/queueService.js";
+import "./core/services/emailService.js"; // Register email queue processors
 
 // Import routes
 import meetingsRoutes from "./modules/meetings/routes.js";

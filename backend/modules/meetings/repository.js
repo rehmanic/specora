@@ -71,8 +71,9 @@ class MeetingsRepository {
   async getUpcomingMeetings(userId = null) {
     try {
       const where = {
-        status: { [Op.in]: ['scheduled', 'in-progress'] },
-        scheduledAt: { [Op.gte]: new Date() }
+        status: { [Op.in]: ['scheduled', 'in-progress'] }
+        // Removed date filter for testing - shows all scheduled/in-progress meetings
+        // scheduledAt: { [Op.gte]: new Date() }
       };
 
       if (userId) {
@@ -165,6 +166,35 @@ class MeetingsRepository {
       return meeting;
     } catch (error) {
       throw new Error(`Error fetching meeting: ${error.message}`);
+    }
+  }
+
+  /**
+   * Find meeting by Daily.co room ID
+   */
+  async findByRoomId(roomId) {
+    try {
+      const meeting = await Meeting.findOne({
+        where: { roomId },
+        include: [
+          {
+            model: MeetingParticipant,
+            as: 'participants'
+          },
+          {
+            model: MeetingAgenda,
+            as: 'agendas'
+          },
+          {
+            model: MeetingActionItem,
+            as: 'actionItems'
+          }
+        ]
+      });
+      
+      return meeting;
+    } catch (error) {
+      throw new Error(`Error finding meeting by room ID: ${error.message}`);
     }
   }
 
