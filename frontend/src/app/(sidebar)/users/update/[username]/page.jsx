@@ -2,9 +2,11 @@ import Link from "next/link";
 import { CreateUserForm } from "@/components/users/CreateUserForm";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import ProtectedRoute  from "@/components/auth/ProtectedRoute";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
-export default function CreateUserPage() {
+export default function UpdateUserPage({ params }) {
+  const { username } = params;
+
   return (
     <ProtectedRoute allowedRoles={["manager"]}>
       <section className="w-full flex justify-center py-10">
@@ -17,13 +19,13 @@ export default function CreateUserPage() {
           </Link>
 
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold">Create New User</h1>
+            <h1 className="text-2xl font-semibold">Update User</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Add a new user to the system and configure their permissions.
+              Update an existing user in the system.
             </p>
           </div>
 
-          <CreateUserForm variant="create-user" />
+          <CreateUserForm variant="update-user" username={username} />
         </div>
       </section>
     </ProtectedRoute>

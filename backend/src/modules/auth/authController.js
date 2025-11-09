@@ -1,16 +1,19 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../../../prisma/prismaClient.js";
-import { validateSignup } from "../../../utils/inputValidation.js";
-
+import { validateAuthInput } from "../../../utils/inputValidator.js";
 
 // Signup
 export const signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
     // Validate input
-    const validationError = validateSignup({ username, email, password });
+    const validationError = validateAuthInput({ username, email, password });
     if (validationError) {
       return res.status(400).json({ message: validationError });
     }
@@ -54,6 +57,16 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Validate input
+    const validationError = validateAuthInput({ username, password });
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
 
     if (!username || !password) {
       return res

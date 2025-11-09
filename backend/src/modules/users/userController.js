@@ -1,34 +1,68 @@
 import prisma from "../../../prisma/prismaClient.js";
 import bcrypt from "bcrypt";
+import { validateUserInput } from "../../../utils/inputValidator.js";
 
 /**
  * 1. Create a user (admin only)
  */
 export const createUser = async (req, res) => {
   try {
-    const { username, email, password, role, display_name, profile_pic_url } =
-      req.body;
+    const {
+      username,
+      email,
+      password,
+      role,
+      display_name,
+      profile_pic_url,
+      permissions,
+    } = req.body;
 
-    if (!username || !email || !password) {
+    if (
+      !username ||
+      !email ||
+      !password ||
+      !role ||
+      !display_name ||
+      !permissions
+    ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
+    // Validate fields
+    const validationError = validateUserInput({
+      username,
+      email,
+      password,
+      role,
+      display_name,
+      profile_pic_url,
+      permissions,
+    });
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
+
+    // Check if user already exists
     const existingUser = await prisma.users.findFirst({
       where: { OR: [{ username }, { email }] },
     });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
+    if (existingUser) {
+      return res.status(409).json({ message: "User already exists" });
+    }
 
+    // Hash password
     const password_hash = await bcrypt.hash(password, 10);
 
+    // Create new user
     const newUser = await prisma.users.create({
       data: {
         username,
         email,
         password_hash,
-        role: role || "client",
-        display_name,
-        profile_pic_url,
+        role: role,
+        display_name: display_name,
+        profile_pic_url: profile_pic_url,
+        permissions: permissions,
       },
       select: {
         id: true,
@@ -37,6 +71,7 @@ export const createUser = async (req, res) => {
         role: true,
         display_name: true,
         profile_pic_url: true,
+        permissions: true,
         created_at: true,
       },
     });
@@ -45,7 +80,7 @@ export const createUser = async (req, res) => {
       .status(201)
       .json({ message: "User created successfully", user: newUser });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -89,13 +124,23 @@ export const getAllUsers = async (req, res) => {
         role: true,
         display_name: true,
         profile_pic_url: true,
+        permissions: true,
         created_at: true,
         updated_at: true,
       },
     });
-    res.json(users);
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "No users found" });
+    }
+
+    res.status(200).json({
+      message: "Users retrieved successfully",
+      count: users.length,
+      users,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -104,35 +149,60 @@ export const getAllUsers = async (req, res) => {
  */
 export const updateUser = async (req, res) => {
   try {
-    const { username } = req.params;
     const {
-      display_name,
+      username,
       email,
-      profile_pic_url,
-      role,
-      permissions,
       password,
+      role,
+      display_name,
+      profile_pic_url,
+      permissions,
     } = req.body;
 
-    const dataToUpdate = {
-      display_name,
-      email,
-      profile_pic_url,
-      role,
-    };
-
-    if (permissions) {
-      dataToUpdate.permissions =
-        typeof permissions === "string" ? JSON.parse(permissions) : permissions;
+    if (
+      !username ||
+      !email ||
+      !password ||
+      !role ||
+      !display_name ||
+      !profile_pic_url ||
+      !permissions
+    ) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
+    const existingUser = await prisma.users.findUnique({ where: { username } });
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const validationError = validateUserInput({
+      email,
+      password,
+      role,
+      display_name,
+      profile_pic_url,
+      permissions,
+    });
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
+
+    const updateData = {
+      email: email ?? existingUser.email,
+      role: role ?? existingUser.role,
+      display_name: display_name ?? existingUser.display_name,
+      profile_pic_url: profile_pic_url ?? existingUser.profile_pic_url,
+      permissions: permissions ?? existingUser.permissions,
+    };
+
     if (password) {
-      dataToUpdate.password_hash = await bcrypt.hash(password, 10);
+      updateData.password_hash = await bcrypt.hash(password, 10);
     }
 
     const updatedUser = await prisma.users.update({
       where: { username },
-      data: dataToUpdate,
+      data: updateData,
       select: {
         id: true,
         username: true,
@@ -145,9 +215,12 @@ export const updateUser = async (req, res) => {
       },
     });
 
-    res.json({ message: "Profile updated", user: updatedUser });
+    res
+      .status(200)
+      .json({ message: "User updated successfully", user: updatedUser });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Error updating user:", err);
+    res.status(500).json({ message: "An unexpected error occurred" });
   }
 };
 
@@ -157,9 +230,16 @@ export const updateUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const { username } = req.params;
+
+    const existingUser = await prisma.users.findUnique({ where: { username } });
+    if (!existingUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     await prisma.users.delete({ where: { username } });
+
     res.json({ message: "User deleted successfully" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };

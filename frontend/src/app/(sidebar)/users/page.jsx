@@ -1,14 +1,56 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { UsersTable } from "@/components/users/UsersTable";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
-import ProtectedRoute  from "@/components/auth/ProtectedRoute";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { getAllUsersRequest } from "@/api/users";
 
 export default function UsersPage() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await getAllUsersRequest();
+        console.log("Fetched users response:", response);
+
+        // ✅ Fix: backend returns { message, count, users: [...] }
+        const userData = Array.isArray(response)
+          ? response
+          : response.users || response.data || [];
+
+        // Optional: filter out malformed entries
+        const validUsers = userData.filter(
+          (user) =>
+            user &&
+            typeof user === "object" &&
+            user.id &&
+            user.username &&
+            user.email
+        );
+
+        setUsers(validUsers);
+      } catch (err) {
+        console.error("Error fetching users:", err);
+        setError(err.message || "Failed to fetch users");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
   return (
     <ProtectedRoute allowedRoles={["manager"]}>
       <section className="w-full flex justify-center py-10">
         <div className="w-full max-w-8xl px-6">
+          {/* Header */}
           <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-semibold">User Management</h1>
@@ -24,7 +66,19 @@ export default function UsersPage() {
             </Link>
           </div>
 
-          <UsersTable />
+          {/* Error Message */}
+          {error && (
+            <div className="text-red-500 mb-4">
+              Error loading users: {error}
+            </div>
+          )}
+
+          {/* Loading / Table */}
+          {loading ? (
+            <div className="text-center py-4">Loading users...</div>
+          ) : (
+            <UsersTable users={users} />
+          )}
         </div>
       </section>
     </ProtectedRoute>
