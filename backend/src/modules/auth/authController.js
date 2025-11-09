@@ -1,38 +1,53 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../../../prisma/prismaClient.js";
+import { validateSignup } from "../../../utils/inputValidation.js";
 
+
+// Signup
 export const signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    // Validate input
+    const validationError = validateSignup({ username, email, password });
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
+
+    // Check if user already exists
     const existingUser = await prisma.users.findFirst({
       where: { OR: [{ username }, { email }] },
     });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
+    if (existingUser) {
+      return res.status(409).json({ message: "User already exists" });
+    }
 
+    // Hash password
     const password_hash = await bcrypt.hash(password, 10);
 
+    // Create user
     const user = await prisma.users.create({
       data: { username, email, password_hash },
     });
 
     res.status(201).json({
-      message: "User registered",
+      message: "User registered successfully",
       user: {
-        username: user.username,
+        userId: user.id,
+        userName: user.username,
         email: user.email,
-        display_name: user.display_name,
+        displayName: user.display_name,
         role: user.role,
-        profile_pic_url: user.profile_pic_url,
+        profilePicUrl: user.profile_pic_url,
         permissions: user.permissions,
-        created_at: user.created_at,
-        updated_at: user.updated_at,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
       },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Signup error:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -40,35 +55,44 @@ export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ message: "Username and password are required" });
+    }
+
+    // Find user
     const user = await prisma.users.findUnique({ where: { username } });
-    if (!user)
-      return res.status(400).json({ message: "Invalid credentials" });
 
-    const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid)
-      return res.status(400).json({ message: "Invalid credentials" });
+    // Check password
+    const valid = user && (await bcrypt.compare(password, user.password_hash));
+    if (!valid) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
+    // Generate JWT
     const token = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      { expiresIn: process.env.JWT_EXPIRES_IN || "30d" }
     );
 
-    // Send back token + user details
     res.json({
       token,
       user: {
-        username: user.username,
+        userId: user.id,
+        userName: user.username,
         email: user.email,
-        display_name: user.display_name,
+        displayName: user.display_name,
         role: user.role,
-        profile_pic_url: user.profile_pic_url,
+        profilePicUrl: user.profile_pic_url,
         permissions: user.permissions,
-        created_at: user.created_at,
-        updated_at: user.updated_at,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
       },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

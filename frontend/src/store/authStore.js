@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { loginRequest, logoutRequest } from "@/api/auth";
+import { loginRequest, signupRequest, logoutRequest } from "@/api/auth";
 
 const useAuthStore = create(
   persist(
@@ -14,6 +14,22 @@ const useAuthStore = create(
         set({ loading: true, error: null });
         try {
           const data = await loginRequest(credentials);
+          set({
+            user: data.user,
+            token: data.token,
+            loading: false,
+          });
+          return data.user;
+        } catch (err) {
+          set({ loading: false, error: err.message });
+          throw err;
+        }
+      },
+
+      signup: async (credentials) => {
+        set({ loading: true, error: null });
+        try {
+          const data = await signupRequest(credentials);
           set({
             user: data.user,
             token: data.token,

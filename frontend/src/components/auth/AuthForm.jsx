@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 
 export default function AuthForm({ className, variant = "login", ...props }) {
   const isLogin = variant === "login";
-  const { login, loading, error } = useAuthStore();
+  const { login, signup, loading, error } = useAuthStore();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -45,19 +45,16 @@ export default function AuthForm({ className, variant = "login", ...props }) {
           username: formData.username,
           password: formData.password,
         });
-        router.push("/dashboard"); // redirect after successful login
-      } else {
-        // signup
-        const res = await fetch("http://localhost:5000/api/auth/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Signup failed");
 
-        alert("Signup successful! Please login.");
-        router.push("/login");
+        router.push("/dashboard");
+      } else {
+        await signup({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        });
+
+        router.push("/dashboard");
       }
     } catch (err) {
       setLocalError(err.message);
@@ -91,6 +88,9 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                   value={formData.username}
                   onChange={handleChange}
                   required
+                  minLength={5}
+                  maxLength={20}
+                  pattern="(?=.*[A-Za-z]{3,})[A-Za-z\d]+"
                 />
               </div>
 
@@ -104,6 +104,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
+                    required
                   />
                 </div>
               )}
@@ -128,6 +129,8 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  minLength={6}
+                  maxLength={32}
                 />
               </div>
 
