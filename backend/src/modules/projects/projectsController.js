@@ -1,5 +1,6 @@
-import prisma from "../../../prisma/prismaClient.js";
+import prisma from "../../../config/db/prismaClient.js";
 import { generateSlug } from "../../../utils/slugGenerator.js";
+import { validateAuthInput } from "../../../utils/inputValidator.js";
 
 /**
  * Create a new project
@@ -283,5 +284,43 @@ export const removeMember = async (req, res) => {
     res.json({ message: "Member removed", project: updated });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+export const getSingleUserProjects = async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    if (!username) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+
+    const validationError = validateAuthInput({ username });
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
+
+    const user = await prisma.users.findUnique({
+      where: { username },
+    });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const projects = await prisma.projects.findMany({
+      where: { created_by: username },
+      orderBy: { created_at: "desc" },
+    });
+
+    if (!projects || projects.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No projects found for this user" });
+    }
+
+    return res.status(200).json({ projects });
+  } catch (error) {
+    console.error("Error fetching user projects:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

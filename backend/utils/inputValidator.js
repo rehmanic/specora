@@ -2,8 +2,10 @@ export const validateAuthInput = ({ username, email, password }) => {
   const usernameRegex = /^(?=.*[A-Za-z]{3,})[A-Za-z\d]{5,20}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  if (!usernameRegex.test(username)) {
-    return "Username must be 5-20 characters, contain at least 3 letters, letters and numbers only.";
+  if (username) {
+    if (!usernameRegex.test(username)) {
+      return "Username must be 5-20 characters, contain at least 3 letters, letters and numbers only.";
+    }
   }
 
   if (email) {
@@ -12,8 +14,10 @@ export const validateAuthInput = ({ username, email, password }) => {
     }
   }
 
-  if (password.length < 6 || password.length > 32) {
-    return "Password must be 6-32 characters long.";
+  if (password) {
+    if (password.length < 6 || password.length > 32) {
+      return "Password must be 6-32 characters long.";
+    }
   }
 
   return null;

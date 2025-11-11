@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import prisma from "../../../prisma/prismaClient.js";
+import prisma from "../../../config/db/prismaClient.js";
 import { validateAuthInput } from "../../../utils/inputValidator.js";
 
 // Signup

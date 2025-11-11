@@ -36,7 +36,7 @@ CREATE TABLE projects (
 	members JSONB DEFAULT '[]',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by VARCHAR(100) REFERENCES users(username) ON DELETE SET NULL
+    created_by VARCHAR(100) REFERENCES users(id) ON DELETE CASCADE
 );
 
 ------------------------------------------------------------

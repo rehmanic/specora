@@ -1,4 +1,4 @@
-import prisma from "../../../prisma/prismaClient.js";
+import prisma from "../../../config/db/prismaClient.js";
 import bcrypt from "bcrypt";
 import { validateUserInput } from "../../../utils/inputValidator.js";
 

@@ -1,7 +1,7 @@
 import express from "express";
 import { body, param, query } from "express-validator";
 import { createProject, getAllProjects, getProjectById, getProjectBySlug, 
-  updateProject, deleteProject, searchProjects, addMember, removeMember } from "./projectsController.js";
+  updateProject, deleteProject, searchProjects, addMember, removeMember, getSingleUserProjects } from "./projectsController.js";
 
 const router = express.Router();
 
@@ -23,6 +23,7 @@ router.get("/:id", getProjectById);
 router.post("/create", createValidation, createProject);
 router.put("/:id", updateValidation, updateProject);
 router.delete("/:id", deleteProject);
+router.get("/:username", getSingleUserProjects);
 
 // members
 router.post("/:id/members", addMember);

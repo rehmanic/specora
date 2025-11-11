@@ -1,31 +1,54 @@
-# Permissions
+# Prisma ORM Setup
+Prisma Integration
 
-##  Users
-add_user
-view_users
-update_user
-delete_user
+## 1. Install
 
-## Projects
-create_project
-view_projects
-view_all_projects
-update_project
-delete_project
+```bash
+npm install prisma @prisma/client
+```
 
-# Specbot
-create_new_chat_bot
-delete_chat_bot
-view_chat_bot
-view_all_chats_bot
-send_message_bot
-edit_message_bot
-view_all_messages_bot
-delete_message_bot
+## 2. Initialize
+```bash
+npx prisma init
+```
 
-# Chat
-send_message_group
-edit_message_group
-view_all_messages_group
-delete_message_group
+## 3. Configure `.env`
+```env
+DATABASE_URL="postgresql://<db_username>:<db_password>@<db_host>:<db_port>/<db_name>"
+```
 
+## 4. Define Prisma Schema
+
+**File:** `./config/db/schema.prisma`
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../prisma/generated/client"
+}
+```
+
+Note: Following commands must be run from the folder containing schema.prisma
+
+## 5. Pull Existing Database Schema
+```bash
+npx prisma db pull
+```
+
+## 6. Generate Prisma Client
+```bash
+npx prisma generate
+```
+
+## On Schema Update
+```bash
+npx prisma db pull
+```
+
+```bash
+npx prisma generate
+```

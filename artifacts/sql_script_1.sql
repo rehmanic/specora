@@ -23,11 +23,11 @@ SELECT * FROM users;
 -- Step 1: Drop the old foreign key constraint
 ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_created_by_fkey;
 
--- Step 2: Change created_by column type from UUID → VARCHAR(100)
+-- Step 2: Change created_by column type from VARCHAR(100) → UUID
 ALTER TABLE projects 
-    ALTER COLUMN created_by TYPE VARCHAR(100) USING created_by::text;
+    ALTER COLUMN created_by TYPE UUID USING created_by::uuid;
 
--- Step 3: Add new FK referencing users.username
+-- Step 3: Add new FK referencing users.id
 ALTER TABLE projects 
     ADD CONSTRAINT projects_created_by_fkey 
-    FOREIGN KEY (created_by) REFERENCES users(username) ON DELETE SET NULL;
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE;
