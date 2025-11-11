@@ -94,3 +94,29 @@ export async function getSingleUserDataRequest(username) {
 
   return responseData;
 }
+
+export async function getUsersByIds(userIds) {
+  const { token } = useAuthStore.getState();
+
+  try {
+    const res = await fetch(`${API_BASE}/users/by-ids`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userIds }),
+    });
+
+    const responseData = await res.json();
+
+    if (!res.ok) {
+      throw new Error(responseData.message || "Failed to fetch users");
+    }
+
+    return responseData.data || responseData;
+  } catch (err) {
+    console.error("Error fetching users by IDs:", err);
+    return [];
+  }
+}

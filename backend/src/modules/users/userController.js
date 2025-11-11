@@ -243,3 +243,44 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/**
+ * 6. Get multiple users by their IDs
+ */
+export const getUsersByIds = async (req, res) => {
+  try {
+    const { userIds } = req.body;
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ message: "userIds array is required" });
+    }
+
+    const users = await prisma.users.findMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        display_name: true,
+        profile_pic_url: true,
+        permissions: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    res.status(200).json({
+      message: "Users retrieved successfully",
+      count: users.length,
+      data: users,
+    });
+  } catch (err) {
+    console.error("Error fetching users by IDs:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

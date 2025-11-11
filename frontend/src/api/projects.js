@@ -1,6 +1,9 @@
-import useAuthStore  from "@/store/authStore";
+import useAuthStore from "@/store/authStore";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
+// ======================
+// Get All Projects
+// ======================
 export async function getAllProjects(token) {
   const res = await fetch(`${API_BASE}/projects/all`, {
     headers: {
@@ -18,6 +21,9 @@ export async function getAllProjects(token) {
   return res.json();
 }
 
+// ======================
+// Get User Projects
+// ======================
 export async function getUserProjects(userId) {
   const { token } = useAuthStore.getState();
 
@@ -33,4 +39,72 @@ export async function getUserProjects(userId) {
   }
 
   return responseData;
+}
+
+// ======================
+// Create Project
+// ======================
+export async function createProject(projectData) {
+  const { token } = useAuthStore.getState();
+
+  const res = await fetch(`${API_BASE}/projects/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(projectData),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to create project");
+  }
+
+  return data;
+}
+
+// ======================
+// Update Project
+// ======================
+export async function updateProject(projectId, updateData) {
+  const { token } = useAuthStore.getState();
+
+  const res = await fetch(`${API_BASE}/projects/update/${projectId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updateData),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to update project");
+  }
+
+  return data;
+}
+
+// ======================
+// Delete Project
+// ======================
+export async function deleteProject(projectId) {
+  const { token } = useAuthStore.getState();
+
+  const res = await fetch(`${API_BASE}/projects/delete/${projectId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to delete project");
+  }
+
+  return data;
 }

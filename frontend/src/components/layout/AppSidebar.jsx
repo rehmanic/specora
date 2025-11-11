@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -9,6 +8,7 @@ import {
   MessageCircle,
   UsersRound,
   Settings,
+  Clipboard,
 } from "lucide-react";
 
 import { NavMain } from "@/components/layout/NavMain";
@@ -23,83 +23,69 @@ import {
 } from "@/components/ui/sidebar";
 
 import useAuthStore from "@/store/authStore";
-import useUserStore from "@/store/authStore";
 import useProjectsStore from "@/store/projectsStore";
 
-const baseNav = [
+const allSidebarItems = [
   {
     id: "dashboard",
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
-  }, // global
-  { id: "chat", title: "Chat", url: "chat", icon: MessageSquare },
-  { id: "specbot", title: "SpecBot", url: "specbot", icon: Bot },
-  { id: "meetings", title: "Meetings", url: "meetings", icon: Video },
-  { id: "feedback", title: "Feedback", url: "feedback", icon: MessageCircle },
+  },
+  { id: "chat", title: "Chat", url: "/chat", icon: MessageSquare },
+  { id: "specbot", title: "SpecBot", url: "/specbot", icon: Bot },
+  { id: "meetings", title: "Meetings", url: "/meetings", icon: Video },
+  { id: "feedback", title: "Feedback", url: "/feedback", icon: MessageCircle },
+  {
+    id: "requirements",
+    title: "Requirements",
+    url: "/requirements",
+    icon: Clipboard,
+  },
   {
     id: "project_settings",
     title: "Settings",
-    url: "settings",
+    url: "/settings",
     icon: Settings,
   },
-  { id: "users", title: "Users", url: "/users", icon: UsersRound }, // global
+  { id: "users", title: "Users", url: "/users", icon: UsersRound },
 ];
 
-export function AppSidebar({ ...props }) {
-  const { user } = useUserStore();
-  const { token } = useAuthStore();
-  const { projects = [], fetchProjects } = useProjectsStore();
-
-  // fetch projects once token available
-  useEffect(() => {
-    if (token) fetchProjects(token);
-  }, [token, fetchProjects]);
-
-  // Build dynamic nav combining global + project routes
-  let dynamicNav = [];
-
-  // 1️⃣ Add global routes first
-  dynamicNav.push(
-    ...baseNav.filter((item) => item.id === "dashboard" || item.id === "users")
-  );
-
-  // 2️⃣ Add project-scoped routes
-  if (projects?.length > 0) {
-    projects.forEach((project) => {
-      baseNav.forEach((navItem) => {
-        const isGlobal = navItem.id === "dashboard" || navItem.id === "users";
-        if (isGlobal) return;
-
-        dynamicNav.push({
-          id: `${project.slug}-${navItem.id}`,
-          title: navItem.title,
-          url:
-            navItem.url === ""
-              ? `/projects/${project.slug}`
-              : `/projects/${project.slug}/${navItem.url}`,
-          icon: navItem.icon,
-        });
-      });
-    });
-  }
+export function AppSidebar(props) {
+  const { user } = useAuthStore();
+  const { selectedProject } = useProjectsStore();
 
   // Role-based filtering
-  let filteredNav = [];
+  const sidebarItems = allSidebarItems.filter((item) => {
+    if (!user) return false;
 
-  if (user) {
-    if (user.role === "manager") {
-      filteredNav = dynamicNav;
-    } else if (
-      user.role === "client" ||
-      user.role === "requirements_engineer"
-    ) {
-      filteredNav = dynamicNav.filter(
-        (item) =>
-          !item.id.includes("users") && !item.id.includes("project_settings")
-      );
+    switch (user.role) {
+      case "manager":
+        return true; // full access
+      case "requirements_engineer":
+        return !["users", "project_settings"].includes(item.id);
+      case "client":
+        return !["users", "project_settings", "requirements"].includes(item.id);
+      default:
+        return false;
     }
-  }
+  });
+
+  // ✅ Add project slug to all except /dashboard & /users
+  const projectScopedSidebarItems = sidebarItems.map((item) => {
+    if (["/dashboard", "/users"].includes(item.url)) {
+      return item;
+    }
+
+    if (!selectedProject?.slug) {
+      return { ...item, url: item.url, disabled: true };
+    }
+
+    return {
+      ...item,
+      url: `/projects/${selectedProject.slug}${item.url}`,
+    };
+  });
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -108,12 +94,12 @@ export function AppSidebar({ ...props }) {
       </SidebarHeader>
 
       <SidebarContent>
-        {filteredNav.length === 0 ? (
+        {projectScopedSidebarItems.length > 0 ? (
+          <NavMain items={projectScopedSidebarItems} />
+        ) : (
           <div className="p-4 text-sm text-muted-foreground">
             No sidebar items available.
           </div>
-        ) : (
-          <NavMain items={filteredNav} />
         )}
       </SidebarContent>
 

@@ -9,18 +9,34 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function ProjectCard({
-  icon,
-  name,
-  createdAt,
-  thumbnail,
-  onDelete,
-  onClick,
-}) {
-  const formatTimestamp = (date) => {
-    const created = new Date(date);
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return `Created on ${created.toLocaleDateString("en-US", options)}`;
+export function ProjectCard({ project, onClick, onDelete }) {
+  if (!project) return null;
+
+  const {
+    id,
+    name,
+    slug,
+    description,
+    cover_image_url,
+    icon_url,
+    status,
+    start_date,
+    end_date,
+    tags,
+    members,
+    created_at,
+    updated_at,
+    created_by,
+  } = project;
+
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+    const d = new Date(date);
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
@@ -31,7 +47,9 @@ export function ProjectCard({
       {/* Thumbnail */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
         <img
-          src={thumbnail || `https://picsum.photos/800/600?random=${name}`}
+          src={
+            cover_image_url || `https://picsum.photos/800/600?random=${name}`
+          }
           alt={name}
           className="h-full w-full object-cover transition-transform group-hover:scale-105"
         />
@@ -40,21 +58,39 @@ export function ProjectCard({
       {/* Content */}
       <div className="flex items-center gap-3 p-4">
         {/* Icon */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xl">
-          {<img src={icon} alt="icon" /> || "📁"}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 overflow-hidden">
+          {icon_url ? (
+            <img
+              src={icon_url}
+              alt={`${name} icon`}
+              className="h-6 w-6 object-contain"
+            />
+          ) : (
+            "📁"
+          )}
         </div>
 
-        {/* Name + Timestamp */}
+        {/* Info */}
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-card-foreground text-sm truncate">
             {name}
           </h3>
+          {description && (
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
+              {description}
+            </p>
+          )}
           <p className="text-xs text-muted-foreground mt-0.5">
-            {formatTimestamp(createdAt)}
+            Created on {formatDate(created_at)}
           </p>
+          {status && (
+            <p className="text-xs text-muted-foreground capitalize mt-0.5">
+              Status: {status}
+            </p>
+          )}
         </div>
 
-        {/* Options Button */}
+        {/* Options Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
             <Button
@@ -67,18 +103,36 @@ export function ProjectCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
+            {/* <DropdownMenuItem
               className="text-destructive focus:text-destructive cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete?.();
+                onDelete?.(id);
               }}
             >
               Delete
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Optional footer for tags or members */}
+      {(tags?.length > 0 || members?.length > 0) && (
+        <div className="px-4 pb-3">
+          {tags?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

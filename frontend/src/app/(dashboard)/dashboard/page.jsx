@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import useAuthStore from "@/store/authStore";
+import useProjectsStore from "@/store/projectsStore";
 import { ProjectCard } from "@/components/project/ProjectCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -9,6 +10,7 @@ import { getUserProjects } from "@/api/projects";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const { setSelectedProject } = useProjectsStore();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,12 +30,17 @@ export default function DashboardPage() {
     fetchProjects();
   }, [user]);
 
-  if (loading) return <p className="p-6">Loading projects...</p>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center w-full h-[80vh]">
+        <p className="p-6">Loading projects...</p>
+      </div>
+    );
 
   return (
     <div className="p-6">
       <div className="mb-4 flex items-center justify-end">
-        <Link href="/chat">
+        <Link href="/create">
           <Button className="w-[150px] h-[40px] flex items-center justify-center cursor-pointer">
             <Plus className="h-5 w-5" />
             <span className="font-medium">New Project</span>
@@ -42,17 +49,21 @@ export default function DashboardPage() {
       </div>
 
       {projects.length === 0 ? (
-        <p>No projects found.</p>
+        <div className="flex justify-center items-center w-full h-[80vh]">
+          <p>No projects found.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {projects.map((project) => (
-            <Link href={`/projects/${project.slug}/chat`} key={project.id}>
+            <Link
+              href={`/projects/${project.slug}/chat`}
+              key={project.id}
+              onClick={() => setSelectedProject(project)}
+            >
               <ProjectCard
-                name={project.name}
-                createdAt={project.created_at}
-                icon={project.icon_url}
-                thumbnail={project.cover_image_url}
-                onClick={() => console.log("Clicked", project.name)}
+                project={project}
+                onClick={() => setSelectedProject(project)}
+                onDelete={() => console.log("Deleted", project.id)}
               />
             </Link>
           ))}
