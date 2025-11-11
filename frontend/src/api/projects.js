@@ -1,3 +1,4 @@
+import useAuthStore  from "@/store/authStore";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export async function getAllProjects(token) {
@@ -15,4 +16,21 @@ export async function getAllProjects(token) {
   }
 
   return res.json();
+}
+
+export async function getUserProjects(userId) {
+  const { token } = useAuthStore.getState();
+
+  const res = await fetch(`${API_BASE}/projects/${userId}`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const responseData = await res.json();
+
+  if (!res.ok) {
+    throw new Error(responseData.message || "Fetching user projects failed");
+  }
+
+  return responseData;
 }

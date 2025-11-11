@@ -1,10 +1,9 @@
 import prisma from "../../../config/db/prismaClient.js";
 import { generateSlug } from "../../../utils/slugGenerator.js";
-import { validateAuthInput } from "../../../utils/inputValidator.js";
 
-/**
- * Create a new project
- */
+// ======================
+// New Project
+// ======================
 export const createProject = async (req, res) => {
   try {
     const {
@@ -17,6 +16,7 @@ export const createProject = async (req, res) => {
       end_date,
       tags,
       members,
+      created_by: userId,
     } = req.body;
 
     if (!name) {
@@ -54,7 +54,7 @@ export const createProject = async (req, res) => {
         end_date: end_date || null,
         tags: parsedTags || [],
         members: validMemberUsernames,
-        created_by: req.user?.username || null,
+        created_by: userId,
       },
       select: {
         id: true,
@@ -82,9 +82,9 @@ export const createProject = async (req, res) => {
   }
 };
 
-/**
- * Get all projects (optional filters: status, page, limit)
- */
+// ======================
+// All System Projects
+// ======================
 export const getAllProjects = async (req, res) => {
   try {
     const { status, page = 1, limit = 50 } = req.query;
@@ -121,201 +121,118 @@ export const getAllProjects = async (req, res) => {
   }
 };
 
-/**
- * Get project by id
- */
-export const getProjectById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const project = await prisma.projects.findUnique({
-      where: { id },
-    });
-
-    if (!project) return res.status(404).json({ message: "Project not found" });
-
-    res.json(project);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-/**
- * Get project by slug
- */
-export const getProjectBySlug = async (req, res) => {
-  try {
-    const { slug } = req.params;
-    const project = await prisma.projects.findUnique({ where: { slug } });
-    if (!project) return res.status(404).json({ message: "Project not found" });
-    res.json(project);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-/**
- * Update project
- */
+// ======================
+// Update Project
+// ======================
 export const updateProject = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updateData = { ...req.body };
+    const { projectId } = req.params;
+    const {
+      name,
+      slug,
+      description,
+      cover_image_url,
+      icon_url,
+      status,
+      start_date,
+      end_date,
+      tags,
+      members,
+    } = req.body;
 
-    // If slug changed, ensure uniqueness
-    if (updateData.slug) {
-      const existing = await prisma.projects.findUnique({
-        where: { slug: updateData.slug },
-      });
-      if (existing && existing.id !== id) {
-        return res.status(400).json({ message: "Project slug already in use" });
-      }
+    if (!projectId) {
+      return res.status(400).json({ message: "Project ID is required" });
     }
 
-    if (typeof updateData.tags === "string")
-      updateData.tags = JSON.parse(updateData.tags);
-    if (typeof updateData.members === "string")
-      updateData.members = JSON.parse(updateData.members);
-
-    const project = await prisma.projects.update({
-      where: { id },
-      data: updateData,
+    // Check if project exists
+    const existingProject = await prisma.projects.findUnique({
+      where: { id: projectId },
     });
 
-    res.json({ message: "Project updated successfully", project });
-  } catch (err) {
-    if (err.code === "P2025") {
+    if (!existingProject) {
       return res.status(404).json({ message: "Project not found" });
     }
-    res.status(500).json({ error: err.message });
+
+    // Update the project
+    const updatedProject = await prisma.projects.update({
+      where: { id: projectId },
+      data: {
+        ...(name && { name }),
+        ...(slug && { slug }),
+        ...(description && { description }),
+        ...(cover_image_url && { cover_image_url }),
+        ...(icon_url && { icon_url }),
+        ...(status && { status }),
+        ...(start_date && { start_date: new Date(start_date) }),
+        ...(end_date && { end_date: new Date(end_date) }),
+        ...(Array.isArray(tags) && { tags }),
+        ...(Array.isArray(members) && { members }),
+        updated_at: new Date(),
+      },
+    });
+
+    return res.status(200).json({
+      message: "Project updated successfully",
+      project: updatedProject,
+    });
+  } catch (error) {
+    console.error("Error updating project:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-/**
- * Delete project
- */
+// ======================
+// Delete Project
+// ======================
 export const deleteProject = async (req, res) => {
   try {
-    const { id } = req.params;
-    await prisma.projects.delete({ where: { id } });
-    res.json({ message: "Project deleted successfully" });
-  } catch (err) {
-    if (err.code === "P2025") {
+    const { projectId } = req.params;
+
+    if (!projectId) {
+      return res.status(400).json({ message: "Project ID is required" });
+    }
+
+    const existingProject = await prisma.projects.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!existingProject) {
       return res.status(404).json({ message: "Project not found" });
     }
-    res.status(500).json({ error: err.message });
-  }
-};
 
-/**
- * Search projects by name or description
- */
-export const searchProjects = async (req, res) => {
-  try {
-    const { q } = req.query;
-    if (!q)
-      return res.status(400).json({ message: "Search query is required" });
-
-    const projects = await prisma.projects.findMany({
-      where: {
-        OR: [
-          { name: { contains: q, mode: "insensitive" } },
-          { description: { contains: q, mode: "insensitive" } },
-        ],
-      },
-      orderBy: { created_at: "desc" },
+    await prisma.projects.delete({
+      where: { id: projectId },
     });
 
-    res.json(projects);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(200).json({ message: "Project deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-/**
- * Add member (email or object) to members JSON array
- */
-export const addMember = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { member } = req.body; // expected string/email or object
-    if (!member)
-      return res.status(400).json({ message: "Missing required fields" });
-
-    const project = await prisma.projects.findUnique({ where: { id } });
-    if (!project) return res.status(404).json({ message: "Project not found" });
-
-    const current = project.members || [];
-    const newMembers = Array.isArray(current) ? [...current] : [];
-    // Avoid duplicates (simple check)
-    if (!newMembers.includes(member)) newMembers.push(member);
-
-    const updated = await prisma.projects.update({
-      where: { id },
-      data: { members: newMembers },
-    });
-    res.json({ message: "Member added", project: updated });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-/**
- * Remove member from members array
- */
-export const removeMember = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { member } = req.body; // email or identifier
-    if (!member)
-      return res.status(400).json({ message: "Missing required fields" });
-
-    const project = await prisma.projects.findUnique({ where: { id } });
-    if (!project) return res.status(404).json({ message: "Project not found" });
-
-    const current = project.members || [];
-    const newMembers = Array.isArray(current)
-      ? current.filter((m) => m !== member)
-      : [];
-
-    const updated = await prisma.projects.update({
-      where: { id },
-      data: { members: newMembers },
-    });
-    res.json({ message: "Member removed", project: updated });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
+// ===========================
+// Get Single User's Projects
+// ===========================
 export const getSingleUserProjects = async (req, res) => {
   try {
-    const { username } = req.params;
-    
-    if (!username) {
-      return res.status(400).json({ message: "Username is required" });
-    }
-
-    const validationError = validateAuthInput({ username });
-    if (validationError) {
-      return res.status(400).json({ message: validationError });
-    }
+    const { userId } = req.params;
 
     const user = await prisma.users.findUnique({
-      where: { username },
+      where: { id: userId },
     });
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     const projects = await prisma.projects.findMany({
-      where: { created_by: username },
+      where: { created_by: userId },
       orderBy: { created_at: "desc" },
     });
 
-    if (!projects || projects.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No projects found for this user" });
+    if (!projects.length) {
+      return res.status(200).json({ projects: [] });
     }
 
     return res.status(200).json({ projects });

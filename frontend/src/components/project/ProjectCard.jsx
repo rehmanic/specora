@@ -41,7 +41,7 @@ export function ProjectCard({
       <div className="flex items-center gap-3 p-4">
         {/* Icon */}
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xl">
-          {icon || "📁"}
+          {<img src={icon} alt="icon" /> || "📁"}
         </div>
 
         {/* Name + Timestamp */}
