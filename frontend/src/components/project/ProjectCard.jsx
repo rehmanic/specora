@@ -91,7 +91,7 @@ export function ProjectCard({ project, onClick, onDelete }) {
         </div>
 
         {/* Options Dropdown */}
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
             <Button
               variant="ghost"
@@ -103,7 +103,7 @@ export function ProjectCard({ project, onClick, onDelete }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {/* <DropdownMenuItem
+            <DropdownMenuItem
               className="text-destructive focus:text-destructive cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
@@ -111,9 +111,9 @@ export function ProjectCard({ project, onClick, onDelete }) {
               }}
             >
               Delete
-            </DropdownMenuItem> */}
+            </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
       </div>
 
       {/* Optional footer for tags or members */}

@@ -31,3 +31,12 @@ ALTER TABLE projects
 ALTER TABLE projects 
     ADD CONSTRAINT projects_created_by_fkey 
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE;
+
+
+SELECT * FROM projects WHERE created_by = '8a35da11-12ca-419d-bb85-111c025e6777';
+
+
+ALTER TABLE projects
+ALTER COLUMN cover_image_url SET DEFAULT 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fHNvZnR3YXJlfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
+ALTER COLUMN icon_url SET DEFAULT 'https://cdn-icons-png.flaticon.com/128/1383/1383970.png';
+

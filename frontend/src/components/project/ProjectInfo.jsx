@@ -47,7 +47,7 @@ const getAvatarUrl = (name) =>
 
 export default function ProjectInfo({ variant }) {
   const isSettings = variant === "project-settings";
-  const { selectedProject, clearSelectedProject, fetchProjects } = useProjectsStore();
+  const { selectedProject, clearSelectedProject } = useProjectsStore();
   const { user } = useAuthStore();
   const router = useRouter();
 
@@ -88,7 +88,10 @@ export default function ProjectInfo({ variant }) {
       if (isSettings && selectedProject) {
         // Fetch member details if members are just IDs
         let members = [];
-        if (Array.isArray(selectedProject.members) && selectedProject.members.length > 0) {
+        if (
+          Array.isArray(selectedProject.members) &&
+          selectedProject.members.length > 0
+        ) {
           // Check if members are objects or just IDs
           if (typeof selectedProject.members[0] === "string") {
             // Members are IDs, fetch their details
@@ -267,11 +270,10 @@ export default function ProjectInfo({ variant }) {
 
     try {
       await deleteProject(selectedProject.id);
-      
+
       // Clear the selected project and refresh the projects list
       clearSelectedProject();
-      await fetchProjects();
-      
+
       // Redirect to dashboard page
       router.push("/dashboard");
     } catch (err) {
@@ -321,15 +323,15 @@ export default function ProjectInfo({ variant }) {
           setIsSaving(false);
           return;
         }
-        
+
         const createData = {
           ...projectData,
           created_by: user.userId,
         };
-        
+
         const newProject = await createProject(createData);
         setSaveSuccess(true);
-        
+
         // Reset form after successful creation
         setProject({
           id: "",
@@ -348,21 +350,19 @@ export default function ProjectInfo({ variant }) {
           },
           Members: [],
         });
-        
+
         // Refresh the projects list and redirect
-        await fetchProjects();
-        
+
         // Redirect to dashboard after showing success message
         setTimeout(() => {
           router.push("/dashboard");
         }, 2000);
-        
+
         return;
       }
-      
+
       // Refresh the projects list for update
-      await fetchProjects();
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
@@ -497,114 +497,117 @@ export default function ProjectInfo({ variant }) {
         </CardContent>
       </Card>
 
-      {/* Members */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Members</CardTitle>
-          <CardDescription>Manage who has access</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {memberError && (
-            <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">
-              {memberError}
-            </div>
-          )}
-          
-          {project.Members.map((member, index) => (
-            <div
-              key={member.id || member.email || index}
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border p-3 rounded-lg"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage
-                    src={getAvatarUrl(member.name || member.email || "user")}
-                    alt={member.name || member.email}
-                  />
-                  <AvatarFallback>
-                    {(member.name || member.email || "U")
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium">{member.name || member.email || "Unknown"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {member.email || "N/A"}
-                  </p>
+      {/* Members - Only visible to managers */}
+      {user?.role === "manager" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Members</CardTitle>
+            <CardDescription>Manage who has access</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {memberError && (
+              <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">
+                {memberError}
+              </div>
+            )}
+
+            {project.Members.map((member, index) => (
+              <div
+                key={member.id || member.email || index}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border p-3 rounded-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    <AvatarImage
+                      src={getAvatarUrl(member.name || member.email || "user")}
+                      alt={member.name || member.email}
+                    />
+                    <AvatarFallback>
+                      {(member.name || member.email || "U")
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">
+                      {member.name || member.email || "Unknown"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {member.email || "N/A"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{member.role}</Badge>
+                  {member.role !== "Project Owner" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeMember(member.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      Remove
+                    </Button>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">{member.role}</Badge>
-                {member.role !== "Project Owner" && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeMember(member.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    Remove
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              placeholder="Enter username to add"
-              value={newMemberEmail}
-              onChange={(e) => {
-                setNewMemberEmail(e.target.value);
-                setMemberError(null);
-              }}
-              className="flex-1"
-            />
-            <Button
-              onClick={handleAddMember}
-              disabled={isAddingMember}
-            >
-              {isAddingMember ? "Adding..." : "Add Member"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tags */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tags & Categories</CardTitle>
-          <CardDescription>Organize your project with tags</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            {project.tags.map((tag) => (
-              <Badge key={tag} variant="outline" className="gap-1">
-                {tag}
-                <button
-                  onClick={() => removeTag(tag)}
-                  className="ml-1 rounded-full hover:bg-muted"
-                  aria-label={`Remove ${tag}`}
-                >
-                  ×
-                </button>
-              </Badge>
             ))}
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              placeholder="Add a tag"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addTag()}
-              className="flex-1"
-            />
-            <Button onClick={addTag}>Add Tag</Button>
-          </div>
-        </CardContent>
-      </Card>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                placeholder="Enter username to add"
+                value={newMemberEmail}
+                onChange={(e) => {
+                  setNewMemberEmail(e.target.value);
+                  setMemberError(null);
+                }}
+                className="flex-1"
+              />
+              <Button onClick={handleAddMember} disabled={isAddingMember}>
+                {isAddingMember ? "Adding..." : "Add Member"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tags & Categories - Only visible to managers */}
+      {user?.role === "manager" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tags & Categories</CardTitle>
+            <CardDescription>Organize your project with tags</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {project.tags.map((tag) => (
+                <Badge key={tag} variant="outline" className="gap-1">
+                  {tag}
+                  <button
+                    onClick={() => removeTag(tag)}
+                    className="ml-1 rounded-full hover:bg-muted"
+                    aria-label={`Remove ${tag}`}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                placeholder="Add a tag"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addTag()}
+                className="flex-1"
+              />
+              <Button onClick={addTag}>Add Tag</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Danger Zone */}
       {isSettings && (
@@ -634,11 +637,14 @@ export default function ProjectInfo({ variant }) {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the project "{selectedProject?.name}" and all its data.
+                      This action cannot be undone. This will permanently delete
+                      the project "{selectedProject?.name}" and all its data.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel disabled={isDeleting}>
+                      Cancel
+                    </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleDeleteProject}
                       disabled={isDeleting}
@@ -663,15 +669,14 @@ export default function ProjectInfo({ variant }) {
         )}
         {saveSuccess && (
           <div className="p-3 bg-green-100 text-green-800 rounded-md text-sm">
-            {isSettings ? "Project updated successfully!" : "Project created successfully! Redirecting..."}
+            {isSettings
+              ? "Project updated successfully!"
+              : "Project created successfully! Redirecting..."}
           </div>
         )}
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
           {/* {isSettings && <Button variant="outline">Cancel</Button>} */}
-          <Button
-            onClick={handleSaveChanges}
-            disabled={isSaving}
-          >
+          <Button onClick={handleSaveChanges} disabled={isSaving}>
             {isSaving
               ? isSettings
                 ? "Saving..."
