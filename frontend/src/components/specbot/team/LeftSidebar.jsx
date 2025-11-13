@@ -11,7 +11,10 @@ const recentChats = [
   { id: 4, title: "Client Feedback", time: "1d ago" },
   { id: 5, title: "Sprint Planning", time: "2d ago" },
   { id: 6, title: "Bug Fixes", time: "3d ago" },
-  { id: 7, title: "Feature Requests", time: "1w ago" },
+  { id: 8, title: "Feature Requests", time: "1w ago" },
+  { id: 9, title: "Feature Requests", time: "1w ago" },
+  { id: 10, title: "Feature Requests", time: "1w ago" },
+  { id: 11, title: "Feature Requests", time: "1w ago" },
 ];
 
 export default function LeftSidebar({ collapsed, onToggleCollapse }) {
