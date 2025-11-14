@@ -1,39 +1,47 @@
-import express from "express";
-import morgan from "morgan";
-import helmet from "helmet";
-import cors from "cors";
+// ----- Core Libraries -----
+import express from "express"; // Web framework for building REST APIs
+
+// ----- Middleware -----
+import morgan from "morgan"; // HTTP request logger
+import helmet from "helmet"; // Security middleware for setting HTTP headers
+import cors from "cors"; // Enables Cross-Origin Resource Sharing
+
+// ----- Route Modules -----
 import authRoutes from "./src/modules/auth/authRoutes.js";
 import userRoutes from "./src/modules/users/userRoutes.js";
 import projectRoutes from "./src/modules/projects/projectsRoutes.js";
 
+
+
 const app = express();
 
-// Middleware
 app.use(helmet());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// ----- CORS Configuration -----
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true,
+    origin: process.env.CORS_ORIGIN, // Allow requests from specified origin
+    credentials: true,  // cookies/auth headers are allowed for that site
   })
 );
 
-// Logging (only in development)
+// ----- Development Logging -----
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-// Routes
+// ----- Base Route -----
 app.get("/", (req, res) => {
-  res.json({ message: "root API is running..." });
+  res.json({ message: "root" });
 });
 
+// ----- API Routes -----
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
 
-// 404 handler
+// ----- 404 Handler -----
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });

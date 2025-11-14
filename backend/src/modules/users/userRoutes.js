@@ -7,11 +7,11 @@ import {
   deleteUser,
   getUsersByIds,
 } from "../users/userController.js";
-import { authenticateToken } from "../../middlewares/authMiddleware.js";
+import { verifyToken } from "../../middlewares/auth/verifyToken.js";
 import requireManager from "../../middlewares/roleCheck.js";
 
 const router = express.Router();
-router.use(authenticateToken);
+router.use(verifyToken);
 
 
 router.post("/create", requireManager, createUser);

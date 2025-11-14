@@ -1,6 +1,6 @@
 import prisma from "../../../config/db/prismaClient.js";
 import bcrypt from "bcrypt";
-import { validateUserInput } from "../../../utils/inputValidator.js";
+// import { validateUserInput } from "../../utils/inputValidator.js";
 
 /**
  * 1. Create a user (admin only)
@@ -28,19 +28,19 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Validate fields
-    const validationError = validateUserInput({
-      username,
-      email,
-      password,
-      role,
-      display_name,
-      profile_pic_url,
-      permissions,
-    });
-    if (validationError) {
-      return res.status(400).json({ message: validationError });
-    }
+    // // Validate fields
+    // const validationError = validateUserInput({
+    //   username,
+    //   email,
+    //   password,
+    //   role,
+    //   display_name,
+    //   profile_pic_url,
+    //   permissions,
+    // });
+    // if (validationError) {
+    //   return res.status(400).json({ message: validationError });
+    // }
 
     // Check if user already exists
     const existingUser = await prisma.users.findFirst({
@@ -176,17 +176,17 @@ export const updateUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const validationError = validateUserInput({
-      email,
-      password,
-      role,
-      display_name,
-      profile_pic_url,
-      permissions,
-    });
-    if (validationError) {
-      return res.status(400).json({ message: validationError });
-    }
+    // const validationError = validateUserInput({
+    //   email,
+    //   password,
+    //   role,
+    //   display_name,
+    //   profile_pic_url,
+    //   permissions,
+    // });
+    // if (validationError) {
+    //   return res.status(400).json({ message: validationError });
+    // }
 
     const updateData = {
       email: email ?? existingUser.email,

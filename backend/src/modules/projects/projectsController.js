@@ -1,5 +1,5 @@
 import prisma from "../../../config/db/prismaClient.js";
-import { generateSlug } from "../../../utils/slugGenerator.js";
+import { generateSlug } from "../../utils/slugGenerator.js";
 
 // ======================
 // New Project

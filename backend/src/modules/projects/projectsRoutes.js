@@ -6,8 +6,10 @@ import {
   deleteProject,
   getSingleUserProjects,
 } from "./projectsController.js";
+import { verifyToken } from "../../middlewares/auth/verifyToken.js";
 
 const router = express.Router();
+router.use(verifyToken);
 
 // Routes
 router.post("/create", createProject);

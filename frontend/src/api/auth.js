@@ -1,10 +1,16 @@
+import useAuthStore from "@/store/authStore";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export async function loginRequest(credentials) {
+  const { token } = useAuthStore.getState();
 
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(credentials),
   });
 
@@ -15,9 +21,8 @@ export async function loginRequest(credentials) {
 }
 
 export async function signupRequest(credentials) {
-
   console.log(credentials);
-  
+
   const res = await fetch(`${API_BASE}/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
