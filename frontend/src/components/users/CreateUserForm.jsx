@@ -51,6 +51,7 @@ export function CreateUserForm({ variant = "create-user", username }) {
   const [permissions, setPermissions] = useState(permissionList);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
 
   // -------------------------
   // Prefill data in update mode
@@ -123,6 +124,19 @@ export function CreateUserForm({ variant = "create-user", username }) {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    setValidationErrors({});
+
+    // Validate required fields
+    const errors = {};
+    if (!formData.role) {
+      errors.role = "Role is required";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const enabledPermissions = Object.entries(permissions).flatMap(
@@ -223,11 +237,16 @@ export function CreateUserForm({ variant = "create-user", username }) {
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
             <Select
-              value={formData.role}
-              onValueChange={(value) =>
-                setFormData({ ...formData, role: value })
-              }
               required
+              value={formData.role}
+              onValueChange={(value) => {
+                setFormData({ ...formData, role: value });
+                // Clear validation error when role is selected
+                if (validationErrors.role) {
+                  const { role, ...rest } = validationErrors;
+                  setValidationErrors(rest);
+                }
+              }}
             >
               <SelectTrigger id="role">
                 <SelectValue placeholder="Select a role" />
@@ -240,6 +259,9 @@ export function CreateUserForm({ variant = "create-user", username }) {
                 </SelectItem>
               </SelectContent>
             </Select>
+            {validationErrors.role && (
+              <p className="text-sm text-red-500">{validationErrors.role}</p>
+            )}
           </div>
 
           {/* Password */}
@@ -257,6 +279,7 @@ export function CreateUserForm({ variant = "create-user", username }) {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
+                  required
                   minLength={isCreateUser ? 6 : undefined}
                   maxLength={32}
                 />
@@ -356,29 +379,20 @@ export function CreateUserForm({ variant = "create-user", username }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
         {error && <p className="text-sm text-red-500 mb-2">{error}</p>}
 
-        {isCreateUser ? (
-          <Button type="submit" className="gap-2 cursor-pointer">
-            <Save className="h-4 w-4" />
-            Create
-          </Button>
-        ) : (
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              className="gap-2 bg-transparent cursor-pointer"
-            >
-              <X className="h-4 w-4" />
-              Cancel
-            </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleCancel}
+          className="gap-2 bg-transparent cursor-pointer"
+        >
+          <X className="h-4 w-4" />
+          Cancel
+        </Button>
 
-            <Button type="submit" className="gap-2 cursor-pointer">
-              <Save className="h-4 w-4" />
-              Update
-            </Button>
-          </>
-        )}
+        <Button type="submit" className="gap-2 cursor-pointer">
+          <Save className="h-4 w-4" />
+          {isCreateUser ? "Create" : "Update"}
+        </Button>
       </div>
     </form>
   );

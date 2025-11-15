@@ -2,6 +2,10 @@ import useAuthStore from "@/store/authStore";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
+
+// ======================
+// NEW USER
+// ======================
 export async function createUserRequest(userData) {
   const { token } = useAuthStore.getState();
 
@@ -26,7 +30,7 @@ export async function createUserRequest(userData) {
 export async function getAllUsersRequest() {
   const { token } = useAuthStore.getState();
 
-  const res = await fetch(`${API_BASE}/users`, {
+  const res = await fetch(`${API_BASE}/users/all`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -98,6 +102,7 @@ export async function getSingleUserDataRequest(username) {
 export async function getUsersByIds(userIds) {
   const { token } = useAuthStore.getState();
 
+  console.log("Fetching users for IDs:", userIds);
   try {
     const res = await fetch(`${API_BASE}/users/by-ids`, {
       method: "POST",

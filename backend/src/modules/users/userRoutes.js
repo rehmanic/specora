@@ -9,16 +9,39 @@ import {
 } from "../users/userController.js";
 import { verifyToken } from "../../middlewares/auth/verifyToken.js";
 import requireManager from "../../middlewares/roleCheck.js";
+import requireField from "../../middlewares/common/requireFields.js";
+import checkUserExists from "../../middlewares/common/checkUserExists.js";
+import { validateUserDataInput } from "../../middlewares/users/inputValidation.js";
 
 const router = express.Router();
+
 router.use(verifyToken);
+router.use(requireManager);
 
+// CREATE
+router.post(
+  "/create",
+  requireField(["username", "email", "password", "role", "display_name"]),
+  checkUserExists("signup"),
+  validateUserDataInput,
+  createUser
+);
 
-router.post("/create", requireManager, createUser);
-router.post("/by-ids", requireManager, getUsersByIds);
-router.get("/:username", requireManager, getUserByUsername);
-router.get("/", requireManager, getAllUsers);
-router.put("/:username", updateUser);
-router.delete("/:username", requireManager, deleteUser);
+// READ
+router.get("/all", getAllUsers);
+router.get("/ids", getUsersByIds);
+router.get("/:username", getUserByUsername);
+
+// UPDATE
+router.put(
+  "/:username",
+  requireField(["username", "email", "password", "role", "display_name"]),
+  checkUserExists("login"),
+  validateUserDataInput,
+  updateUser
+);
+
+// DELETE
+router.delete("/:username", deleteUser);
 
 export default router;
