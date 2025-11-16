@@ -3,39 +3,39 @@ import prisma from "../../../config/db/prismaClient.js";
 export default function checkUserExists(action) {
   return async (req, res, next) => {
     try {
-      if (action === "signup") {
-        const { username, email } = req.body;
+      let user;
 
-        const existing = await prisma.users.findFirst({
+      if (action === "by-username") {
+        const { username } = req.body || req.params;
+        user = await prisma.users.findUnique({ where: { username } });
+
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+      } else if (action === "by-id") {
+        const { userId } = req.params;
+        user = await prisma.users.findUnique({ where: { id: userId } });
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+      } else if (action === "by-username-email") {
+        const { username, email } = req.body;
+        user = await prisma.users.findFirst({
           where: { OR: [{ username }, { email }] },
         });
 
-        if (existing) {
+        if (user) {
           return res
-            .status(409)
-            .json({ message: "Username or email already exists" });
+            .status(404)
+            .json({ message: "Username or email already in use" });
         }
-      } else if (action === "login") {
-        const { username } = req.body;
-        const user = await prisma.users.findUnique({
-          where: { username },
-        });
-
-        if (!user) {
-          return res
-            .status(401)
-            .json({ message: "Invalid username or password" });
-        }
-
-        req.user = user;
       }
 
+      req.user = user;
       next();
     } catch (error) {
       console.error("Check user exists error:", error);
-      return res
-        .status(500)
-        .json({ message: "Internal server error", error: error.message });
+      return res.status(500).json({ message: "Internal server error" });
     }
   };
 }

@@ -6,17 +6,20 @@ import { validateSignupInput } from "../../middlewares/auth/inputValidation.js";
 
 const router = express.Router();
 
+// SIGNUP
 router.post(
   "/signup",
   requireFeilds(["username", "email", "password"]),
   validateSignupInput,
-  checkUserExists("signup"),
+  checkUserExists("by-username-email"),
   signup
 );
+
+// LOGIN
 router.post(
   "/login",
   requireFeilds(["username", "password"]),
-  checkUserExists("login"),
+  checkUserExists("by-username"),
   login
 );
 

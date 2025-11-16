@@ -56,14 +56,6 @@ export const getSingleUserProjects = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const user = await prisma.users.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
     const projects = await prisma.projects.findMany({
       where: { created_by: userId },
       orderBy: { created_at: "desc" },

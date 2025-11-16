@@ -6,8 +6,9 @@ import {
   deleteProject,
   getSingleUserProjects,
 } from "./projectsController.js";
-import { verifyToken } from "../../middlewares/auth/verifyToken.js";
-import requireManager from "../../middlewares/roleCheck.js";
+import { verifyToken } from "../../middlewares/common/verifyToken.js";
+import requireManager from "../../middlewares/common/roleCheck.js";
+import checkUserExists from "../../middlewares/common/checkUserExists.js";
 import checkProjectExists from "../../middlewares/projects/checkProjectExists.js";
 import requireFeilds from "../../middlewares/common/requireFields.js";
 import { validateProjectDataInput } from "../../middlewares/projects/inputValidation.js";
@@ -28,7 +29,7 @@ router.post(
 
 // READ
 router.get("/all", getAllProjects);
-router.get("/:userId", getSingleUserProjects);
+router.get("/:userId", checkUserExists("by-id"), getSingleUserProjects);
 
 // UPDATE
 router.put(

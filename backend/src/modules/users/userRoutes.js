@@ -7,8 +7,8 @@ import {
   deleteUser,
   getUsersByIds,
 } from "../users/userController.js";
-import { verifyToken } from "../../middlewares/auth/verifyToken.js";
-import requireManager from "../../middlewares/roleCheck.js";
+import { verifyToken } from "../../middlewares/common/verifyToken.js";
+import requireManager from "../../middlewares/common/roleCheck.js";
 import requireField from "../../middlewares/common/requireFields.js";
 import checkUserExists from "../../middlewares/common/checkUserExists.js";
 import { validateUserDataInput } from "../../middlewares/users/inputValidation.js";
@@ -22,26 +22,26 @@ router.use(requireManager);
 router.post(
   "/create",
   requireField(["username", "email", "password", "role", "display_name"]),
-  checkUserExists("signup"),
   validateUserDataInput,
+  checkUserExists("by-username-email"),
   createUser
 );
 
 // READ
 router.get("/all", getAllUsers);
 router.get("/ids", getUsersByIds);
-router.get("/:username", getUserByUsername);
+router.get("/:username", checkUserExists("by-username"), getUserByUsername);
 
 // UPDATE
 router.put(
   "/:username",
   requireField(["username", "email", "password", "role", "display_name"]),
-  checkUserExists("login"),
   validateUserDataInput,
+  checkUserExists("by-username"),
   updateUser
 );
 
 // DELETE
-router.delete("/:username", deleteUser);
+router.delete("/:username", checkUserExists("by-username"), deleteUser);
 
 export default router;
