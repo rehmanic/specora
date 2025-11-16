@@ -45,6 +45,8 @@ npx prisma generate
 ```
 
 ## On Schema Update
+
+Delete "generated" folder inside prisma first!
 ```bash
 npx prisma db pull
 ```

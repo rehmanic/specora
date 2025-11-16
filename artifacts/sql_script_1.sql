@@ -40,3 +40,17 @@ ALTER TABLE projects
 ALTER COLUMN cover_image_url SET DEFAULT 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fHNvZnR3YXJlfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
 ALTER COLUMN icon_url SET DEFAULT 'https://cdn-icons-png.flaticon.com/128/1383/1383970.png';
 
+ALTER TABLE projects
+ADD CONSTRAINT projects_name_key UNIQUE (name);
+
+UPDATE projects
+SET start_date = CURRENT_DATE
+WHERE start_date IS NULL;
+
+UPDATE projects
+SET end_date = CURRENT_DATE
+WHERE end_date IS NULL;
+
+ALTER TABLE projects
+ALTER COLUMN start_date SET NOT NULL,
+ALTER COLUMN end_date SET NOT NULL;

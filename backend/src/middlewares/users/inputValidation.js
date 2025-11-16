@@ -4,8 +4,7 @@ export const validateUserDataInput = (req, res, next) => {
   const usernameRegex = /^(?=.*[A-Za-z]{3,})[A-Za-z\d]{5,20}$/;
   const displayNameRegex = /^[A-Za-z\d\s'.-]{3,50}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const urlRegex =
-    /^(https?:\/\/)?([\w-])+\.{1}([a-zA-Z]{2,63})([\/\w\-.]*)*\/?$/;
+  const urlRegex = /^https?:\/\/[^\s]+$/i;
 
   const rolesList = ["manager", "client", "requirements_engineer"];
 
