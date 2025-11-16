@@ -7,104 +7,199 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 // NEW USER
 // ======================
 export async function createUserRequest(userData) {
-  const { token } = useAuthStore.getState();
+  try {
+    const { token } = useAuthStore.getState();
 
-  const res = await fetch(`${API_BASE}/users/create`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(userData),
-  });
+    const res = await fetch(`${API_BASE}/users/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(userData),
+    });
 
-  const responseData = await res.json();
+    let responseData;
+    try {
+      responseData = await res.json();
+    } catch (parseError) {
+      throw new Error(
+        "Server response is invalid. Please try again later."
+      );
+    }
 
-  if (!res.ok) {
-    throw new Error(responseData.message || "User creation failed");
+    if (!res.ok) {
+      throw new Error(
+        responseData?.message ||
+          `User creation failed${res.status ? ` (${res.status})` : ""}`
+      );
+    }
+
+    return responseData;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(
+      err?.message || "Network error. Please check your connection and try again."
+    );
   }
-
-  return responseData;
 }
 
 export async function getAllUsersRequest() {
-  const { token } = useAuthStore.getState();
+  try {
+    const { token } = useAuthStore.getState();
 
-  const res = await fetch(`${API_BASE}/users/all`, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+    const res = await fetch(`${API_BASE}/users/all`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  const responseData = await res.json();
+    let responseData;
+    try {
+      responseData = await res.json();
+    } catch (parseError) {
+      throw new Error(
+        "Server response is invalid. Please try again later."
+      );
+    }
 
-  if (!res.ok) {
-    throw new Error(responseData.message || "Fetching all users failed");
+    if (!res.ok) {
+      throw new Error(
+        responseData?.message ||
+          `Fetching all users failed${res.status ? ` (${res.status})` : ""}`
+      );
+    }
+
+    return responseData;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(
+      err?.message || "Network error. Please check your connection and try again."
+    );
   }
-
-  return responseData;
 }
 
 export async function deleteUserRequest(username) {
-  const { token } = useAuthStore.getState();
+  try {
+    const { token } = useAuthStore.getState();
 
-  const res = await fetch(`${API_BASE}/users/${username}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+    const res = await fetch(`${API_BASE}/users/${username}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  const responseData = await res.json();
+    let responseData;
+    try {
+      responseData = await res.json();
+    } catch (parseError) {
+      throw new Error(
+        "Server response is invalid. Please try again later."
+      );
+    }
 
-  if (!res.ok) {
-    throw new Error(responseData.message || "User deletion failed");
+    if (!res.ok) {
+      throw new Error(
+        responseData?.message ||
+          `User deletion failed${res.status ? ` (${res.status})` : ""}`
+      );
+    }
+
+    return responseData;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(
+      err?.message || "Network error. Please check your connection and try again."
+    );
   }
-
-  return responseData;
 }
 
 export async function updateUserRequest(userData) {
-  const { token } = useAuthStore.getState();
+  try {
+    const { token } = useAuthStore.getState();
 
-  const res = await fetch(`${API_BASE}/users/${userData.username}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(userData),
-  });
+    const res = await fetch(`${API_BASE}/users/${userData.username}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(userData),
+    });
 
-  const responseData = await res.json();
+    let responseData;
+    try {
+      responseData = await res.json();
+    } catch (parseError) {
+      throw new Error(
+        "Server response is invalid. Please try again later."
+      );
+    }
 
-  if (!res.ok) {
-    throw new Error(responseData.message || "User updation failed");
+    if (!res.ok) {
+      throw new Error(
+        responseData?.message ||
+          `User updation failed${res.status ? ` (${res.status})` : ""}`
+      );
+    }
+
+    return responseData;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(
+      err?.message || "Network error. Please check your connection and try again."
+    );
   }
-
-  return responseData;
 }
 
 export async function getSingleUserDataRequest(username) {
-  const { token } = useAuthStore.getState();
+  try {
+    const { token } = useAuthStore.getState();
 
-  const res = await fetch(`${API_BASE}/users/${username}`, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+    const res = await fetch(`${API_BASE}/users/${username}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  const responseData = await res.json();
+    let responseData;
+    try {
+      responseData = await res.json();
+    } catch (parseError) {
+      throw new Error(
+        "Server response is invalid. Please try again later."
+      );
+    }
 
-  if (!res.ok) {
-    throw new Error(responseData.message || "Fetching user details failed");
+    if (!res.ok) {
+      throw new Error(
+        responseData?.message ||
+          `Fetching user details failed${res.status ? ` (${res.status})` : ""}`
+      );
+    }
+
+    // Backend returns { user: {...}, message: "..." }
+    return responseData.user || responseData;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(
+      err?.message || "Network error. Please check your connection and try again."
+    );
   }
-
-  return responseData;
 }
 
 export async function getUsersByIds(userIds) {
-  const { token } = useAuthStore.getState();
-
-  console.log("Fetching users for IDs:", userIds);
   try {
-    const res = await fetch(`${API_BASE}/users/by-ids`, {
+    const { token } = useAuthStore.getState();
+
+    const res = await fetch(`${API_BASE}/users/ids`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -113,15 +208,26 @@ export async function getUsersByIds(userIds) {
       body: JSON.stringify({ userIds }),
     });
 
-    const responseData = await res.json();
+    let responseData;
+    try {
+      responseData = await res.json();
+    } catch (parseError) {
+      console.error("Error parsing response in getUsersByIds:", parseError);
+      return [];
+    }
 
     if (!res.ok) {
-      throw new Error(responseData.message || "Failed to fetch users");
+      console.error(
+        "Error fetching users by IDs:",
+        responseData?.message || `Failed (${res.status})`
+      );
+      return [];
     }
 
     return responseData.data || responseData;
   } catch (err) {
     console.error("Error fetching users by IDs:", err);
+    // Return empty array on error for this function (it's used for optional data)
     return [];
   }
 }

@@ -6,7 +6,6 @@ import {
   Bot,
   Video,
   MessageCircle,
-  UsersRound,
   Settings,
   Clipboard,
 } from "lucide-react";
@@ -48,7 +47,6 @@ const allSidebarItems = [
     url: "/settings",
     icon: Settings,
   },
-  { id: "users", title: "Users", url: "/users", icon: UsersRound },
 ];
 
 export function AppSidebar(props) {
@@ -63,17 +61,17 @@ export function AppSidebar(props) {
       case "manager":
         return true; // full access
       case "requirements_engineer":
-        return !["users", "project_settings"].includes(item.id);
+        return !["project_settings"].includes(item.id);
       case "client":
-        return !["users", "project_settings", "requirements"].includes(item.id);
+        return !["project_settings", "requirements"].includes(item.id);
       default:
         return false;
     }
   });
 
-  // ✅ Add project slug to all except /dashboard & /users
+  // ✅ Add project slug to all except /dashboard
   const projectScopedSidebarItems = sidebarItems.map((item) => {
-    if (["/dashboard", "/users"].includes(item.url)) {
+    if (["/dashboard"].includes(item.url)) {
       return item;
     }
 

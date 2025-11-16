@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { UsersTable } from "@/components/users/UsersTable";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
+import { UserPlus, ArrowLeft } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { getAllUsersRequest } from "@/api/users";
+import ErrorBox from "@/components/common/ErrorBox";
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -49,7 +50,14 @@ export default function UsersPage() {
   return (
     <ProtectedRoute allowedRoles={["manager"]}>
       <section className="w-full flex justify-center py-10">
-        <div className="w-full max-w-8xl px-6">
+        <div className="w-[85%] max-w-8xl px-6">
+          <Link href="/dashboard">
+            <Button variant="ghost" className="mb-6 gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
+
           {/* Header */}
           <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -67,11 +75,7 @@ export default function UsersPage() {
           </div>
 
           {/* Error Message */}
-          {error && (
-            <div className="text-red-500 mb-4">
-              Error loading users: {error}
-            </div>
-          )}
+          {error && <ErrorBox message={`Error loading users: ${error}`} />}
 
           {/* Loading / Table */}
           {loading ? (

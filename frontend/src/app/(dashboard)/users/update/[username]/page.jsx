@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
-export default function UpdateUserPage({ params }) {
-  const { username } = params;
+export default async function UpdateUserPage({ params }) {
+  const { username } = await params;
 
   return (
     <ProtectedRoute allowedRoles={["manager"]}>

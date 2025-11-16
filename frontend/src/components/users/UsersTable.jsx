@@ -24,6 +24,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MoreHorizontal, Pencil, Trash2, Shield, Mail } from "lucide-react";
 import { deleteUserRequest } from "@/api/users";
 import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import ErrorBox from "@/components/common/ErrorBox";
 
 export function UsersTable({ users: initialUsers = [] }) {
   const router = useRouter();
@@ -32,21 +44,28 @@ export function UsersTable({ users: initialUsers = [] }) {
     Array.isArray(initialUsers) ? initialUsers : []
   );
   const [loading, setLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async (username) => {
-    const confirmed = confirm(
-      `Are you sure you want to delete user ${username}?`
-    );
-    if (!confirmed) return;
+    setUserToDelete(username);
+    setDeleteError(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
 
     try {
-      setLoading(true);
-      const response = await deleteUserRequest(username);
-      setUsers((prevUsers) => prevUsers.filter((u) => u.username !== username));
+      setIsDeleting(true);
+      setDeleteError(null);
+      await deleteUserRequest(userToDelete);
+      setUsers((prevUsers) => prevUsers.filter((u) => u.username !== userToDelete));
+      setUserToDelete(null);
     } catch (error) {
-      alert(`Failed to delete user: ${error.message}`);
+      setDeleteError(error.message || "Failed to delete user");
     } finally {
-      setLoading(false);
+      setIsDeleting(false);
     }
   };
 
@@ -67,8 +86,45 @@ export function UsersTable({ users: initialUsers = [] }) {
     }
   };
 
+  const userBeingDeleted = users.find((u) => u.username === userToDelete);
+
   return (
     <Card className="overflow-hidden">
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => {
+        if (!open) {
+          setUserToDelete(null);
+          setDeleteError(null);
+        }
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete
+              the user "{userBeingDeleted?.display_name || userBeingDeleted?.username || userToDelete}" and all their data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteError && <ErrorBox message={deleteError} />}
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setUserToDelete(null);
+                setDeleteError(null);
+              }}
+              disabled={isDeleting}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -89,21 +145,22 @@ export function UsersTable({ users: initialUsers = [] }) {
                     <Avatar className="h-10 w-10">
                       <AvatarImage
                         src={user.profile_pic_url}
-                        alt={user.display_name}
+                        alt={user.display_name || user.username || "User"}
                       />
                       <AvatarFallback>
-                        {user.display_name
+                        {(user.display_name || user.username || "U")
                           .split(" ")
                           .map((n) => n[0])
-                          .join("")}
+                          .join("")
+                          .toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col text-left">
                       <span className="font-medium truncate">
-                        {user.display_name.trim()}
+                        {user.display_name?.trim() || user.username?.trim() || "Unknown User"}
                       </span>
                       <span className="text-sm text-muted-foreground truncate">
-                        @{user.username.trim()}
+                        @{user.username?.trim() || "unknown"}
                       </span>
                     </div>
                   </div>
@@ -138,7 +195,10 @@ export function UsersTable({ users: initialUsers = [] }) {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => handleDelete(user.username)}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          handleDelete(user.username);
+                        }}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />

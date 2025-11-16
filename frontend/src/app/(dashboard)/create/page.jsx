@@ -3,7 +3,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function CreateProjectPage() {
   return (
-    <ProtectedRoute allowedRoles={["manager", "client"]}>
+    <ProtectedRoute allowedRoles={["manager"]}>
       <section className="border w-full">
         <ProjectInfo variant="create-project" />
       </section>

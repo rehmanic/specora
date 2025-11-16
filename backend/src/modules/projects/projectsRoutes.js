@@ -16,11 +16,11 @@ import { validateProjectDataInput } from "../../middlewares/projects/inputValida
 const router = express.Router();
 
 router.use(verifyToken);
-router.use(requireManager);
 
-// CREATE
+// CREATE - Manager only
 router.post(
   "/create",
+  requireManager,
   requireFeilds(["name", "start_date", "end_date"]),
   validateProjectDataInput,
   checkProjectExists("create"),
@@ -28,19 +28,20 @@ router.post(
 );
 
 // READ
-router.get("/all", getAllProjects);
-router.get("/:userId", checkUserExists("by-id"), getSingleUserProjects);
+router.get("/all", requireManager, getAllProjects); // Manager only - all projects
+router.get("/:userId", getSingleUserProjects); // All authenticated users - their projects
 
-// UPDATE
+// UPDATE - Manager only
 router.put(
   "/update/:projectId",
+  requireManager,
   requireFeilds(["name", "start_date", "end_date"]),
   validateProjectDataInput,
   checkProjectExists("update"),
   updateProject
 );
 
-// DELETE
-router.delete("/delete/:projectId", deleteProject);
+// DELETE - Manager only
+router.delete("/delete/:projectId", requireManager, deleteProject);
 
 export default router;

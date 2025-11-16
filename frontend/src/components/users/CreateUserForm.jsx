@@ -33,6 +33,7 @@ import {
   updateUserRequest,
   getSingleUserDataRequest,
 } from "@/api/users";
+import ErrorBox from "@/components/common/ErrorBox";
 
 export function CreateUserForm({ variant = "create-user", username }) {
   const isCreateUser = variant === "create-user";
@@ -60,13 +61,15 @@ export function CreateUserForm({ variant = "create-user", username }) {
     if (!isCreateUser && username) {
       const fetchUser = async () => {
         try {
+          setError(null);
           const data = await getSingleUserDataRequest(username);
+          // API now returns user object directly
 
           setFormData({
             username: data.username || "",
             email: data.email || "",
             fullName: data.display_name || "",
-            password: data.password || "",
+            password: "", // Don't prefill password for security
             role: data.role || "",
             profilePic: null, // file input cannot be prefilled
           });
@@ -75,14 +78,16 @@ export function CreateUserForm({ variant = "create-user", username }) {
 
           // Pre-fill permissions
           const updatedPermissions = { ...permissionList };
-          Object.keys(updatedPermissions).forEach((category) => {
-            updatedPermissions[category] = updatedPermissions[category].map(
-              (perm) => ({
-                ...perm,
-                enabled: data.permissions.includes(perm.id),
-              })
-            );
-          });
+          if (data.permissions && Array.isArray(data.permissions)) {
+            Object.keys(updatedPermissions).forEach((category) => {
+              updatedPermissions[category] = updatedPermissions[category].map(
+                (perm) => ({
+                  ...perm,
+                  enabled: data.permissions.includes(perm.id),
+                })
+              );
+            });
+          }
           setPermissions(updatedPermissions);
         } catch (err) {
           setError(err.message || "Failed to fetch user data");
@@ -118,6 +123,61 @@ export function CreateUserForm({ variant = "create-user", username }) {
   };
 
   // -------------------------
+  // Validation functions
+  // -------------------------
+  const validateForm = () => {
+    const errors = {};
+    
+    // Username validation: 5-20 chars, at least 3 letters, letters/numbers only
+    const usernameRegex = /^(?=.*[A-Za-z]{3,})[A-Za-z\d]{5,20}$/;
+    if (!formData.username.trim()) {
+      errors.username = "Username is required";
+    } else if (!usernameRegex.test(formData.username)) {
+      errors.username = "Username must be 5-20 characters, contain at least 3 letters, and use only letters/numbers";
+    }
+
+    // Display name validation: 3-50 chars, letters/numbers/spaces/punctuation
+    const displayNameRegex = /^[A-Za-z\d\s'.-]{3,50}$/;
+    if (!formData.fullName.trim()) {
+      errors.fullName = "Display name is required";
+    } else if (!displayNameRegex.test(formData.fullName)) {
+      errors.fullName = "Display name must be 3-50 characters and may include letters, numbers, spaces, and punctuation";
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!emailRegex.test(formData.email)) {
+      errors.email = "Invalid email format";
+    }
+
+    // Password validation (required for create, optional for update)
+    if (isCreateUser) {
+      if (!formData.password) {
+        errors.password = "Password is required";
+      } else if (formData.password.length < 6 || formData.password.length > 32) {
+        errors.password = "Password must be 6-32 characters long";
+      }
+    } else {
+      // For updates, validate only if password is provided
+      if (formData.password && (formData.password.length < 6 || formData.password.length > 32)) {
+        errors.password = "Password must be 6-32 characters long";
+      }
+    }
+
+    // Role validation
+    const validRoles = ["manager", "client", "requirements_engineer"];
+    if (!formData.role) {
+      errors.role = "Role is required";
+    } else if (!validRoles.includes(formData.role)) {
+      errors.role = `Invalid role. Must be one of: ${validRoles.join(", ")}`;
+    }
+
+    return errors;
+  };
+
+  // -------------------------
   // Form submit handler
   // -------------------------
   const handleSubmit = async (e) => {
@@ -126,12 +186,8 @@ export function CreateUserForm({ variant = "create-user", username }) {
     setError(null);
     setValidationErrors({});
 
-    // Validate required fields
-    const errors = {};
-    if (!formData.role) {
-      errors.role = "Role is required";
-    }
-
+    // Validate form
+    const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       setIsSubmitting(false);
@@ -144,15 +200,19 @@ export function CreateUserForm({ variant = "create-user", username }) {
       );
 
       const userData = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password || undefined, // don't send empty
+        username: formData.username.trim(),
+        email: formData.email.trim(),
         role: formData.role,
-        display_name: formData.fullName,
+        display_name: formData.fullName.trim(),
         profile_pic_url:
           preview || "https://cdn-icons-png.flaticon.com/128/1077/1077012.png",
         permissions: enabledPermissions,
       };
+
+      // Only include password if provided (required for create, optional for update)
+      if (formData.password && formData.password.trim()) {
+        userData.password = formData.password;
+      }
 
       if (isCreateUser) {
         await createUserRequest(userData);
@@ -162,7 +222,14 @@ export function CreateUserForm({ variant = "create-user", username }) {
 
       router.push("/users");
     } catch (err) {
-      setError(err.message || "Failed to submit form");
+      // Provide user-friendly error messages
+      let errorMessage = "Failed to submit form";
+      
+      if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -189,53 +256,83 @@ export function CreateUserForm({ variant = "create-user", username }) {
           {/* Display Name & Username */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="fullName">Display Name</Label>
+              <Label htmlFor="fullName">
+                Display Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="fullName"
                 placeholder="e.g. Hamza"
                 value={formData.fullName}
-                onChange={(e) =>
-                  setFormData({ ...formData, fullName: e.target.value })
-                }
+                onChange={(e) => {
+                  setFormData({ ...formData, fullName: e.target.value });
+                  if (validationErrors.fullName) {
+                    const { fullName, ...rest } = validationErrors;
+                    setValidationErrors(rest);
+                  }
+                }}
                 required
                 minLength={3}
                 maxLength={50}
               />
+              {validationErrors.fullName && (
+                <p className="text-sm text-red-500">{validationErrors.fullName}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="username">User Name</Label>
+              <Label htmlFor="username">
+                User Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="username"
                 placeholder="john.doe"
                 value={formData.username}
-                onChange={(e) =>
-                  setFormData({ ...formData, username: e.target.value })
-                }
+                onChange={(e) => {
+                  setFormData({ ...formData, username: e.target.value });
+                  if (validationErrors.username) {
+                    const { username, ...rest } = validationErrors;
+                    setValidationErrors(rest);
+                  }
+                }}
                 required
                 minLength={5}
                 maxLength={20}
+                disabled={!isCreateUser} // Username cannot be changed on update
               />
+              {validationErrors.username && (
+                <p className="text-sm text-red-500">{validationErrors.username}</p>
+              )}
             </div>
           </div>
 
           {/* Email */}
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">
+              Email <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="email"
               type="email"
               placeholder="john.doe@example.com"
               value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                if (validationErrors.email) {
+                  const { email, ...rest } = validationErrors;
+                  setValidationErrors(rest);
+                }
+              }}
               required
             />
+            {validationErrors.email && (
+              <p className="text-sm text-red-500">{validationErrors.email}</p>
+            )}
           </div>
 
           {/* Role */}
           <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
+            <Label htmlFor="role">
+              Role <span className="text-red-500">*</span>
+            </Label>
             <Select
               required
               value={formData.role}
@@ -267,7 +364,9 @@ export function CreateUserForm({ variant = "create-user", username }) {
           {/* Password */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">
+                Password {isCreateUser && <span className="text-red-500">*</span>}
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -276,10 +375,14 @@ export function CreateUserForm({ variant = "create-user", username }) {
                     isCreateUser ? "••••••••" : "Leave blank to keep current"
                   }
                   value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  required
+                  onChange={(e) => {
+                    setFormData({ ...formData, password: e.target.value });
+                    if (validationErrors.password) {
+                      const { password, ...rest } = validationErrors;
+                      setValidationErrors(rest);
+                    }
+                  }}
+                  required={isCreateUser}
                   minLength={isCreateUser ? 6 : undefined}
                   maxLength={32}
                 />
@@ -300,6 +403,9 @@ export function CreateUserForm({ variant = "create-user", username }) {
                   </span>
                 </Button>
               </div>
+              {validationErrors.password && (
+                <p className="text-sm text-red-500">{validationErrors.password}</p>
+              )}
             </div>
           </div>
 
@@ -377,21 +483,29 @@ export function CreateUserForm({ variant = "create-user", username }) {
 
       {/* Action buttons */}
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-        {error && <p className="text-sm text-red-500 mb-2">{error}</p>}
+        {error && <ErrorBox message={error} />}
 
         <Button
           type="button"
           variant="outline"
           onClick={handleCancel}
           className="gap-2 bg-transparent cursor-pointer"
+          disabled={isSubmitting}
         >
           <X className="h-4 w-4" />
           Cancel
         </Button>
 
-        <Button type="submit" className="gap-2 cursor-pointer">
+        <Button 
+          type="submit" 
+          className="gap-2 cursor-pointer"
+          disabled={isSubmitting}
+        >
           <Save className="h-4 w-4" />
-          {isCreateUser ? "Create" : "Update"}
+          {isSubmitting 
+            ? (isCreateUser ? "Creating..." : "Updating...") 
+            : (isCreateUser ? "Create" : "Update")
+          }
         </Button>
       </div>
     </form>

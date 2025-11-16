@@ -5,106 +5,202 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 // Get All Projects
 // ======================
 export async function getAllProjects(token) {
-  const res = await fetch(`${API_BASE}/projects/all`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    cache: "no-store",
-  });
+  try {
+    const res = await fetch(`${API_BASE}/projects/all`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
 
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.message || "Failed to fetch projects");
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseError) {
+      throw new Error(
+        "Server response is invalid. Please try again later."
+      );
+    }
+
+    if (!res.ok) {
+      throw new Error(
+        data?.message ||
+          `Failed to fetch projects${res.status ? ` (${res.status})` : ""}`
+      );
+    }
+
+    return data;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(
+      err?.message || "Network error. Please check your connection and try again."
+    );
   }
-
-  return res.json();
 }
 
 // ======================
 // Get User Projects
 // ======================
 export async function getUserProjects(userId) {
-  const { token } = useAuthStore.getState();
+  try {
+    const { token } = useAuthStore.getState();
 
-  const res = await fetch(`${API_BASE}/projects/${userId}`, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+    const res = await fetch(`${API_BASE}/projects/${userId}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  const responseData = await res.json();
+    let responseData;
+    try {
+      responseData = await res.json();
+    } catch (parseError) {
+      throw new Error(
+        "Server response is invalid. Please try again later."
+      );
+    }
 
-  if (!res.ok) {
-    throw new Error(responseData.message || "Fetching user projects failed");
+    if (!res.ok) {
+      throw new Error(
+        responseData?.message ||
+          `Fetching user projects failed${res.status ? ` (${res.status})` : ""}`
+      );
+    }
+
+    return responseData;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(
+      err?.message || "Network error. Please check your connection and try again."
+    );
   }
-
-  return responseData;
 }
 
 // ======================
 // Create Project
 // ======================
 export async function createProject(projectData) {
-  const { token } = useAuthStore.getState();
+  try {
+    const { token } = useAuthStore.getState();
 
-  const res = await fetch(`${API_BASE}/projects/create`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(projectData),
-  });
+    const res = await fetch(`${API_BASE}/projects/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(projectData),
+    });
 
-  const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseError) {
+      throw new Error(
+        "Server response is invalid. Please try again later."
+      );
+    }
 
-  if (!res.ok) {
-    throw new Error(data.message || "Failed to create project");
+    if (!res.ok) {
+      throw new Error(
+        data?.message ||
+          `Failed to create project${res.status ? ` (${res.status})` : ""}`
+      );
+    }
+
+    return data;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(
+      err?.message || "Network error. Please check your connection and try again."
+    );
   }
-
-  return data;
 }
 
 // ======================
 // Update Project
 // ======================
 export async function updateProject(projectId, updateData) {
-  const { token } = useAuthStore.getState();
+  try {
+    const { token } = useAuthStore.getState();
 
-  const res = await fetch(`${API_BASE}/projects/update/${projectId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(updateData),
-  });
+    const res = await fetch(`${API_BASE}/projects/update/${projectId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updateData),
+    });
 
-  const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseError) {
+      throw new Error(
+        "Server response is invalid. Please try again later."
+      );
+    }
 
-  if (!res.ok) {
-    throw new Error(data.message || "Failed to update project");
+    if (!res.ok) {
+      throw new Error(
+        data?.message ||
+          `Failed to update project${res.status ? ` (${res.status})` : ""}`
+      );
+    }
+
+    return data;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(
+      err?.message || "Network error. Please check your connection and try again."
+    );
   }
-
-  return data;
 }
 
 // ======================
 // Delete Project
 // ======================
 export async function deleteProject(projectId) {
-  const { token } = useAuthStore.getState();
+  try {
+    const { token } = useAuthStore.getState();
 
-  const res = await fetch(`${API_BASE}/projects/delete/${projectId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+    const res = await fetch(`${API_BASE}/projects/delete/${projectId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseError) {
+      throw new Error(
+        "Server response is invalid. Please try again later."
+      );
+    }
 
-  if (!res.ok) {
-    throw new Error(data.message || "Failed to delete project");
+    if (!res.ok) {
+      throw new Error(
+        data?.message ||
+          `Failed to delete project${res.status ? ` (${res.status})` : ""}`
+      );
+    }
+
+    return data;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(
+      err?.message || "Network error. Please check your connection and try again."
+    );
   }
-
-  return data;
 }

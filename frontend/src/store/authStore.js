@@ -21,7 +21,9 @@ const useAuthStore = create(
           });
           return data.user;
         } catch (err) {
-          set({ loading: false, error: err.message });
+          const errorMessage =
+            err?.message || "An unexpected error occurred. Please try again.";
+          set({ loading: false, error: errorMessage });
           throw err;
         }
       },
@@ -37,14 +39,26 @@ const useAuthStore = create(
           });
           return data.user;
         } catch (err) {
-          set({ loading: false, error: err.message });
+          const errorMessage =
+            err?.message || "An unexpected error occurred. Please try again.";
+          set({ loading: false, error: errorMessage });
           throw err;
         }
       },
 
       logout: async () => {
-        await logoutRequest();
-        set({ user: null, token: null });
+        try {
+          await logoutRequest();
+        } catch (err) {
+          console.error("Logout error:", err);
+        } finally {
+          // Clear auth store state
+          set({ user: null, token: null, error: null });
+          // Clear auth-storage from localStorage
+          localStorage.removeItem("auth-storage");
+          // Clear projects-storage from localStorage
+          localStorage.removeItem("projects-storage");
+        }
       },
     }),
     {

@@ -55,20 +55,62 @@ export const getAllProjects = async (req, res) => {
 export const getSingleUserProjects = async (req, res) => {
   try {
     const { userId } = req.params;
+    const currentUserId = req.user.userId; // From JWT token
 
-    const projects = await prisma.projects.findMany({
-      where: { created_by: userId },
+    // Users can only fetch their own projects
+    if (userId !== currentUserId) {
+      return res.status(403).json({ message: "Access denied. You can only view your own projects." });
+    }
+
+    // Get projects where user is creator or member
+    // Strategy: Get projects where user is creator, then get all other projects
+    // and filter for those where user is in members array
+    
+    // Step 1: Get projects where user is the creator
+    const createdProjects = await prisma.projects.findMany({
+      where: {
+        created_by: userId,
+      },
       orderBy: { created_at: "desc" },
     });
 
-    if (!projects || projects.length === 0) {
-      return res.status(200).json({ message: "No projects for this user" });
+    // Step 2: Get all projects (excluding those already found) and filter for members
+    // We'll get projects where created_by != userId to avoid duplicates
+    const allOtherProjects = await prisma.projects.findMany({
+      where: {
+        NOT: {
+          created_by: userId,
+        },
+      },
+      orderBy: { created_at: "desc" },
+    });
+
+    // Step 3: Filter projects where user is in the members array
+    const memberProjects = allOtherProjects.filter((project) => {
+      const members = Array.isArray(project.members) ? project.members : [];
+      // Check if userId (as string) is in the members array
+      return members.some((memberId) => String(memberId) === String(userId));
+    });
+
+    // Step 4: Combine both lists and sort by created_at descending
+    const userProjects = [...createdProjects, ...memberProjects].sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+      const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+      return dateB - dateA;
+    });
+
+    if (!userProjects || userProjects.length === 0) {
+      return res.status(200).json({
+        message: "No projects found for this user",
+        count: 0,
+        projects: [],
+      });
     }
 
     res.status(200).json({
       message: "Fetching user projects successful",
-      count: projects.length,
-      projects,
+      count: userProjects.length,
+      projects: userProjects,
     });
   } catch (error) {
     console.error("Error fetching user projects:", error);

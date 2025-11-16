@@ -38,6 +38,8 @@ import useAuthStore from "@/store/authStore";
 import { deleteProject, updateProject, createProject } from "@/api/projects";
 import { getSingleUserDataRequest, getUsersByIds } from "@/api/users";
 import { useRouter } from "next/navigation";
+import ErrorBox from "@/components/common/ErrorBox";
+import SuccessBox from "@/components/common/SuccessBox";
 
 // ✅ Safe avatar URL generator using DiceBear (trusted, open source)
 const getAvatarUrl = (name) =>
@@ -47,7 +49,7 @@ const getAvatarUrl = (name) =>
 
 export default function ProjectInfo({ variant }) {
   const isSettings = variant === "project-settings";
-  const { selectedProject, clearSelectedProject } = useProjectsStore();
+  const { selectedProject, clearSelectedProject, setSelectedProject } = useProjectsStore();
   const { user } = useAuthStore();
   const router = useRouter();
 
@@ -81,6 +83,13 @@ export default function ProjectInfo({ variant }) {
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [memberError, setMemberError] = useState(null);
+
+  // Clear errors when variant changes
+  useEffect(() => {
+    setSaveError(null);
+    setDeleteError(null);
+    setMemberError(null);
+  }, [variant]);
 
   // Prefill form from selectedProject when in settings mode
   useEffect(() => {
@@ -188,8 +197,13 @@ export default function ProjectInfo({ variant }) {
     }
   };
 
-  const handleProjectUpdate = (field, value) =>
+  const handleProjectUpdate = (field, value) => {
     setProject((prev) => ({ ...prev, [field]: value }));
+    // Clear errors when user starts editing
+    if (saveError) {
+      setSaveError(null);
+    }
+  };
 
   const handleNotificationToggle = (key) => {
     setProject((prev) => ({
@@ -199,9 +213,24 @@ export default function ProjectInfo({ variant }) {
   };
 
   const addTag = () => {
-    if (newTag.trim() && !project.tags.includes(newTag.trim())) {
-      setProject((prev) => ({ ...prev, tags: [...prev.tags, newTag.trim()] }));
+    const trimmedTag = newTag.trim();
+    
+    // Validate tag length (3-30 characters)
+    if (trimmedTag.length < 3 || trimmedTag.length > 30) {
+      setSaveError("Each tag must be between 3 and 30 characters");
+      return;
+    }
+    
+    // Check max tags (10)
+    if (project.tags.length >= 10) {
+      setSaveError("A maximum of 10 tags is allowed");
+      return;
+    }
+    
+    if (trimmedTag && !project.tags.includes(trimmedTag)) {
+      setProject((prev) => ({ ...prev, tags: [...prev.tags, trimmedTag] }));
       setNewTag("");
+      setSaveError(null);
     }
   };
 
@@ -235,12 +264,18 @@ export default function ProjectInfo({ variant }) {
     try {
       // Fetch user details by username
       const response = await getSingleUserDataRequest(newMemberEmail.trim());
-      const userData = response.data || response;
+      // API returns { user: {...}, message: "..." }
+      const userData = response?.user || response?.data || response;
+
+      // Validate user data exists
+      if (!userData || !userData.id) {
+        throw new Error(`User "${newMemberEmail.trim()}" not found. Please check the username and try again.`);
+      }
 
       // Add the member to the project
       const newMember = {
         id: userData.id,
-        name: userData.name || userData.username || newMemberEmail,
+        name: userData.display_name || userData.name || userData.username || newMemberEmail,
         email: userData.email || newMemberEmail,
         role: "Member",
       };
@@ -251,9 +286,26 @@ export default function ProjectInfo({ variant }) {
       }));
 
       setNewMemberEmail("");
+      setMemberError(null);
     } catch (err) {
-      setMemberError(err.message || "Failed to add member. User not found.");
-      console.error("Error adding member:", err);
+      // Provide user-friendly error messages
+      let errorMessage = "Failed to add member.";
+      
+      if (err?.message) {
+        // Check for specific error messages and provide clearer feedback
+        const errorMsgLower = err.message.toLowerCase();
+        if (errorMsgLower.includes("user not found") || 
+            errorMsgLower.includes("fetching user details failed") ||
+            errorMsgLower.includes("404")) {
+          errorMessage = `User "${newMemberEmail.trim()}" not found. Please check the username and try again.`;
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setMemberError(errorMessage);
+      // Suppress console error since we're handling it in the UI
+      // The error is already caught and displayed to the user
     } finally {
       setIsAddingMember(false);
     }
@@ -277,7 +329,9 @@ export default function ProjectInfo({ variant }) {
       // Redirect to dashboard page
       router.push("/dashboard");
     } catch (err) {
-      setDeleteError(err.message || "Failed to delete project");
+      const errorMessage =
+        err?.message || "Failed to delete project";
+      setDeleteError(errorMessage);
       console.error("Error deleting project:", err);
     } finally {
       setIsDeleting(false);
@@ -296,6 +350,55 @@ export default function ProjectInfo({ variant }) {
       return;
     }
 
+    if (project.name.trim().length < 3 || project.name.trim().length > 100) {
+      setSaveError("Project name must be between 3 and 100 characters");
+      return;
+    }
+
+    if (!/^[A-Za-z0-9 _-]+$/.test(project.name.trim())) {
+      setSaveError(
+        "Project name can only contain letters, numbers, spaces, hyphens, and underscores"
+      );
+      return;
+    }
+
+    if (!project.startDate) {
+      setSaveError("Start date is required");
+      return;
+    }
+
+    if (!project.endDate) {
+      setSaveError("End date is required");
+      return;
+    }
+
+    // Validate date range
+    const startDate = new Date(project.startDate);
+    const endDate = new Date(project.endDate);
+    if (startDate > endDate) {
+      setSaveError("Start date cannot be later than end date");
+      return;
+    }
+
+    // Validate description if provided
+    if (project.description && project.description.trim()) {
+      if (project.description.trim().length < 5) {
+        setSaveError("Description must be at least 5 characters");
+        return;
+      }
+      if (project.description.trim().length > 1000) {
+        setSaveError("Description must not exceed 1000 characters");
+        return;
+      }
+    }
+
+    // Validate status
+    const validStatuses = ["active", "on_hold", "completed", "archived"];
+    if (project.status && !validStatuses.includes(project.status)) {
+      setSaveError("Invalid status value");
+      return;
+    }
+
     setIsSaving(true);
     setSaveError(null);
     setSaveSuccess(false);
@@ -306,19 +409,24 @@ export default function ProjectInfo({ variant }) {
         name: project.name,
         description: project.description,
         status: project.status,
-        start_date: project.startDate ? new Date(project.startDate) : null,
-        end_date: project.endDate ? new Date(project.endDate) : null,
+        start_date: project.startDate || null,
+        end_date: project.endDate || null,
         tags: project.tags,
         members: project.Members.map((m) => m.id), // Send member IDs
       };
 
       if (isSettings) {
         // Update existing project
-        await updateProject(selectedProject.id, projectData);
+        const response = await updateProject(selectedProject.id, projectData);
+        // Update the selected project in store with the latest data
+        const updatedProject = response?.project || response;
+        if (updatedProject) {
+          setSelectedProject(updatedProject);
+        }
         setSaveSuccess(true);
       } else {
         // Create new project with created_by
-        if (!user?.userId) {
+        if (!user?.id) {
           setSaveError("User information not available");
           setIsSaving(false);
           return;
@@ -326,7 +434,7 @@ export default function ProjectInfo({ variant }) {
 
         const createData = {
           ...projectData,
-          created_by: user.userId,
+          created_by: user.id,
         };
 
         const newProject = await createProject(createData);
@@ -360,13 +468,10 @@ export default function ProjectInfo({ variant }) {
 
         return;
       }
-
-      // Refresh the projects list for update
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      setSaveError(err.message || "Failed to save project");
+      const errorMessage =
+        err?.message || "Failed to save project";
+      setSaveError(errorMessage);
       console.error("Error saving project:", err);
     } finally {
       setIsSaving(false);
@@ -398,11 +503,18 @@ export default function ProjectInfo({ variant }) {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="project-name">Project Name</Label>
+              <Label htmlFor="project-name">
+                Project Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="project-name"
                 value={project.name}
                 onChange={(e) => handleProjectUpdate("name", e.target.value)}
+                required
+                minLength={3}
+                maxLength={100}
+                pattern="^[A-Za-z0-9 _-]{3,100}$"
+                title="Project name must be 3-100 characters and contain only letters, numbers, spaces, hyphens, and underscores"
               />
             </div>
             <div>
@@ -416,7 +528,7 @@ export default function ProjectInfo({ variant }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="on-hold">On Hold</SelectItem>
+                  <SelectItem value="on_hold">On Hold</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
@@ -433,12 +545,17 @@ export default function ProjectInfo({ variant }) {
                 handleProjectUpdate("description", e.target.value)
               }
               rows={4}
+              minLength={5}
+              maxLength={1000}
+              title="Description must be between 5 and 1000 characters (if provided)"
             />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="start-date">Start Date</Label>
+              <Label htmlFor="start-date">
+                Start Date <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="start-date"
                 type="date"
@@ -446,15 +563,23 @@ export default function ProjectInfo({ variant }) {
                 onChange={(e) =>
                   handleProjectUpdate("startDate", e.target.value)
                 }
+                required
+                max={project.endDate || undefined}
+                title="Start date is required and must be before or equal to end date"
               />
             </div>
             <div>
-              <Label htmlFor="end-date">End Date</Label>
+              <Label htmlFor="end-date">
+                End Date <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="end-date"
                 type="date"
                 value={project.endDate}
                 onChange={(e) => handleProjectUpdate("endDate", e.target.value)}
+                required
+                min={project.startDate || undefined}
+                title="End date is required and must be after or equal to start date"
               />
             </div>
           </div>
@@ -505,11 +630,7 @@ export default function ProjectInfo({ variant }) {
             <CardDescription>Manage who has access</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {memberError && (
-              <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">
-                {memberError}
-              </div>
-            )}
+            {memberError && <ErrorBox message={memberError} />}
 
             {project.Members.map((member, index) => (
               <div
@@ -597,14 +718,32 @@ export default function ProjectInfo({ variant }) {
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <Input
-                placeholder="Add a tag"
+                placeholder="Add a tag (3-30 characters)"
                 value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
+                onChange={(e) => {
+                  setNewTag(e.target.value);
+                  setSaveError(null);
+                }}
                 onKeyDown={(e) => e.key === "Enter" && addTag()}
                 className="flex-1"
+                minLength={3}
+                maxLength={30}
+                disabled={project.tags.length >= 10}
+                title={
+                  project.tags.length >= 10
+                    ? "Maximum of 10 tags allowed"
+                    : "Each tag must be between 3 and 30 characters"
+                }
               />
-              <Button onClick={addTag}>Add Tag</Button>
+              <Button onClick={addTag} disabled={project.tags.length >= 10}>
+                Add Tag
+              </Button>
             </div>
+            {project.tags.length >= 10 && (
+              <p className="text-sm text-muted-foreground">
+                Maximum of 10 tags reached
+              </p>
+            )}
           </CardContent>
         </Card>
       )}
@@ -617,11 +756,7 @@ export default function ProjectInfo({ variant }) {
             <CardDescription>Irreversible actions</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {deleteError && (
-              <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">
-                {deleteError}
-              </div>
-            )}
+            {deleteError && <ErrorBox message={deleteError} />}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-medium">Delete Project</p>
@@ -662,17 +797,15 @@ export default function ProjectInfo({ variant }) {
 
       {/* Save Actions */}
       <div className="space-y-4">
-        {saveError && (
-          <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">
-            {saveError}
-          </div>
-        )}
+        {saveError && <ErrorBox message={saveError} />}
         {saveSuccess && (
-          <div className="p-3 bg-green-100 text-green-800 rounded-md text-sm">
-            {isSettings
-              ? "Project updated successfully!"
-              : "Project created successfully! Redirecting..."}
-          </div>
+          <SuccessBox
+            message={
+              isSettings
+                ? "Project updated successfully!"
+                : "Project created successfully! Redirecting..."
+            }
+          />
         )}
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
           {/* {isSettings && <Button variant="outline">Cancel</Button>} */}

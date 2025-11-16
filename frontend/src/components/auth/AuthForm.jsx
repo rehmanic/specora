@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import useAuthStore from "@/store/authStore";
 import { useRouter } from "next/navigation";
+import ErrorBox from "@/components/common/ErrorBox";
 
 export default function AuthForm({ className, variant = "login", ...props }) {
   const isLogin = variant === "login";
@@ -28,16 +29,28 @@ export default function AuthForm({ className, variant = "login", ...props }) {
 
   const [localError, setLocalError] = useState(null);
 
+  // Clear errors when variant changes
+  useEffect(() => {
+    setLocalError(null);
+    useAuthStore.setState({ error: null });
+  }, [variant]);
+
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
+    // Clear errors when user starts typing
+    if (localError || error) {
+      setLocalError(null);
+      useAuthStore.setState({ error: null });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError(null);
+    useAuthStore.setState({ error: null });
 
     try {
       if (isLogin) {
@@ -57,7 +70,9 @@ export default function AuthForm({ className, variant = "login", ...props }) {
         router.push("/dashboard");
       }
     } catch (err) {
-      setLocalError(err.message);
+      const errorMessage =
+        err?.message || "An unexpected error occurred. Please try again.";
+      setLocalError(errorMessage);
     }
   };
 
@@ -136,7 +151,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
 
               {/* Error display */}
               {(localError || error) && (
-                <p className="text-red-600 text-sm">{localError || error}</p>
+                <ErrorBox message={localError || error} />
               )}
 
               <div className="flex flex-col gap-3">

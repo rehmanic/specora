@@ -104,7 +104,7 @@ export const getUserByUsername = async (req, res) => {
     });
 
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     res
@@ -164,20 +164,24 @@ export const updateUser = async (req, res) => {
   try {
     const user = req.body;
 
-    // Hash password
-    const password_hash = await bcrypt.hash(user.password, 10);
+    // Prepare update data
+    const updateData = {
+      username: user.username,
+      role: user.role,
+      permissions: user.permissions,
+      email: user.email,
+      profile_pic_url: user.profile_pic_url,
+      display_name: user.display_name,
+    };
+
+    // Only hash and update password if provided
+    if (user.password && user.password.trim().length > 0) {
+      updateData.password_hash = await bcrypt.hash(user.password, 10);
+    }
 
     const updatedUser = await prisma.users.update({
       where: { username: user.username },
-      data: {
-        username: user.username,
-        password_hash,
-        role: user.role,
-        permissions: user.permissions,
-        email: user.email,
-        profile_pic_url: user.profile_pic_url,
-        display_name: user.display_name,
-      },
+      data: updateData,
       select: {
         id: true,
         username: true,

@@ -60,11 +60,13 @@ export const validateUserDataInput = (req, res, next) => {
     return res.status(400).json({ message: "Invalid email format." });
   }
 
-  // PASSWORD
-  if (user.password.length < 6 || user.password.length > 32) {
-    return res
-      .status(400)
-      .json({ message: "Password must be 6-32 characters long." });
+  // PASSWORD (only validate if provided - optional for updates)
+  if (user.password !== undefined && user.password !== null && user.password !== "") {
+    if (user.password.length < 6 || user.password.length > 32) {
+      return res
+        .status(400)
+        .json({ message: "Password must be 6-32 characters long." });
+    }
   }
 
   // ROLE
