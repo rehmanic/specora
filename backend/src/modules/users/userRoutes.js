@@ -29,7 +29,7 @@ router.post(
 
 // READ
 router.get("/all", getAllUsers);
-router.get("/ids", getUsersByIds);
+router.post("/ids", getUsersByIds);
 router.get("/:username", checkUserExists("by-username"), getUserByUsername);
 
 // UPDATE
