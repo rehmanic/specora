@@ -1,4 +1,5 @@
 import prisma from "../../../config/db/prismaClient.js";
+import { generateGeminiResponse, clearChatSession } from "../../utils/gemini.js";
 
 export const createSpecbotChat = async (req, res) => {
     try {
@@ -66,6 +67,9 @@ export const deleteSpecbotChat = async (req, res) => {
                 where: { id: chatId },
             }),
         ]);
+
+        // Clear the cached Gemini chat session
+        clearChatSession(chatId);
 
         res.status(200).json({ message: "Specbot Chat deleted successfully" });
     } catch (error) {
@@ -157,9 +161,9 @@ export const createMessage = async (req, res) => {
 
         let botMessage = null;
 
-        // 2. If chat_type is 'specbot', generate bot response
+        // 2. If chat_type is 'specbot', generate bot response with context
         if (chat_type === 'specbot') {
-            const botContent = await generateGeminiResponse(content, instructions || {});
+            const botContent = await generateGeminiResponse(chat_id, content, instructions || {});
 
             botMessage = await createMessageCore({
                 chat_type,
@@ -224,7 +228,7 @@ const createMessageCore = async ({ chat_type, chat_id, content, sender_type, sen
     });
 };
 
-import { generateGeminiResponse } from "../../utils/gemini.js";
+
 
 
 
