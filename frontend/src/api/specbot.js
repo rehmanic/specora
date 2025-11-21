@@ -87,11 +87,16 @@ export async function deleteSpecbotChat(chatId) {
 // ======================
 // Get All Specbot Chats
 // ======================
-export async function getAllSpecbotChats() {
+export async function getAllSpecbotChats(projectId) {
     try {
         const { token } = useAuthStore.getState();
 
-        const res = await fetch(`${API_BASE}/specbot/chat/all`, {
+        let url = `${API_BASE}/specbot/chat/all`;
+        if (projectId) {
+            url += `?projectId=${encodeURIComponent(projectId)}`;
+        }
+
+        const res = await fetch(url, {
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,

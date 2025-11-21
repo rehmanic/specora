@@ -20,10 +20,10 @@ const useSpecbotStore = create((set, get) => ({
     // ======================
     // Fetch All Chats
     // ======================
-    fetchChats: async () => {
+    fetchChats: async (projectId) => {
         set({ loading: true, error: null });
         try {
-            const data = await getAllSpecbotChats();
+            const data = await getAllSpecbotChats(projectId);
             set({ chats: data.chats || [], loading: false });
         } catch (err) {
             set({ loading: false, error: err.message });

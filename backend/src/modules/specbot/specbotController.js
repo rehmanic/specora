@@ -81,11 +81,18 @@ export const deleteSpecbotChat = async (req, res) => {
 export const getAllSpecbotChats = async (req, res) => {
     try {
         const userId = req.user.userId;
+        const { projectId } = req.query;
 
+        if(!projectId){
+            return res.status(400).json({ message: "Project ID is required" });
+        }
+
+        const whereClause = { user_id: userId };
+        if (projectId) {
+            whereClause.project_id = projectId;
+        }
         const chats = await prisma.specbot_chats.findMany({
-            where: {
-                user_id: userId,
-            },
+            where: whereClause,
             orderBy: {
                 created_at: 'desc',
             },

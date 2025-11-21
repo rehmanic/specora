@@ -32,6 +32,7 @@ export default function SpecbotPage() {
     setCurrentChat,
     sendMessage,
     clearError,
+    clearCurrentChat, // <-- add this from store
   } = useSpecbotStore();
 
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
@@ -40,12 +41,13 @@ export default function SpecbotPage() {
   const [creatingChat, setCreatingChat] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Fetch chats on mount
+  // Fetch chats on mount and clear chat state on project change
   useEffect(() => {
-    if (isClient) {
-      fetchChats();
+    if (isClient && selectedProject?.id) {
+      fetchChats(selectedProject.id);
+      clearCurrentChat(); // <-- clear chat when switching projects
     }
-  }, [isClient, fetchChats]);
+  }, [isClient, fetchChats, selectedProject?.id, clearCurrentChat]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
