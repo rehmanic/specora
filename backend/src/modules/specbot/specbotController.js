@@ -144,54 +144,89 @@ export const updateSpecbotChat = async (req, res) => {
 
 export const createMessage = async (req, res) => {
     try {
-        const { chat_type, chat_id, content, sender_type, sender_id } = req.body;
+        const { chat_type, chat_id, content, sender_type, sender_id, instructions } = req.body;
 
-        // Verify chat exists based on type
+        // 1. Create User Message
+        const userMessage = await createMessageCore({
+            chat_type,
+            chat_id,
+            content,
+            sender_type,
+            sender_id,
+        });
+
+        let botMessage = null;
+
+        // 2. If chat_type is 'specbot', generate bot response
         if (chat_type === 'specbot') {
-            const chat = await prisma.specbot_chats.findUnique({
-                where: { id: chat_id },
-            });
-            if (!chat) {
-                return res.status(404).json({ message: "Specbot chat not found" });
-            }
-        } else if (chat_type === 'group') {
-            const chat = await prisma.group_chats.findUnique({
-                where: { id: chat_id },
-            });
-            if (!chat) {
-                return res.status(404).json({ message: "Group chat not found" });
-            }
-        }
+            const botContent = await generateGeminiResponse(content, instructions || {});
 
-        // Verify sender exists if it's a user
-        if (sender_type === 'user') {
-            const user = await prisma.users.findUnique({
-                where: { id: sender_id },
-            });
-            if (!user) {
-                return res.status(404).json({ message: "Sender (User) not found" });
-            }
-        }
-
-        const newMessage = await prisma.messages.create({
-            data: {
+            botMessage = await createMessageCore({
                 chat_type,
                 chat_id,
-                content,
-                sender_type,
-                sender_id,
-            },
-        });
+                content: botContent,
+                sender_type: 'bot',
+                sender_id: null
+            });
+        }
 
         res.status(201).json({
             message: "Message created successfully",
-            data: newMessage,
+            data: userMessage,
+            botMessage
         });
     } catch (error) {
         console.error("Error creating message:", error);
+        if (error.message.includes("not found")) {
+            return res.status(404).json({ message: error.message });
+        }
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+// Helper function for creating messages
+const createMessageCore = async ({ chat_type, chat_id, content, sender_type, sender_id }) => {
+    // Verify chat exists based on type
+    if (chat_type === 'specbot') {
+        const chat = await prisma.specbot_chats.findUnique({
+            where: { id: chat_id },
+        });
+        if (!chat) {
+            throw new Error("Specbot chat not found");
+        }
+    } else if (chat_type === 'group') {
+        const chat = await prisma.group_chats.findUnique({
+            where: { id: chat_id },
+        });
+        if (!chat) {
+            throw new Error("Group chat not found");
+        }
+    }
+
+    // Verify sender exists if it's a user
+    if (sender_type === 'user') {
+        const user = await prisma.users.findUnique({
+            where: { id: sender_id },
+        });
+        if (!user) {
+            throw new Error("Sender (User) not found");
+        }
+    }
+
+    return await prisma.messages.create({
+        data: {
+            chat_type,
+            chat_id,
+            content,
+            sender_type,
+            sender_id,
+        },
+    });
+};
+
+import { generateGeminiResponse } from "../../utils/gemini.js";
+
+
 
 export const getAllMessages = async (req, res) => {
     try {
@@ -209,13 +244,23 @@ export const getAllMessages = async (req, res) => {
             }
         }
 
-        if(!specbotChat){
+        if (!specbotChat) {
             return res.status(404).json({ message: "Chat not found" });
         }
 
         const messages = await prisma.messages.findMany({
             where: { chat_id: chatId },
             orderBy: { created_at: 'asc' },
+            include: {
+                users: {
+                    select: {
+                        id: true,
+                        username: true,
+                        display_name: true,
+                        profile_pic_url: true
+                    }
+                }
+            }
         });
 
         res.status(200).json({
