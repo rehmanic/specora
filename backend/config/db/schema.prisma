@@ -52,14 +52,21 @@ model meetings {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model messages {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  chat_type  String    @db.VarChar(50)
-  chat_id    String    @db.Uuid
-  content    String
-  metadata   Json?     @default("{}")
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  sender_id  String?   @db.Uuid
-  users      users?    @relation(fields: [sender_id], references: [id], onUpdate: NoAction)
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chat_type   chat_type_enum
+  chat_id     String           @db.Uuid
+  content     String
+  metadata    Json?            @default("{}")
+  created_at  DateTime?        @default(now()) @db.Timestamptz(6)
+  sender_type sender_type_enum
+  sender_id   String?          @db.Uuid
+  users       users?           @relation(fields: [sender_id], references: [id], onUpdate: NoAction)
+}
+
+model permissions {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String           @unique @db.VarChar(100)
+  rolepermission rolepermission[]
 }
 
 model projects {
@@ -109,12 +116,29 @@ model requirements {
   projects    projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
+model rolepermission {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role_id       String      @db.Uuid
+  permission_id String      @db.Uuid
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  roles         roles       @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([role_id, permission_id])
+}
+
+model roles {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String           @unique @db.VarChar(100)
+  rolepermission rolepermission[]
+}
+
 model specbot_chats {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title      String?   @db.VarChar(255)
+  title      String    @unique(map: "specbot_chats_title_unique") @db.VarChar(255)
   created_at DateTime? @default(now()) @db.Timestamptz(6)
   user_id    String?   @db.Uuid
   project_id String?   @db.Uuid
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
   projects   projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   users      users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
@@ -136,10 +160,20 @@ model users {
   specbot_chats   specbot_chats[]
 }
 
+enum chat_type_enum {
+  specbot
+  group
+}
+
 enum project_status {
   draft
   active
   on_hold
   completed
   archived
+}
+
+enum sender_type_enum {
+  user
+  bot
 }

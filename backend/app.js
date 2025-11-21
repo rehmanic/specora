@@ -10,6 +10,7 @@ import cors from "cors"; // Enables Cross-Origin Resource Sharing
 import authRoutes from "./src/modules/auth/authRoutes.js";
 import userRoutes from "./src/modules/users/userRoutes.js";
 import projectRoutes from "./src/modules/projects/projectsRoutes.js";
+import specbotRoutes from "./src/modules/specbot/specbotRoutes.js";
 
 
 
@@ -40,6 +41,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/specbot", specbotRoutes);
 
 // ----- 404 Handler -----
 app.use((req, res) => {

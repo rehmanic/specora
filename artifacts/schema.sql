@@ -4,6 +4,34 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 ------------------------------------------------------------
+-- ROLES TABLE
+------------------------------------------------------------
+CREATE TABLE Roles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) UNIQUE NOT NULL
+);
+
+------------------------------------------------------------
+-- PERMISSIONS TABLE
+------------------------------------------------------------
+CREATE TABLE Permissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) UNIQUE NOT NULL
+);
+
+------------------------------------------------------------
+-- ROLE-PERMISSION TABLE
+------------------------------------------------------------
+CREATE TABLE RolePermission (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    role_id UUID NOT NULL,
+    permission_id UUID NOT NULL,
+    FOREIGN KEY (role_id) REFERENCES Roles(id),
+    FOREIGN KEY (permission_id) REFERENCES Permissions(id),
+    UNIQUE (role_id, permission_id)
+);
+
+------------------------------------------------------------
 -- USERS TABLE
 ------------------------------------------------------------
 CREATE TABLE users (
@@ -44,8 +72,9 @@ CREATE TABLE projects (
 ------------------------------------------------------------
 CREATE TABLE specbot_chats (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title VARCHAR(255),
+    title VARCHAR(255) UNIQUE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
+	updated_at TIMESTAMPTZ DEFAULT NOW();
 	user_id UUID REFERENCES users(id) ON DELETE CASCADE,
 	project_id UUID REFERENCES projects(id) ON DELETE CASCADE
 );
@@ -63,14 +92,19 @@ CREATE TABLE group_chats (
 ------------------------------------------------------------
 -- MESSAGES TABLE
 ------------------------------------------------------------
+-- Create enums
+CREATE TYPE chat_type_enum AS ENUM ('specbot','group');
+CREATE TYPE sender_type_enum AS ENUM ('user','bot');
+
 CREATE TABLE messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    chat_type VARCHAR(50) NOT NULL CHECK (chat_type IN ('specbot', 'group')),
-    chat_id UUID NOT NULL, -- references depends on chat_type
+    chat_type chat_type_enum NOT NULL,
+    chat_id UUID NOT NULL, -- reference depends on chat_type
     content TEXT NOT NULL,
     metadata JSONB DEFAULT '{}', -- For reactions, etc.
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    sender_id UUID REFERENCES users(id) ON DELETE SET NULL
+    sender_type sender_type_enum NOT NULL,
+	sender_id UUID REFERENCES users(id) ON DELETE SET NULL DEFAULT NULL
 );
 
 ------------------------------------------------------------
