@@ -10,3 +10,5 @@ python-dotenv
 loguru
 tqdm
 joblib
+google-generativeai
+numpy

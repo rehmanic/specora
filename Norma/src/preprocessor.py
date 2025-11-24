@@ -1,8 +1,13 @@
 import pdfplumber
 import json
+from pathlib import Path
+import os
+from dotenv import load_dotenv
 
-PDF_PATH = "../data/raw/ccpa.pdf"
-OUTPUT_PATH = "../data/processed/ccpa_by_section.json"
+load_dotenv()
+
+PDF_PATH = Path(os.getenv("PDF_PATH"))
+OUTPUT_PATH = Path(os.getenv("OUTPUT_PATH"))
 
 SECTIONS = [
     "1798.100. General Duties of Businesses that Collect Personal Information",

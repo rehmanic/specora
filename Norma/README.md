@@ -5,34 +5,32 @@ pip install --upgrade pip
 python.exe -m pip install --upgrade pip
 pip install -r requirements.txt
 
+python src/preprocessor.py
+python src/ingest.py
+streamlit run src/app.py
+
 # App structure
 Norma/
 │
-├── app/                    # Streamlit app code
-│   ├── main.py             # Entry point
-│   ├── ui/                 # Optional subfolder for modular UI components
-│   │   └── components.py
-│   └── config.py           # App configuration (paths, API keys, etc.)
+├── data/
+│   ├── raw/
+│   │   └── ccpa.pdf
+│   └── processed/
+│       └── chunks.json
 │
-├── data/                   # Raw and processed legal docs
-│   ├── raw/                # Original PDFs or downloaded HTML
-│   └── processed/          # Cleaned text for embeddings
+├── src/
+│   ├── app.py
+│   ├── ingest.py
+│   └── preprocessor.py
 │
-├── embeddings/             # Vector embeddings for RAG
-│   └── <vector_db_files>   # FAISS/Chroma/etc. files
+├── tests/
+├── venv/
 │
-├── modules/                # Modular Python logic
-│   ├── preprocessing.py    # PDF/text extraction & cleaning
-│   ├── rag.py              # RAG pipeline logic
-│   ├── search.py           # Query/lookup helpers
-│   └── utils.py            # Misc helpers
-│
-├── tests/                  # Unit / integration tests
-│   └── test_rag.py
-│
-├── requirements.txt        # Python dependencies
+├── .env
+├── .gitignore
 ├── README.md
-└── setup.py                # Optional if packaged
+├── requirements.txt
+└── setup.py
 
 
 # CCPA Doc structure
