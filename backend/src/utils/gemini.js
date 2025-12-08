@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import prisma from "../../config/db/prismaClient.js";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 // In-memory cache for chat sessions
 const chatSessions = new Map();
@@ -82,16 +82,16 @@ async function getChatSession(chatId, instructions = {}) {
     // Create new chat session with history
     const history = await buildChatHistory(chatId);
 
-    const systemInstructionText = `You are a software requirements engineer assistant. Keep your answers concise and helpful.
+    const systemInstructionText = `You are a senior software requirements engineer. Stay strictly on requirements analysis: elicit, refine, and validate requirements. If a prompt is off-topic or irrelevant to the product/project scope, politely redirect the user back to requirements gathering.
 
 Context/Instructions:
 ${JSON.stringify(instructions, null, 2)}
 
 Guidelines:
-- Provide clear, actionable advice
-- Ask clarifying questions when needed
-- Reference previous conversation context when relevant
-- Keep responses focused and concise`;
+- Keep responses concise and structured
+- Prefer numbered or bulleted requirements with clear acceptance notes
+- Ask for missing constraints, edge cases, and dependencies
+- Do NOT answer generic chit-chat; remind the user you focus only on requirements`;
 
     const chat = model.startChat({
         history: history,

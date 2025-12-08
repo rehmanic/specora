@@ -31,6 +31,7 @@ export default function SpecbotPage() {
     createChat,
     setCurrentChat,
     sendMessage,
+    deleteChat,
     clearError,
     clearCurrentChat, // <-- add this from store
   } = useSpecbotStore();
@@ -39,6 +40,7 @@ export default function SpecbotPage() {
   const [inputValue, setInputValue] = useState("");
   const [newChatDialogOpen, setNewChatDialogOpen] = useState(false);
   const [creatingChat, setCreatingChat] = useState(false);
+  const [deletingChatId, setDeletingChatId] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Fetch chats on mount and clear chat state on project change
@@ -83,6 +85,23 @@ export default function SpecbotPage() {
     setCurrentChat(chat);
   };
 
+  const handleDeleteChat = async (chat) => {
+    if (!chat) return;
+    const confirmDelete = window.confirm(
+      `Delete chat "${chat.title}"? This cannot be undone.`
+    );
+    if (!confirmDelete) return;
+
+    setDeletingChatId(chat.id);
+    try {
+      await deleteChat(chat.id);
+    } catch (err) {
+      console.error("Failed to delete chat:", err);
+    } finally {
+      setDeletingChatId(null);
+    }
+  };
+
   // Handle send message
   const handleSendMessage = async (content) => {
     if (!content.trim() || !currentChat) return;
@@ -112,7 +131,7 @@ export default function SpecbotPage() {
   };
 
   return isClient ? (
-    <div className="flex flex-1 w-full min-h-0 overflow-hidden">
+    <div className="flex flex-1 w-full h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] overflow-hidden bg-background">
       {/* Left Sidebar */}
       <div className={`${leftSidebarCollapsed ? "w-16" : "w-64"} shrink-0`}>
         <LeftSidebar
@@ -124,11 +143,13 @@ export default function SpecbotPage() {
           onChatSelect={handleChatSelect}
           onNewChat={handleNewChat}
           activeChatId={currentChat?.id}
+          onDeleteChat={handleDeleteChat}
+          deletingChatId={deletingChatId}
         />
       </div>
 
       {/* Chat Area */}
-      <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex flex-col flex-1 min-h-0 max-h-full overflow-hidden">
         {!currentChat ? (
           // Empty state - no chat selected
           <div className="flex flex-1 items-center justify-center p-8">
@@ -145,7 +166,7 @@ export default function SpecbotPage() {
         ) : (
           <>
             {/* Messages */}
-            <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
               {loading && messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -173,25 +194,38 @@ export default function SpecbotPage() {
 
             {/* Error Display */}
             {error && (
-              <div className="px-4 py-2 bg-destructive/10 text-destructive text-sm">
-                {error}
+              <div className="flex items-center justify-between px-4 py-2 bg-destructive/10 text-destructive text-sm">
+                <span>{error}</span>
+                <button
+                  type="button"
+                  className="text-xs underline"
+                  onClick={clearError}
+                >
+                  Dismiss
+                </button>
               </div>
             )}
 
             {/* Starter + Input */}
-            <div className="border-t">
-              {messages.length === 0 && <Starter onSelect={setInputValue} />}
-              <ChatInputFeild
-                value={inputValue}
-                onChange={setInputValue}
-                onSend={handleSendMessage}
-                disabled={sendingMessage}
-                placeholder={
-                  sendingMessage
-                    ? "Waiting for response..."
-                    : "Type your message here..."
-                }
-              />
+            <div className="border-t bg-background">
+              {messages.length === 0 && (
+                <div className="px-4 pt-3">
+                  <Starter onSelect={setInputValue} />
+                </div>
+              )}
+              <div className="sticky bottom-0 bg-background/95 backdrop-blur">
+                <ChatInputFeild
+                  value={inputValue}
+                  onChange={setInputValue}
+                  onSend={handleSendMessage}
+                  disabled={sendingMessage}
+                  placeholder={
+                    sendingMessage
+                      ? "Waiting for response..."
+                      : "Type your message here..."
+                  }
+                />
+              </div>
             </div>
           </>
         )}

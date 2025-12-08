@@ -144,7 +144,12 @@ const useSpecbotStore = create((set, get) => ({
 
             return data;
         } catch (err) {
-            set({ sendingMessage: false, error: err.message });
+            const friendlyMessage =
+                err?.message &&
+                    err.message.toLowerCase().includes("internal server error")
+                    ? "Specbot ran into an issue. Please try again in a moment."
+                    : err?.message || "Specbot could not send your message.";
+            set({ sendingMessage: false, error: friendlyMessage });
             throw err;
         }
     },

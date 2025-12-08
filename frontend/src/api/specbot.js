@@ -258,3 +258,118 @@ export async function getAllMessages(chatId) {
         );
     }
 }
+
+// ======================
+// Download Specbot Chat (stores on server)
+// ======================
+export async function downloadSpecbotChat(chatId) {
+    try {
+        const { token } = useAuthStore.getState();
+
+        const res = await fetch(`${API_BASE}/specbot/chat/${chatId}/download`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        let data;
+        try {
+            data = await res.json();
+        } catch {
+            throw new Error("Server response is invalid. Please try again later.");
+        }
+
+        if (!res.ok) {
+            throw new Error(
+                data?.message ||
+                "Could not store this chat right now. Please try again."
+            );
+        }
+
+        return data;
+    } catch (err) {
+        if (err instanceof Error) {
+            throw err;
+        }
+        throw new Error(
+            "Could not store this chat right now. Please try again."
+        );
+    }
+}
+
+// ======================
+// Summarize Specbot Chat
+// ======================
+export async function summarizeSpecbotChat(chatId) {
+    try {
+        const { token } = useAuthStore.getState();
+
+        const res = await fetch(`${API_BASE}/specbot/chat/${chatId}/summarize`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        let data;
+        try {
+            data = await res.json();
+        } catch {
+            throw new Error("Server response is invalid. Please try again later.");
+        }
+
+        if (!res.ok) {
+            throw new Error(
+                data?.message ||
+                "Unable to summarize this chat right now. Please try again."
+            );
+        }
+
+        return data;
+    } catch (err) {
+        if (err instanceof Error) {
+            throw err;
+        }
+        throw new Error("Unable to summarize this chat right now. Please try again.");
+    }
+}
+
+// ======================
+// Extract Requirements
+// ======================
+export async function extractSpecbotRequirements(chatId) {
+    try {
+        const { token } = useAuthStore.getState();
+
+        const res = await fetch(`${API_BASE}/specbot/chat/${chatId}/extract`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        let data;
+        try {
+            data = await res.json();
+        } catch {
+            throw new Error("Server response is invalid. Please try again later.");
+        }
+
+        if (!res.ok) {
+            throw new Error(
+                data?.message ||
+                "Unable to extract requirements right now. Please try again."
+            );
+        }
+
+        return data;
+    } catch (err) {
+        if (err instanceof Error) {
+            throw err;
+        }
+        throw new Error(
+            "Unable to extract requirements right now. Please try again."
+        );
+    }
+}

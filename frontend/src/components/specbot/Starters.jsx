@@ -1,14 +1,14 @@
 export default function Starter({ onSelect }) {
-  // Dummy array of starter questions
+  // Starter prompts to guide requirements discovery
   const starterQuestions = [
-    "What's the weather like today?",
-    "Tell me a fun fact",
-    "How do I learn React?",
-    "What are the best practices for TypeScript?",
-    "Explain async/await in JavaScript",
-    "What is Tailwind CSS?",
-    "How does Next.js work?",
-    "What are React hooks?",
+    "List the primary user roles and their goals for this project.",
+    "What business outcomes must this release achieve?",
+    "What are the top 5 constraints (tech, budget, timeline, compliance)?",
+    "Describe the main user journey from sign-up to success.",
+    "Identify critical integrations and their data exchange needs.",
+    "What non-functional requirements (performance, security, availability) matter most?",
+    "List edge cases or failure scenarios we must handle.",
+    "Define acceptance criteria for the main feature in this project.",
   ];
 
   const handleClick = (question) => {

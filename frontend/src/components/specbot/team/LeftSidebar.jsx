@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, MessageSquare, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
@@ -11,7 +11,11 @@ export default function LeftSidebar({
   chats = [],
   onChatSelect,
   onNewChat,
-  activeChatId
+  onDeleteChat,
+  activeChatId,
+  hideNewChat = false,
+  readOnly = false,
+  deletingChatId,
 }) {
   const formatTime = (dateString) => {
     try {
@@ -31,11 +35,13 @@ export default function LeftSidebar({
         >
           <ChevronRight className="h-5 w-5" />
         </Button>
-        <div className="flex flex-col gap-2">
-          <Button variant="ghost" size="icon">
-            <Plus className="h-5 w-5" />
-          </Button>
-        </div>
+        {!hideNewChat && (
+          <div className="flex flex-col gap-2">
+            <Button variant="ghost" size="icon" onClick={onNewChat}>
+              <Plus className="h-5 w-5" />
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -57,12 +63,14 @@ export default function LeftSidebar({
       </div>
 
       {/* New Chat Button */}
-      <div className="p-4">
-        <Button className="w-full justify-start gap-2" size="lg" onClick={onNewChat}>
-          <Plus className="h-5 w-5" />
-          <span className="font-medium">New Chat</span>
-        </Button>
-      </div>
+      {!hideNewChat && (
+        <div className="p-4">
+          <Button className="w-full justify-start gap-2" size="lg" onClick={onNewChat}>
+            <Plus className="h-5 w-5" />
+            <span className="font-medium">New Chat</span>
+          </Button>
+        </div>
+      )}
 
       {/* Recent Chats */}
       <div className="flex-1 overflow-hidden">
@@ -79,7 +87,7 @@ export default function LeftSidebar({
               </div>
             ) : (
               chats.map((chat) => (
-                <button
+                <div
                   key={chat.id}
                   onClick={() => onChatSelect(chat)}
                   className={`flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-secondary ${activeChatId === chat.id ? "bg-secondary" : ""
@@ -94,7 +102,21 @@ export default function LeftSidebar({
                       {formatTime(chat.updated_at || chat.created_at)}
                     </p>
                   </div>
-                </button>
+                  {onDeleteChat && !readOnly && (
+                    <button
+                      type="button"
+                      className="ml-2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteChat(chat);
+                      }}
+                      aria-label="Delete chat"
+                      disabled={deletingChatId === chat.id}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               ))
             )}
           </div>
