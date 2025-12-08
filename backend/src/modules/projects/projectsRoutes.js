@@ -7,7 +7,7 @@ import {
   getSingleUserProjects,
 } from "./projectsController.js";
 import { verifyToken } from "../../middlewares/common/verifyToken.js";
-import requireManager from "../../middlewares/common/roleCheck.js";
+import { requireManager } from "../../middlewares/common/roleCheck.js";
 import checkUserExists from "../../middlewares/common/checkUserExists.js";
 import checkProjectExists from "../../middlewares/projects/checkProjectExists.js";
 import requireFeilds from "../../middlewares/common/requireFields.js";

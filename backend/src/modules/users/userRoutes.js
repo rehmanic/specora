@@ -8,7 +8,7 @@ import {
   getUsersByIds,
 } from "../users/userController.js";
 import { verifyToken } from "../../middlewares/common/verifyToken.js";
-import requireManager from "../../middlewares/common/roleCheck.js";
+import { requireManager } from "../../middlewares/common/roleCheck.js";
 import requireField from "../../middlewares/common/requireFields.js";
 import checkUserExists from "../../middlewares/common/checkUserExists.js";
 import { validateUserDataInput } from "../../middlewares/users/inputValidation.js";

@@ -1,125 +1,247 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import LeftSidebar from "./LeftSidebar";
 import MainPanel from "./MainPanel";
-import RightSidebar from "./RightSidebar";
-import { Menu, X } from "lucide-react";
+import useUserStore from "@/store/authStore";
+import useProjectsStore from "@/store/projectsStore";
+import useSpecbotStore from "@/store/specbotStore";
+import {
+  downloadSpecbotChat,
+  extractSpecbotRequirements,
+  summarizeSpecbotChat,
+} from "@/api/specbot";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 export default function ChatLayout() {
-  const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+  const { user } = useUserStore();
+  const { selectedProject } = useProjectsStore();
+  const {
+    chats,
+    currentChat,
+    messages,
+    loading,
+    error,
+    fetchChats,
+    setCurrentChat,
+    clearCurrentChat,
+    clearError,
+  } = useSpecbotStore();
+
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
-  const [rightSidebarWidth, setRightSidebarWidth] = useState(320);
-  const [isResizing, setIsResizing] = useState(false);
-  const resizeRef = useRef(null);
+  const [downloadedChatIds, setDownloadedChatIds] = useState(new Set());
+  const [processing, setProcessing] = useState({
+    open: false,
+    type: null,
+    status: "",
+    result: null,
+    error: false,
+  });
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const canAccess =
+    user?.role === "manager" || user?.role === "requirements_engineer";
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!isResizing) return;
-
-      const newWidth = window.innerWidth - e.clientX;
-      if (newWidth >= 200 && newWidth <= 600) {
-        setRightSidebarWidth(newWidth);
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-
-    if (isResizing) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "ew-resize";
-      document.body.style.userSelect = "none";
+    if (!canAccess) return;
+    if (selectedProject?.id) {
+      fetchChats(selectedProject.id);
+      clearCurrentChat();
+      clearError();
+      setDownloadedChatIds(new Set());
     }
+  }, [
+    canAccess,
+    selectedProject?.id,
+    fetchChats,
+    clearCurrentChat,
+    clearError,
+  ]);
 
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
+  const downloaded = useMemo(
+    () => (currentChat ? downloadedChatIds.has(currentChat.id) : false),
+    [currentChat, downloadedChatIds]
+  );
+
+  const handleChatSelect = (chat) => {
+    setCurrentChat(chat);
+  };
+
+  const startProcessing = (type, status) => {
+    setProcessing({
+      open: true,
+      type,
+      status,
+      result: null,
+      error: false,
+    });
+  };
+
+  const handleActionError = (type, message) => {
+    setProcessing({
+      open: true,
+      type,
+      status: message,
+      result: null,
+      error: true,
+    });
+  };
+
+  const handleAction = async (type) => {
+    if (!currentChat) return;
+
+    const labels = {
+      download: "Downloading chat...",
+      summarize: "Summarizing chat...",
+      extract: "Extracting requirements...",
     };
-  }, [isResizing]);
+
+    startProcessing(type, labels[type]);
+    setActionLoading(true);
+
+    try {
+      if (type === "download") {
+        const response = await downloadSpecbotChat(currentChat.id);
+        setDownloadedChatIds((prev) => new Set(prev).add(currentChat.id));
+        setProcessing((prev) => ({
+          ...prev,
+          status: "Chat stored on server",
+          result: response?.artifact,
+        }));
+      } else if (type === "summarize") {
+        const response = await summarizeSpecbotChat(currentChat.id);
+        setProcessing((prev) => ({
+          ...prev,
+          status: "Summary ready",
+          result: response?.artifact,
+        }));
+      } else if (type === "extract") {
+        const response = await extractSpecbotRequirements(currentChat.id);
+        setProcessing((prev) => ({
+          ...prev,
+          status: "Requirements ready",
+          result: response?.artifact,
+        }));
+      }
+    } catch (err) {
+      const message =
+        err?.message ||
+        "Something went wrong while processing this request. Please try again.";
+      handleActionError(type, message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const closeProcessing = () =>
+    setProcessing((prev) => ({ ...prev, open: false }));
+
+  const noProjectSelected = !selectedProject?.id;
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
-      {/* Mobile Menu Button - Left */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed left-4 top-16 z-50 md:hidden"
-        onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
-      >
-        {leftSidebarOpen ? (
-          <X className="h-5 w-5" />
-        ) : (
-          <Menu className="h-5 w-5" />
-        )}
-      </Button>
-
-      {/* Mobile Menu Button - Right */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed right-4 top-16 z-50 md:hidden"
-        onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
-      >
-        {rightSidebarOpen ? (
-          <X className="h-5 w-5" />
-        ) : (
-          <Menu className="h-5 w-5" />
-        )}
-      </Button>
-
-      {/* Left Sidebar */}
-      <div
-        className={`${
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } fixed inset-y-0 left-0 z-40 w-64 transition-transform duration-300 md:relative md:translate-x-0 ${
-          leftSidebarCollapsed ? "md:w-16" : "md:w-64"
-        }`}
-      >
+    <div className="flex h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] w-full overflow-hidden bg-background">
+      <div className={`${leftSidebarCollapsed ? "w-16" : "w-64"} shrink-0 border-r`}>
         <LeftSidebar
           collapsed={leftSidebarCollapsed}
           onToggleCollapse={() =>
-            setLeftSidebarCollapsed(!leftSidebarCollapsed)
+            setLeftSidebarCollapsed((prev) => !prev)
           }
+          chats={chats}
+          onChatSelect={handleChatSelect}
+          hideNewChat
+          readOnly
+          activeChatId={currentChat?.id}
         />
       </div>
 
-      {/* Main Panel */}
-      <div className="flex-1 overflow-hidden">
-        <MainPanel />
+      <div className="flex-1 min-h-0 max-h-full overflow-hidden">
+        <MainPanel
+          hasProject={!noProjectSelected}
+          canAccess={canAccess}
+          currentChat={currentChat}
+          messages={messages}
+          loading={loading}
+          error={error}
+          onDismissError={clearError}
+          onDownload={() => handleAction("download")}
+          onSummarize={() => handleAction("summarize")}
+          onExtract={() => handleAction("extract")}
+          actionsDisabled={actionLoading}
+          downloaded={downloaded}
+        />
       </div>
 
-      {/* Right Sidebar with Resize Handle */}
-      <div
-        ref={resizeRef}
-        className={`${
-          rightSidebarOpen ? "translate-x-0" : "translate-x-full"
-        } fixed inset-y-0 right-0 z-40 transition-transform duration-300 md:relative md:translate-x-0`}
-        style={{ width: `${rightSidebarWidth}px` }}
-      >
-        <div
-          className="absolute left-0 top-0 hidden h-full w-1 cursor-ew-resize bg-border hover:bg-primary md:block"
-          onMouseDown={() => setIsResizing(true)}
-        />
-        <RightSidebar />
-      </div>
-
-      {/* Overlay for mobile */}
-      {(leftSidebarOpen || rightSidebarOpen) && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
-          onClick={() => {
-            setLeftSidebarOpen(false);
-            setRightSidebarOpen(false);
-          }}
-        />
-      )}
+      <Dialog open={processing.open} onOpenChange={closeProcessing}>
+        <DialogContent className="max-h-[85vh] flex flex-col overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="capitalize">
+              {processing.type || "Processing"}
+            </DialogTitle>
+            <DialogDescription className={processing.error ? "text-destructive" : ""}>
+              {processing.status}
+            </DialogDescription>
+          </DialogHeader>
+          {processing.result?.data?.summary_text && (
+            <div className="mt-4 space-y-2 min-h-0 flex-1 overflow-hidden flex flex-col">
+              <p className="text-sm font-medium shrink-0">Summary</p>
+              <div className="rounded-md bg-muted p-3 text-sm leading-relaxed max-h-64 overflow-y-auto">
+                <div className="prose prose-sm max-w-none prose-p:mb-2 last:prose-p:mb-0 prose-li:my-0 dark:prose-invert">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {processing.result.data.summary_text}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            </div>
+          )}
+          {processing.result?.data?.requirements && (
+            <div className="mt-4 space-y-2">
+              <p className="text-sm font-medium">Extracted Requirements</p>
+              <div className="space-y-2 rounded-md bg-muted p-3 text-sm leading-relaxed max-h-64 overflow-y-auto">
+                {processing.result.data.requirements.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">
+                    No requirements were extracted.
+                  </p>
+                ) : (
+                  processing.result.data.requirements.map((req) => (
+                    <div key={req.id || req.title} className="space-y-1">
+                      <p className="font-semibold">{req.title}</p>
+                      <p className="text-muted-foreground">{req.description}</p>
+                      {req.acceptance_criteria && (
+                        <p className="text-xs text-muted-foreground">
+                          Acceptance: {req.acceptance_criteria}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+          {processing.result && !processing.result.data && (
+            <div className="mt-2 space-y-1 rounded-md bg-muted p-3 text-sm">
+              <p>{processing.status}</p>
+              {processing.result.path && (
+                <p className="text-xs text-muted-foreground break-all">
+                  Saved at: {processing.result.path}
+                </p>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={closeProcessing}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
