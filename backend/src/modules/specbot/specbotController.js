@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import prisma from "../../../config/db/prismaClient.js";
-import { generateGeminiResponse, clearChatSession } from "../../utils/gemini.js";
+import { generateGeminiResponse, generateStatelessResponse, clearChatSession } from "../../utils/gemini.js";
 
 const ARTIFACT_ROOT = path.join(process.cwd(), "storage", "specbot");
 
@@ -354,6 +354,7 @@ const mapBulletPointsToRequirements = (points) =>
 /**
  * Strips markdown code block delimiters from LLM responses.
  * Handles formats like: ```json\n{...}\n``` or ```\n{...}\n```
+ * Also extracts JSON from within text that may have prose before/after
  */
 const stripMarkdownCodeBlock = (text) => {
     if (!text || typeof text !== "string") return text;
@@ -367,6 +368,24 @@ const stripMarkdownCodeBlock = (text) => {
 
     if (codeBlockStart.test(cleaned) && codeBlockEnd.test(cleaned)) {
         cleaned = cleaned.replace(codeBlockStart, "").replace(codeBlockEnd, "");
+        return cleaned.trim();
+    }
+
+    // Try to extract JSON from within the text (e.g., prose + ```json...``` + prose)
+    const jsonBlockMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    if (jsonBlockMatch && jsonBlockMatch[1]) {
+        return jsonBlockMatch[1].trim();
+    }
+
+    // Try to find raw JSON object/array in the response
+    const jsonObjectMatch = cleaned.match(/(\{[\s\S]*\})/);
+    if (jsonObjectMatch && jsonObjectMatch[1]) {
+        try {
+            JSON.parse(jsonObjectMatch[1]);
+            return jsonObjectMatch[1];
+        } catch {
+            // Not valid JSON, continue
+        }
     }
 
     return cleaned.trim();
@@ -491,8 +510,7 @@ export const summarizeSpecbotChat = async (req, res) => {
             output: "JSON or text is fine; concise paragraphs preferred.",
         };
 
-        const summaryText = await generateGeminiResponse(
-            chatId,
+        const summaryText = await generateStatelessResponse(
             transcript,
             instructions
         );
@@ -577,8 +595,7 @@ export const extractRequirementsFromChat = async (req, res) => {
                 "Prefer JSON { requirements: [{title, description, priority, acceptance_criteria}] }",
         };
 
-        const requirementsText = await generateGeminiResponse(
-            chatId,
+        const requirementsText = await generateStatelessResponse(
             transcript,
             instructions
         );
@@ -593,15 +610,23 @@ export const extractRequirementsFromChat = async (req, res) => {
 
         try {
             const cleanedText = stripMarkdownCodeBlock(requirementsText);
+            console.log("[extractRequirements] Cleaned text preview:", cleanedText.substring(0, 200));
             const parsed = JSON.parse(cleanedText);
             if (Array.isArray(parsed)) {
                 requirementsPayload.requirements = parsed;
+                console.log("[extractRequirements] Parsed as array with", parsed.length, "items");
             } else if (Array.isArray(parsed.requirements)) {
                 requirementsPayload.requirements = parsed.requirements;
+                console.log("[extractRequirements] Parsed requirements array with", parsed.requirements.length, "items");
+            } else {
+                console.log("[extractRequirements] Parsed JSON but no requirements array found:", Object.keys(parsed));
             }
-        } catch {
+        } catch (parseError) {
+            console.log("[extractRequirements] JSON parse failed:", parseError.message);
+            console.log("[extractRequirements] Raw text preview:", requirementsText.substring(0, 300));
             const points = extractBulletPoints(requirementsText);
             requirementsPayload.requirements = mapBulletPointsToRequirements(points);
+            console.log("[extractRequirements] Fallback to bullet points:", points.length, "found");
         }
 
         await fs.promises.writeFile(

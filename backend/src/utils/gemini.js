@@ -156,6 +156,46 @@ export const generateGeminiResponse = async (chatId, content, instructions = {})
 };
 
 /**
+ * Generate a one-off response without using chat session (stateless).
+ * Use this for analysis tasks like extraction or summarization where
+ * you want to analyze a full transcript independently.
+ * @param {string} content - The content to analyze
+ * @param {object} instructions - Task-specific instructions
+ * @returns {string} - The AI's response
+ */
+export const generateStatelessResponse = async (content, instructions = {}) => {
+    try {
+        const systemPrompt = `You are a senior software requirements engineer performing analysis tasks.
+
+Task: ${instructions.task || "analyze"}
+Expectations: ${instructions.expectations || "Provide a structured response."}
+Output Format: ${instructions.output || "Return structured JSON when possible."}
+
+Important: Analyze the ENTIRE content provided below. Do not treat this as a conversation continuation.`;
+
+        const result = await model.generateContent({
+            contents: [
+                {
+                    role: "user",
+                    parts: [{ text: `${systemPrompt}\n\n---\n\nCONTENT TO ANALYZE:\n\n${content}` }]
+                }
+            ],
+            generationConfig: {
+                maxOutputTokens: 4000,
+                temperature: 0.3,  // Lower temperature for more consistent output
+                topP: 0.8,
+                topK: 40,
+            },
+        });
+
+        return result.response.text();
+    } catch (error) {
+        console.error("Gemini Stateless API Error:", error);
+        throw new Error("Failed to generate stateless response from Gemini");
+    }
+};
+
+/**
  * Clear a specific chat session from cache
  * @param {string} chatId - The chat ID to clear
  */

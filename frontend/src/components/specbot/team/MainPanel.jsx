@@ -114,14 +114,20 @@ export default function MainPanel({
             No messages in this chat yet.
           </div>
         ) : (
-          messages.map((msg) => (
-            <Message
-              key={msg.id}
-              text={msg.content}
-              timestamp={msg.created_at}
-              isSender={msg.sender_type === "user"}
-            />
-          ))
+          messages.map((msg) => {
+            const formattedTime = new Date(msg.created_at).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            return (
+              <Message
+                key={msg.id}
+                text={msg.content}
+                timestamp={formattedTime}
+                isSender={msg.sender_type === "user"}
+              />
+            );
+          })
         )}
       </div>
 
