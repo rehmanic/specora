@@ -2,17 +2,18 @@
 
 **ML-powered software effort estimation using XGBoost regression**
 
-EffortLens is a machine learning system that predicts software development effort and cost using the SEERA cost estimation dataset. It uses XGBoost regression trained on 120 historical projects and generates professional AI-powered narratives via Google Gemini API.
+EffortLens is a machine learning system that predicts software development effort and cost using the SEERA cost estimation dataset. It uses XGBoost regression trained on 120 historical projects and generates professional narratives using smart templates (no external API required).
 
 ## 🎯 Features
 
 - **XGBoost ML Model**: Trained regression model for accurate effort prediction
 - **8 Project Inputs**: Team size, complexity, object points, and 5 other key factors
 - **Cost Calculation**: Automatic conversion from effort to cost estimates
-- **AI Narratives**: Gemini API generates professional analysis reports
+- **Smart Narratives**: Template-based professional reports (no API key needed)
 - **Streamlit UI**: Clean, user-friendly web interface
 - **Risk Detection**: Identifies low-scoring inputs as risk factors
 - **Docker Ready**: Containerized deployment with docker-compose
+- **Offline Ready**: Works completely offline without external dependencies
 
 ## 📁 Repository Structure
 
@@ -26,8 +27,8 @@ EffortLens/
 │   └── training_metrics.json    # Training performance metrics
 ├── src/
 │   ├── train_model.py           # XGBoost training pipeline
-│   ├── utils.py                 # Gemini API & cost utilities
-│   └── app.py                   # Streamlit UI
+│   ├── utils.py                 # Cost calculation utilities
+│   └── app.py                   # Streamlit UI + narrative templates
 ├── tests/
 │   ├── test_train.py
 │   └── test_app_smoke.py
@@ -44,7 +45,7 @@ EffortLens/
 
 - Python 3.11+
 - SEERA cost estimation dataset (Excel: `SEERA - Software Project Effort Estimation.xlsx`)
-- Google Gemini API key for AI narratives
+- No API keys required!
 
 ### Installation
 
@@ -58,11 +59,6 @@ python -m venv venv
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Copy environment template
-copy .env.example .env
-
-# Edit .env and add your GEMINI_API_KEY
 ```
 
 ### Setup Pipeline
@@ -105,7 +101,7 @@ copy .env.example .env
 - **Effort**: Person-hours (primary prediction)
 - **Person-Months**: Effort ÷ 160 hours
 - **Cost Estimate**: Person-months × $10,000/month
-- **AI Narrative**: Professional analysis from Gemini API
+- **Smart Narrative**: Professional template-based analysis
 
 ### Training Metrics
 
@@ -117,11 +113,14 @@ copy .env.example .env
 
 ## 🔧 Environment Configuration
 
-Create `.env` file with:
+No environment variables required! The system works out of the box.
+
+Optionally create `.env` file to override model paths:
 
 ```env
-# Google Gemini API for AI narratives
-GEMINI_API_KEY=your_api_key_here
+# Optional: Override default model paths
+# MODEL_PATH=./models/model.joblib
+# ENCODERS_PATH=./models/encoders.joblib
 ```
 
 ## 🎨 Streamlit UI Usage
