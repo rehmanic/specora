@@ -11,6 +11,7 @@ Pipeline: ML Model (XGBoost) -> Prediction -> Gemini API (Narration)
 import json
 import logging
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional, Tuple
@@ -842,36 +843,63 @@ def main():
     
     # Process estimation
     if submitted:
-        with st.spinner("Calculating estimate..."):
-            try:
-                # Prepare features
-                X, input_features = prepare_input_features(
-                    object_points=object_points,
-                    product_complexity=product_complexity,
-                    performance_requirements=performance_requirements,
-                    programmer_capability=programmer_capability,
-                    pm_experience=pm_experience,
-                    team_size=team_size,
-                    requirement_stability=requirement_stability,
-                    environment_adequacy=environment_adequacy,
-                    preprocessing=preprocessing
-                )
-                
-                # Make prediction
-                effort_hours = predict_effort(model, X)
-                
-            except Exception as e:
-                st.error(f"Prediction failed: {e}")
-                logger.exception(e)
-                return
+        # Step 1: Calculate estimate with progress
+        progress_bar = st.progress(0, text="🔄 Initializing ML model...")
+        time.sleep(0.5)
         
-        # Display results
-        st.markdown("---")
-        st.subheader("📈 Estimation Results")
+        progress_bar.progress(20, text="📊 Processing input parameters...")
+        time.sleep(0.4)
+        
+        try:
+            # Prepare features
+            X, input_features = prepare_input_features(
+                object_points=object_points,
+                product_complexity=product_complexity,
+                performance_requirements=performance_requirements,
+                programmer_capability=programmer_capability,
+                pm_experience=pm_experience,
+                team_size=team_size,
+                requirement_stability=requirement_stability,
+                environment_adequacy=environment_adequacy,
+                preprocessing=preprocessing
+            )
+            
+            progress_bar.progress(40, text="🧠 Running XGBoost prediction model...")
+            time.sleep(0.6)
+            
+            # Make prediction
+            effort_hours = predict_effort(model, X)
+            
+            progress_bar.progress(60, text="💰 Computing cost estimates...")
+            time.sleep(0.4)
+            
+        except Exception as e:
+            progress_bar.empty()
+            st.error(f"Prediction failed: {e}")
+            logger.exception(e)
+            return
         
         # Derived metrics
         person_months = effort_hours / HOURS_PER_MONTH
         cost_estimate = person_months * DEFAULT_LABOR_RATE
+        
+        progress_bar.progress(80, text="📝 Generating AI analysis...")
+        time.sleep(0.5)
+        
+        # Generate narrative
+        narrative = generate_narrative(
+            effort_hours=effort_hours,
+            input_features=input_features,
+            feature_importance=feature_importance
+        )
+        
+        progress_bar.progress(100, text="✅ Analysis complete!")
+        time.sleep(0.3)
+        progress_bar.empty()
+        
+        # Display results
+        st.markdown("---")
+        st.subheader("📈 Estimation Results")
         
         # Metrics display
         col1, col2, col3 = st.columns(3)
@@ -897,21 +925,21 @@ def main():
                 delta=f"at ${DEFAULT_LABOR_RATE:,}/month"
             )
         
-        # Generate narrative
+        # AI-Generated Analysis with loading effect
         st.markdown("---")
         st.subheader("📝 AI-Generated Analysis")
         
-        narrative = generate_narrative(
-            effort_hours=effort_hours,
-            input_features=input_features,
-            feature_importance=feature_importance
-        )
+        with st.spinner("🤖 Generating intelligent analysis..."):
+            time.sleep(1.0)  # Simulate AI processing
         
         st.markdown(f'<div class="result-box">{narrative}</div>', unsafe_allow_html=True)
         
         # ========== Dynamic Visualizations ==========
         st.markdown("---")
         st.subheader("📊 Visual Analytics")
+        
+        with st.spinner("📈 Rendering interactive charts..."):
+            time.sleep(0.8)  # Simulate chart generation
         
         # Row 1: Radar Chart and Feature Importance
         viz_col1, viz_col2 = st.columns(2)
