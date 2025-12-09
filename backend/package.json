@@ -8,7 +8,9 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "dev": "nodemon server.js"
   },
   "author": "rehman",
@@ -26,7 +28,9 @@
     "morgan": "^1.10.1"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.15",
     "nodemon": "^3.1.10",
-    "prisma": "^6.17.1"
+    "prisma": "^6.17.1",
+    "vitest": "^4.0.15"
   }
 }
