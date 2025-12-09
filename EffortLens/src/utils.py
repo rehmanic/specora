@@ -3,67 +3,14 @@
 Utility functions for EffortLens - Project Cost and Effort Estimator.
 
 This module provides utility functions for the ML-based effort estimation system.
-The RAG approach has been replaced with a direct ML regression pipeline.
+Uses template-based narrative generation (no external API required).
 """
 
 import logging
-import os
 from typing import Dict, Optional
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-
-# ========== Gemini LLM Integration ==========
-
-def call_gemini_api(prompt: str, api_key: Optional[str] = None) -> Optional[str]:
-    """
-    Call Google Gemini API for text generation.
-    
-    Args:
-        prompt: The prompt to send to Gemini
-        api_key: Optional API key (defaults to GEMINI_API_KEY env var)
-        
-    Returns:
-        Generated text or None if failed
-    """
-    if api_key is None:
-        api_key = os.getenv('GEMINI_API_KEY', '')
-    
-    if not api_key:
-        logger.warning("GEMINI_API_KEY not set")
-        return None
-    
-    try:
-        import google.generativeai as genai
-        
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        response = model.generate_content(prompt)
-        return response.text
-        
-    except ImportError:
-        logger.warning("google-generativeai not installed. Install with: pip install google-generativeai")
-        return None
-    except Exception as e:
-        logger.error(f"Gemini API error: {e}")
-        return None
-
-
-def call_llm_api(prompt: str) -> Optional[str]:
-    """
-    Wrapper for LLM API calls.
-    
-    Currently uses Gemini API. Can be extended to support other LLMs.
-    
-    Args:
-        prompt: The prompt to send to the LLM
-        
-    Returns:
-        Generated text or None if failed
-    """
-    return call_gemini_api(prompt)
 
 
 # ========== Cost Calculation Utilities ==========
