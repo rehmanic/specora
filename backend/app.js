@@ -13,9 +13,11 @@ const app = express();
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// FIX: Explicitly allow localhost:3000 so the frontend can connect
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: "http://localhost:3000",
     credentials: true,
   })
 );
@@ -28,6 +30,11 @@ if (process.env.NODE_ENV === "development") {
 // Routes
 app.get("/", (req, res) => {
   res.json({ message: "root API is running..." });
+});
+
+// Health endpoint to quickly verify server + CORS from browser
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, env: process.env.NODE_ENV || null });
 });
 
 app.use("/api/auth", authRoutes);

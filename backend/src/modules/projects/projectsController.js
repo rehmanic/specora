@@ -116,6 +116,9 @@ export const getAllProjects = async (req, res) => {
 
     res.json(projects);
   } catch (err) {
+    console.error("❌ Error in getAllProjects:");
+    console.error("   Message:", err.message);
+    console.error("   Stack:", err.stack);
     res.status(500).json({ error: err.message });
   }
 };

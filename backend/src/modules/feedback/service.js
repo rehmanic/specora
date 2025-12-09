@@ -2,21 +2,21 @@
 import { create, findAll, findById, update, remove } from "./repository.js";
 
 export async function createFeedback(data) {
-  return await repo.create(data);
+  return await create(data);
 }
 
 export async function getAllFeedback() {
-  return await repo.findAll();
+  return await findAll();
 }
 
 export async function getFeedbackById(id) {
-  return await repo.findById(id);
+  return await findById(id);
 }
 
 export async function updateFeedback(id, data) {
-  return await repo.update(id, data);
+  return await update(id, data);
 }
 
 export async function deleteFeedback(id) {
-  return await repo.remove(id);
+  return await remove(id);
 }

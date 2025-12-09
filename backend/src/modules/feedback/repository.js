@@ -1,21 +1,21 @@
 import prisma from "../../../prisma/prismaClient.js";
 
 export function create(data) {
-  return prisma.feedback.create({ data });
+  return prisma.feedbacks.create({ data });
 }
 
 export function findAll() {
-  return prisma.feedback.findMany();
+  return prisma.feedbacks.findMany();
 }
 
 export function findById(id) {
-  return prisma.feedback.findUnique({ where: { id } });
+  return prisma.feedbacks.findUnique({ where: { id } });
 }
 
 export function update(id, data) {
-  return prisma.feedback.update({ where: { id }, data });
+  return prisma.feedbacks.update({ where: { id }, data });
 }
 
 export function remove(id) {
-  return prisma.feedback.delete({ where: { id } });
+  return prisma.feedbacks.delete({ where: { id } });
 }

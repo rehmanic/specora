@@ -17,7 +17,8 @@ import { useRouter } from "next/navigation";
 
 export default function AuthForm({ className, variant = "login", ...props }) {
   const isLogin = variant === "login";
-  const { login, loading, error } = useAuthStore();
+  // We still import the store, but we will bypass 'login' to fix the URL issue locally
+  const { loading: storeLoading, error: storeError } = useAuthStore();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -27,6 +28,8 @@ export default function AuthForm({ className, variant = "login", ...props }) {
   });
 
   const [localError, setLocalError] = useState(null);
+  // Add local loading state since we are handling login manually
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -38,31 +41,68 @@ export default function AuthForm({ className, variant = "login", ...props }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError(null);
+    setIsSubmitting(true);
 
     try {
       if (isLogin) {
-        await login({
-          username: formData.username,
-          password: formData.password,
+        // FIX: Manually fetch login to ensure we hit port 5000 (Backend)
+        // This bypasses the broken URL in the store's login() function
+        const res = await fetch("http://localhost:5000/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password,
+          }),
         });
-        router.push("/dashboard"); // redirect after successful login
+
+        // Check response status BEFORE parsing JSON to avoid parsing HTML error pages
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ message: "Login failed" }));
+          throw new Error(errorData.message || "Login failed");
+        }
+
+        const data = await res.json();
+
+        // Save token to localStorage
+        localStorage.setItem("token", data.token);
+
+        // CRITICAL FIX: Update Zustand store with user data so ProtectedRoute can access it
+        useAuthStore.setState({
+          user: data.user,
+          token: data.token,
+        });
+
+        // Use router.push instead of window.location to avoid full page reload
+        router.push("/dashboard");
       } else {
-        // signup
+        // signup (This was already working correctly)
         const res = await fetch("http://localhost:5000/api/auth/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         });
+
+        // Check response status BEFORE parsing JSON to avoid parsing HTML error pages
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ message: "Signup failed" }));
+          throw new Error(errorData.message || "Signup failed");
+        }
+
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Signup failed");
 
         alert("Signup successful! Please login.");
         router.push("/login");
       }
     } catch (err) {
       setLocalError(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const isLoading = storeLoading || isSubmitting;
+  const errorMessage = localError || storeError;
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -132,23 +172,23 @@ export default function AuthForm({ className, variant = "login", ...props }) {
               </div>
 
               {/* Error display */}
-              {(localError || error) && (
-                <p className="text-red-600 text-sm">{localError || error}</p>
+              {errorMessage && (
+                <p className="text-red-600 text-sm">{errorMessage}</p>
               )}
 
               <div className="flex flex-col gap-3">
                 <Button
                   type="submit"
                   className="w-full cursor-pointer"
-                  disabled={loading}
+                  disabled={isLoading}
                 >
-                  {loading
+                  {isLoading
                     ? isLogin
                       ? "Logging in..."
                       : "Signing up..."
                     : isLogin
-                    ? "Login"
-                    : "Sign up"}
+                      ? "Login"
+                      : "Sign up"}
                 </Button>
               </div>
             </div>

@@ -2,10 +2,20 @@ import * as service from "./service.js";
 
 export async function createFeedback(req, res) {
   try {
-    const { title, status, formJson } = req.body;
-    const feedback = await service.createFeedback({ title, status, formJson });
+    const { title, status, formJson, form_structure } = req.body;
+
+    // Handle both formJson (from FormBuilder) and form_structure (database field)
+    const feedbackData = {
+      title,
+      status: status?.toLowerCase() || "open",
+      form_structure: form_structure || formJson,
+    };
+
+    console.log("Creating feedback:", feedbackData);
+    const feedback = await service.createFeedback(feedbackData);
     res.status(201).json({ success: true, data: feedback });
   } catch (err) {
+    console.error("❌ Error creating feedback:", err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 }

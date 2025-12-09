@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -8,27 +9,58 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-
-const DUMMY_DATA = [
-  { id: 1, title: "Improve onboarding flow", status: "Open" },
-  { id: 2, title: "Dark mode contrast tweaks", status: "In Progress" },
-  { id: 3, title: "Export to CSV feature", status: "Closed" },
-  { id: 4, title: "Add keyboard shortcuts", status: "Open" },
-  { id: 5, title: "Enhance mobile responsiveness", status: "In Progress" },
-];
+import { getAllFeedback } from "@/api/feedback";
+import useAuthStore from "@/store/authStore";
 
 export function FeedbackTable({ isClient }) {
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { token } = useAuthStore();
+
+  useEffect(() => {
+    const fetchFeedbacks = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const data = await getAllFeedback(token);
+        setFeedbacks(data);
+      } catch (err) {
+        console.error("Error fetching feedbacks:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeedbacks();
+  }, [token]);
+
+  if (loading) {
+    return <p className="p-4 text-muted-foreground">Loading feedbacks...</p>;
+  }
+
+  if (error) {
+    return <p className="p-4 text-red-600">Error: {error}</p>;
+  }
+
+  if (feedbacks.length === 0) {
+    return (
+      <p className="p-4 text-muted-foreground">
+        No feedback found. {isClient && "Create your first feedback to get started!"}
+      </p>
+    );
+  }
+
   return (
     <div className="w-full overflow-x-auto">
       <table className="min-w-full table-auto">
         <thead className="bg-muted/50">
           <tr className="text-left">
-            <th
-              scope="col"
-              className="px-4 py-3 text-sm font-medium text-muted-foreground"
-            >
-              id
-            </th>
             <th
               scope="col"
               className="px-4 py-3 text-sm font-medium text-muted-foreground"
@@ -45,28 +77,36 @@ export function FeedbackTable({ isClient }) {
               scope="col"
               className="px-4 py-3 text-sm font-medium text-muted-foreground"
             >
+              Created
+            </th>
+            <th
+              scope="col"
+              className="px-4 py-3 text-sm font-medium text-muted-foreground"
+            >
               Actions
             </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
-          {DUMMY_DATA.map((item) => (
+          {feedbacks.map((item) => (
             <tr key={item.id} className="bg-card">
-              <td className="px-4 py-3 text-sm">{item.id}</td>
-              <td className="px-4 py-3 text-sm">{item.title}</td>
+              <td className="px-4 py-3 text-sm">{item.title || "Untitled"}</td>
               <td className="px-4 py-3">
                 <span
                   className={cn(
                     "inline-flex items-center rounded-md px-2 py-1 text-xs",
-                    item.status === "Open" &&
-                      "bg-accent text-accent-foreground",
-                    item.status === "In Progress" &&
-                      "bg-secondary text-secondary-foreground",
-                    item.status === "Closed" && "bg-muted text-muted-foreground"
+                    item.status?.toLowerCase() === "open" &&
+                    "bg-accent text-accent-foreground",
+                    item.status?.toLowerCase() === "in progress" &&
+                    "bg-secondary text-secondary-foreground",
+                    item.status?.toLowerCase() === "closed" && "bg-muted text-muted-foreground"
                   )}
                 >
-                  {item.status}
+                  {item.status || "Open"}
                 </span>
+              </td>
+              <td className="px-4 py-3 text-sm">
+                {new Date(item.created_at).toLocaleDateString()}
               </td>
               <td className="px-4 py-3">
                 <DropdownMenu>
@@ -84,18 +124,20 @@ export function FeedbackTable({ isClient }) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                       View
                     </DropdownMenuItem>
                     {!isClient && (
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onSelect={(e) => e.preventDefault()}
-                      >
-                        Delete
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </>
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>

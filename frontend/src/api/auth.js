@@ -1,7 +1,8 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export async function loginRequest(credentials) {
-  const res = await fetch(`${API_BASE}/auth/login`, {
+  // backend auth routes are mounted at /api/auth
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(credentials),
