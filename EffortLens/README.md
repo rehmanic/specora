@@ -1,0 +1,208 @@
+# EffortLens - Project Cost & Effort Estimation System
+
+**ML-powered software effort estimation using XGBoost regression**
+
+EffortLens is a machine learning system that predicts software development effort and cost using the SEERA cost estimation dataset. It uses XGBoost regression trained on 120 historical projects and generates professional AI-powered narratives via Google Gemini API.
+
+## 🎯 Features
+
+- **XGBoost ML Model**: Trained regression model for accurate effort prediction
+- **8 Project Inputs**: Team size, complexity, object points, and 5 other key factors
+- **Cost Calculation**: Automatic conversion from effort to cost estimates
+- **AI Narratives**: Gemini API generates professional analysis reports
+- **Streamlit UI**: Clean, user-friendly web interface
+- **Risk Detection**: Identifies low-scoring inputs as risk factors
+- **Docker Ready**: Containerized deployment with docker-compose
+
+## 📁 Repository Structure
+
+```
+EffortLens/
+├── data/
+│   └── raw/                     # Place SEERA Excel dataset here
+├── models/
+│   ├── model.joblib             # Trained XGBoost model
+│   ├── encoders.joblib          # Preprocessing (imputer, scaler)
+│   └── training_metrics.json    # Training performance metrics
+├── src/
+│   ├── train_model.py           # XGBoost training pipeline
+│   ├── utils.py                 # Gemini API & cost utilities
+│   └── app.py                   # Streamlit UI
+├── tests/
+│   ├── test_train.py
+│   └── test_app_smoke.py
+├── requirements.txt
+├── README.md
+├── Dockerfile
+├── docker-compose.yml
+└── .env.example
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.11+
+- SEERA cost estimation dataset (Excel: `SEERA - Software Project Effort Estimation.xlsx`)
+- Google Gemini API key for AI narratives
+
+### Installation
+
+```powershell
+# Navigate to EffortLens directory
+cd EffortLens
+
+# Create virtual environment
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment template
+copy .env.example .env
+
+# Edit .env and add your GEMINI_API_KEY
+```
+
+### Setup Pipeline
+
+1. **Place your data**:
+   ```powershell
+   # Copy SEERA Excel dataset to data/raw/
+   copy "path\to\SEERA - Software Project Effort Estimation.xlsx" data\raw\
+   ```
+
+2. **Train the model**:
+   ```powershell
+   python src\train_model.py
+   ```
+
+3. **Run Streamlit UI**:
+   ```powershell
+   streamlit run src\app.py
+   ```
+
+4. **Open browser**: Navigate to http://localhost:8501
+
+## 🧠 Model Details
+
+### Input Features (8 total)
+
+| Feature | Type | Range | Description |
+|---------|------|-------|-------------|
+| Object Points | Numeric | 1-1000+ | Function points / object points |
+| Team Size | Numeric | 1-50+ | Number of developers |
+| Product Complexity | Scale | 1-5 | Low (1) to Very High (5) |
+| Performance Requirements | Scale | 1-5 | Low (1) to Very High (5) |
+| Programmer Capability | Scale | 1-5 | Low (1) to Very High (5) |
+| PM Experience | Scale | 1-5 | Low (1) to Very High (5) |
+| Requirement Stability | Scale | 1-5 | Unstable (1) to Very Stable (5) |
+| Dev Environment Adequacy | Scale | 1-5 | Poor (1) to Excellent (5) |
+
+### Output
+
+- **Effort**: Person-hours (primary prediction)
+- **Person-Months**: Effort ÷ 160 hours
+- **Cost Estimate**: Person-months × $10,000/month
+- **AI Narrative**: Professional analysis from Gemini API
+
+### Training Metrics
+
+- **Dataset**: SEERA (120 projects)
+- **Algorithm**: XGBoost Regressor
+- **Cross-Validation R²**: ~0.39
+- **Cross-Validation MAE**: ~5,000 person-hours
+- **Top Features**: Team size (33%), Object points (26%), Environment adequacy (14%)
+
+## 🔧 Environment Configuration
+
+Create `.env` file with:
+
+```env
+# Google Gemini API for AI narratives
+GEMINI_API_KEY=your_api_key_here
+```
+
+## 🎨 Streamlit UI Usage
+
+1. **Enter 8 project parameters**:
+   - Object Points (numeric)
+   - Team Size (numeric)
+   - 6 scale inputs (1-5 sliders)
+
+2. **Click "Calculate Effort Estimate"**
+
+3. **View results**:
+   - Effort in person-hours
+   - Person-months equivalent
+   - Cost estimate in USD
+   - AI-generated professional narrative
+
+## 🐳 Docker Deployment
+
+```powershell
+cd EffortLens
+docker-compose up --build
+```
+
+Access UI at: http://localhost:8501
+
+## 🧪 Testing
+
+```powershell
+pytest tests/ -v
+```
+
+## 🔬 Technical Pipeline
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    TRAINING PHASE                        │
+├─────────────────────────────────────────────────────────┤
+│  SEERA Dataset (120 projects, 76 columns)               │
+│       ↓                                                 │
+│  Feature Selection (8 key features)                     │
+│       ↓                                                 │
+│  Preprocessing (SimpleImputer median, StandardScaler)   │
+│       ↓                                                 │
+│  XGBoost Training (5-fold cross-validation)             │
+│       ↓                                                 │
+│  Save: model.joblib + encoders.joblib                   │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│                   PREDICTION PHASE                       │
+├─────────────────────────────────────────────────────────┤
+│  User Input (8 features via Streamlit UI)               │
+│       ↓                                                 │
+│  Load model.joblib + encoders.joblib                    │
+│       ↓                                                 │
+│  Apply same preprocessing pipeline                      │
+│       ↓                                                 │
+│  XGBoost model.predict()                                │
+│       ↓                                                 │
+│  Cost Calculation (effort → person-months → USD)        │
+│       ↓                                                 │
+│  Gemini API → Professional Narrative                    │
+└─────────────────────────────────────────────────────────┘
+```
+
+## 🐛 Troubleshooting
+
+### Issue: "Model artifacts not found"
+**Solution**: Run `python src/train_model.py` first
+
+### Issue: "Gemini API error"
+**Solution**: Check your `GEMINI_API_KEY` in `.env` file
+
+### Issue: Import errors
+**Solution**: Activate virtual environment and install requirements
+
+## 📄 License
+
+See LICENSE file in repository root.
+
+---
+
+**Built with ❤️ for accurate software cost estimation**

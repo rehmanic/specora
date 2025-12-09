@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  # EffortLens - ML Effort Estimation Service
+  effortlens:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: effortlens_service
+    ports:
+      - "8501:8501"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - PYTHONPATH=/app
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./src:/app/src
+    command: streamlit run src/app.py --server.port=8501 --server.address=0.0.0.0
+    restart: unless-stopped
+
