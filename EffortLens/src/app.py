@@ -18,6 +18,8 @@ from typing import Dict, Optional, Tuple
 import joblib
 import numpy as np
 import streamlit as st
+import plotly.graph_objects as go
+import plotly.express as px
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -319,6 +321,259 @@ def _select_recommendation(risk_features: list) -> str:
     
     # Return a random default recommendation
     return random.choice(DEFAULT_RECOMMENDATIONS)
+
+
+# ========== Dynamic Visualization Functions ==========
+
+def create_radar_chart(input_features: Dict[str, float]) -> go.Figure:
+    """
+    Create a radar chart showing the project parameter profile.
+    
+    Args:
+        input_features: Dictionary of input feature values
+        
+    Returns:
+        Plotly figure object
+    """
+    # Get slider-based features (1-5 scale) for radar
+    categories = [
+        'Product Complexity',
+        'Performance Req.',
+        'Programmer Capability',
+        'PM Experience',
+        'Requirement Stability',
+        'Environment Adequacy'
+    ]
+    
+    values = [
+        input_features.get('product_complexity', 3),
+        input_features.get('performance_requirements', 3),
+        input_features.get('programmer_capability', 3),
+        input_features.get('pm_experience', 3),
+        input_features.get('requirement_stability', 3),
+        input_features.get('environment_adequacy', 3)
+    ]
+    
+    # Close the radar chart
+    categories_closed = categories + [categories[0]]
+    values_closed = values + [values[0]]
+    
+    fig = go.Figure()
+    
+    # Add the radar trace
+    fig.add_trace(go.Scatterpolar(
+        r=values_closed,
+        theta=categories_closed,
+        fill='toself',
+        fillcolor='rgba(102, 126, 234, 0.3)',
+        line=dict(color='#667eea', width=2),
+        name='Your Project',
+        hovertemplate='%{theta}: %{r}/5<extra></extra>'
+    ))
+    
+    # Add ideal benchmark (all 5s)
+    ideal_values = [5] * len(categories) + [5]
+    fig.add_trace(go.Scatterpolar(
+        r=ideal_values,
+        theta=categories_closed,
+        fill='none',
+        line=dict(color='#48BB78', width=1, dash='dash'),
+        name='Ideal (5/5)',
+        hovertemplate='%{theta}: %{r}/5<extra></extra>'
+    ))
+    
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 5],
+                tickvals=[1, 2, 3, 4, 5],
+                ticktext=['1', '2', '3', '4', '5'],
+                gridcolor='rgba(0,0,0,0.1)'
+            ),
+            angularaxis=dict(
+                gridcolor='rgba(0,0,0,0.1)'
+            ),
+            bgcolor='rgba(0,0,0,0)'
+        ),
+        showlegend=True,
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=-0.2,
+            xanchor='center',
+            x=0.5
+        ),
+        margin=dict(l=60, r=60, t=40, b=60),
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    return fig
+
+
+def create_feature_importance_chart(feature_importance: Dict[str, float], input_features: Dict[str, float]) -> go.Figure:
+    """
+    Create a horizontal bar chart showing feature importance with user values.
+    
+    Args:
+        feature_importance: Dictionary of feature importance scores
+        input_features: Dictionary of user input values
+        
+    Returns:
+        Plotly figure object
+    """
+    # Map feature names to display names
+    display_mapping = {
+        'Object points': 'Project Size',
+        'Product complexity': 'Product Complexity',
+        'Performance requirements': 'Performance Req.',
+        'Programmers capability ': 'Programmer Capability',
+        'Project manager experience': 'PM Experience',
+        'Team size': 'Team Size',
+        'Requirment stability': 'Requirement Stability',
+        'Development environment adequacy': 'Environment Adequacy'
+    }
+    
+    # Sort by importance
+    sorted_features = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)
+    
+    names = [display_mapping.get(f[0], f[0]) for f in sorted_features]
+    importances = [f[1] for f in sorted_features]
+    
+    # Create color gradient based on importance
+    colors = ['#667eea' if imp > 0.1 else '#a0aec0' for imp in importances]
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Bar(
+        y=names,
+        x=importances,
+        orientation='h',
+        marker=dict(
+            color=importances,
+            colorscale=[[0, '#a0aec0'], [0.5, '#667eea'], [1, '#764ba2']],
+            line=dict(width=0)
+        ),
+        hovertemplate='%{y}<br>Importance: %{x:.1%}<extra></extra>'
+    ))
+    
+    fig.update_layout(
+        xaxis=dict(
+            title='Relative Importance',
+            tickformat='.0%',
+            gridcolor='rgba(0,0,0,0.1)',
+            range=[0, max(importances) * 1.1]
+        ),
+        yaxis=dict(
+            title='',
+            autorange='reversed'
+        ),
+        margin=dict(l=130, r=20, t=20, b=40),
+        height=350,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    return fig
+
+
+def create_cost_breakdown_chart(cost_estimate: float) -> go.Figure:
+    """
+    Create a gauge chart showing cost estimate with range.
+    
+    Args:
+        cost_estimate: Base cost estimate in USD
+        
+    Returns:
+        Plotly figure object
+    """
+    cost_low = cost_estimate * 0.8
+    cost_high = cost_estimate * 1.2
+    
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number+delta",
+        value=cost_estimate,
+        number={'prefix': "$", 'valueformat': ',.0f'},
+        delta={'reference': cost_low, 'relative': False, 'valueformat': ',.0f', 'prefix': '+$'},
+        gauge={
+            'axis': {
+                'range': [0, cost_high * 1.2],
+                'tickformat': '$,.0f',
+                'tickmode': 'array',
+                'tickvals': [0, cost_low, cost_estimate, cost_high],
+                'ticktext': ['$0', f'${cost_low:,.0f}', f'${cost_estimate:,.0f}', f'${cost_high:,.0f}']
+            },
+            'bar': {'color': '#667eea'},
+            'steps': [
+                {'range': [0, cost_low], 'color': '#C6F6D5'},
+                {'range': [cost_low, cost_estimate], 'color': '#F6E05E'},
+                {'range': [cost_estimate, cost_high], 'color': '#FEB2B2'},
+                {'range': [cost_high, cost_high * 1.2], 'color': '#FC8181'}
+            ],
+            'threshold': {
+                'line': {'color': '#1E3A5F', 'width': 4},
+                'thickness': 0.75,
+                'value': cost_estimate
+            }
+        },
+        title={'text': "Budget Estimate Range", 'font': {'size': 16}}
+    ))
+    
+    fig.update_layout(
+        height=300,
+        margin=dict(l=30, r=30, t=60, b=30),
+        paper_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    return fig
+
+
+def create_effort_comparison_chart(effort_hours: float, team_size: int) -> go.Figure:
+    """
+    Create a chart showing effort distribution over different team configurations.
+    
+    Args:
+        effort_hours: Predicted effort in person-hours
+        team_size: Number of team members
+        
+    Returns:
+        Plotly figure object
+    """
+    # Calculate duration for different team sizes
+    team_sizes = [max(1, team_size - 2), max(1, team_size - 1), team_size, team_size + 1, team_size + 2]
+    team_sizes = sorted(set([t for t in team_sizes if t >= 1]))  # Remove duplicates and negatives
+    
+    # Estimate duration (months) for each team size
+    # Using simple formula: duration = effort / (team_size * hours_per_month)
+    durations = [effort_hours / (t * HOURS_PER_MONTH) for t in team_sizes]
+    
+    # Highlight current team size
+    colors = ['#667eea' if t == team_size else '#a0aec0' for t in team_sizes]
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Bar(
+        x=[f"{t} devs" for t in team_sizes],
+        y=durations,
+        marker_color=colors,
+        text=[f"{d:.1f} mo" for d in durations],
+        textposition='outside',
+        hovertemplate='Team: %{x}<br>Duration: %{y:.1f} months<extra></extra>'
+    ))
+    
+    fig.update_layout(
+        xaxis=dict(title='Team Size'),
+        yaxis=dict(title='Project Duration (months)', gridcolor='rgba(0,0,0,0.1)'),
+        margin=dict(l=60, r=20, t=20, b=60),
+        height=300,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        showlegend=False
+    )
+    
+    return fig
 
 
 # ========== Prediction Logic ==========
@@ -653,6 +908,40 @@ def main():
         )
         
         st.markdown(f'<div class="result-box">{narrative}</div>', unsafe_allow_html=True)
+        
+        # ========== Dynamic Visualizations ==========
+        st.markdown("---")
+        st.subheader("📊 Visual Analytics")
+        
+        # Row 1: Radar Chart and Feature Importance
+        viz_col1, viz_col2 = st.columns(2)
+        
+        with viz_col1:
+            st.markdown("##### 🎯 Project Parameter Profile")
+            st.markdown("*Compare your project parameters against ideal values*")
+            radar_fig = create_radar_chart(input_features)
+            st.plotly_chart(radar_fig, use_container_width=True, key="radar_chart")
+        
+        with viz_col2:
+            st.markdown("##### 📈 Feature Importance")
+            st.markdown("*Which factors most influence effort predictions*")
+            importance_fig = create_feature_importance_chart(feature_importance, input_features)
+            st.plotly_chart(importance_fig, use_container_width=True, key="importance_chart")
+        
+        # Row 2: Cost Gauge and Duration by Team Size
+        viz_col3, viz_col4 = st.columns(2)
+        
+        with viz_col3:
+            st.markdown("##### 💰 Budget Estimate Range")
+            st.markdown("*Cost estimate with ±20% contingency range*")
+            cost_fig = create_cost_breakdown_chart(cost_estimate)
+            st.plotly_chart(cost_fig, use_container_width=True, key="cost_gauge")
+        
+        with viz_col4:
+            st.markdown("##### ⏱️ Duration by Team Size")
+            st.markdown("*How team size affects project duration*")
+            duration_fig = create_effort_comparison_chart(effort_hours, team_size)
+            st.plotly_chart(duration_fig, use_container_width=True, key="duration_chart")
         
         # Additional details
         with st.expander("🔍 View Input Summary"):
