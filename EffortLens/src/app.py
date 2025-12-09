@@ -31,7 +31,6 @@ logger = logging.getLogger(__name__)
 
 MODEL_PATH = os.getenv('ECON_MODEL_PATH', './models/model.joblib')
 ENCODERS_PATH = os.getenv('ECON_ENCODERS_PATH', './models/encoders.joblib')
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
 # Cost estimation parameters
 HOURS_PER_MONTH = 160  # Standard hours per person-month
@@ -79,46 +78,130 @@ def load_model_and_preprocessing():
     return model_artifact, preprocessing
 
 
-# ========== Gemini API Integration ==========
+# ========== Template-Based Narrative Generation ==========
 
-def call_gemini_api(prompt: str) -> Optional[str]:
-    """
-    Call Gemini API for narrative generation.
-    
-    Args:
-        prompt: The prompt to send to Gemini
-        
-    Returns:
-        Generated text or None if failed
-    """
-    if not GEMINI_API_KEY:
-        logger.warning("GEMINI_API_KEY not set, skipping LLM narration")
-        return None
-    
-    try:
-        import google.generativeai as genai
-        
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        response = model.generate_content(prompt)
-        return response.text
-        
-    except ImportError:
-        logger.warning("google-generativeai not installed")
-        return None
-    except Exception as e:
-        logger.error(f"Gemini API error: {e}")
-        return None
+import random
+
+# 5 Different narrative templates for variety (using HTML for proper rendering)
+NARRATIVE_TEMPLATES = [
+    # Template 1: Professional & Formal
+    """<h3 style="color: #1E3A5F; margin-bottom: 15px;">📊 AI-Powered Project Effort and Cost Forecast</h3>
+
+<h4 style="color: #2C5282; margin-top: 20px;">Effort Summary</h4>
+<p>Based on your project parameters, the estimated development effort is <strong>{effort_hours:,.0f} person-hours</strong>, which translates to approximately <strong>{person_months:.1f} person-months</strong> of work (calculated at {hours_per_month} working hours per month).</p>
+
+<h4 style="color: #2C5282; margin-top: 20px;">Cost Interpretation</h4>
+<p>Applying an industry-standard labor rate of <strong>${labor_rate:,}</strong> per person-month, the projected cost is <strong>${cost_estimate:,.0f}</strong>.</p>
+<p>Accounting for typical project variance (±20%), budget planning should consider a range of <strong>${cost_low:,.0f}</strong> to <strong>${cost_high:,.0f}</strong>.</p>
+
+<h4 style="color: #2C5282; margin-top: 20px;">Key Drivers</h4>
+<p>{driver_text}</p>
+
+<h4 style="color: #2C5282; margin-top: 20px;">💡 Actionable Recommendation</h4>
+<p style="background: #EBF8FF; padding: 12px; border-radius: 6px; border-left: 4px solid #3182CE;">{recommendation}</p>""",
+
+    # Template 2: Executive Summary Style
+    """<h3 style="color: #1E3A5F; margin-bottom: 15px;">📋 Project Estimation Report</h3>
+
+<p style="background: #F0FFF4; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 16px;"><strong style="color: #276749;">📊 Executive Summary:</strong> This analysis predicts <strong>{effort_hours:,.0f} person-hours</strong> (~{person_months:.1f} person-months) of development effort, with an estimated budget of <strong>${cost_estimate:,.0f}</strong>.</p>
+
+<h4 style="color: #2C5282; margin-top: 20px;">💰 Financial Overview</h4>
+<table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+    <tr style="background: #EDF2F7;">
+        <td style="padding: 10px; border: 1px solid #CBD5E0;"><strong>Base Estimate</strong></td>
+        <td style="padding: 10px; border: 1px solid #CBD5E0;">${cost_estimate:,.0f}</td>
+    </tr>
+    <tr>
+        <td style="padding: 10px; border: 1px solid #CBD5E0;"><strong>Budget Range</strong></td>
+        <td style="padding: 10px; border: 1px solid #CBD5E0;">${cost_low:,.0f} - ${cost_high:,.0f}</td>
+    </tr>
+    <tr style="background: #EDF2F7;">
+        <td style="padding: 10px; border: 1px solid #CBD5E0;"><strong>Rate Applied</strong></td>
+        <td style="padding: 10px; border: 1px solid #CBD5E0;">${labor_rate:,}/person-month</td>
+    </tr>
+</table>
+
+<h4 style="color: #2C5282; margin-top: 20px;">🎯 Critical Factors</h4>
+<p>{driver_text}</p>
+
+<h4 style="color: #2C5282; margin-top: 20px;">✅ Recommended Action</h4>
+<p style="background: #F0FFF4; padding: 12px; border-radius: 6px; border-left: 4px solid #48BB78;">{recommendation}</p>""",
+
+    # Template 3: Detailed Technical
+    """<h3 style="color: #1E3A5F; margin-bottom: 15px;">🔬 Comprehensive Effort Analysis</h3>
+
+<h4 style="color: #2C5282; margin-top: 20px;">Metrics Breakdown</h4>
+<p>The model predicts a total effort of <strong>{effort_hours:,.0f} person-hours</strong>. For a team working standard {hours_per_month}-hour months, this equates to <strong>{person_months:.1f} person-months</strong> of dedicated development time.</p>
+
+<h4 style="color: #2C5282; margin-top: 20px;">Budget Projection</h4>
+<p>Using the baseline rate of <strong>${labor_rate:,}/person-month</strong>:</p>
+<ul style="list-style: none; padding-left: 0;">
+    <li style="padding: 8px 0; border-bottom: 1px solid #E2E8F0;">📌 <strong>Point Estimate:</strong> ${cost_estimate:,.0f}</li>
+    <li style="padding: 8px 0; border-bottom: 1px solid #E2E8F0;">📉 <strong>Lower Bound (-20%):</strong> ${cost_low:,.0f}</li>
+    <li style="padding: 8px 0;">📈 <strong>Upper Bound (+20%):</strong> ${cost_high:,.0f}</li>
+</ul>
+
+<h4 style="color: #2C5282; margin-top: 20px;">Influencing Factors</h4>
+<p>{driver_text}</p>
+
+<h4 style="color: #2C5282; margin-top: 20px;">🎯 Strategic Recommendation</h4>
+<p style="background: #FFF5F5; padding: 12px; border-radius: 6px; border-left: 4px solid #E53E3E;">{recommendation}</p>""",
+
+    # Template 4: Concise & Action-Oriented
+    """<h3 style="color: #1E3A5F; margin-bottom: 15px;">⚡ Quick Forecast Summary</h3>
+
+<p style="display: inline-block; width: 48%; background: #EBF8FF; padding: 15px; border-radius: 8px; text-align: center; vertical-align: top; margin-right: 2%;"><span style="color: #2B6CB0; font-size: 14px;">⏱️ EFFORT</span><br/><strong style="font-size: 20px; color: #1A365D;">{effort_hours:,.0f} hours</strong><br/><span style="color: #4A5568; font-size: 12px;">({person_months:.1f} person-months)</span></p>
+
+<p style="display: inline-block; width: 48%; background: #F0FFF4; padding: 15px; border-radius: 8px; text-align: center; vertical-align: top;"><span style="color: #276749; font-size: 14px;">💵 COST</span><br/><strong style="font-size: 20px; color: #22543D;">${cost_estimate:,.0f}</strong><br/><span style="color: #4A5568; font-size: 12px;">(${cost_low:,.0f} - ${cost_high:,.0f})</span></p>
+
+<h4 style="color: #2C5282; margin-top: 20px;">📈 Analysis</h4>
+<p>{driver_text}</p>
+
+<h4 style="color: #2C5282; margin-top: 20px;">💡 Key Takeaway</h4>
+<p style="background: #FFFAF0; padding: 12px; border-radius: 6px; border-left: 4px solid #DD6B20;">{recommendation}</p>""",
+
+    # Template 5: Narrative Style
+    """<h3 style="color: #1E3A5F; margin-bottom: 15px;">📝 Project Feasibility Assessment</h3>
+
+<p style="background: #F7FAFC; padding: 15px; border-radius: 8px; line-height: 1.8;">Based on the provided specifications, your project is estimated to require <strong>{effort_hours:,.0f} person-hours</strong> of development work. When distributed across standard working months ({hours_per_month} hours each), this represents approximately <strong>{person_months:.1f} person-months</strong> of effort.</p>
+
+<p style="background: #F7FAFC; padding: 15px; border-radius: 8px; line-height: 1.8; margin-top: 10px;">From a budgetary perspective, at <strong>${labor_rate:,}</strong> per person-month, you should plan for approximately <strong>${cost_estimate:,.0f}</strong> in development costs. Industry best practice suggests maintaining a contingency buffer, so consider a working range of <strong>${cost_low:,.0f}</strong> to <strong>${cost_high:,.0f}</strong>.</p>
+
+<h4 style="color: #2C5282; margin-top: 20px;">🔍 Key Observations</h4>
+<p>{driver_text}</p>
+
+<h4 style="color: #2C5282; margin-top: 20px;">✨ Our Recommendation</h4>
+<p style="background: #FAF5FF; padding: 12px; border-radius: 6px; border-left: 4px solid #805AD5;">{recommendation}</p>"""
+]
+
+# Risk-based recommendations mapping
+RECOMMENDATIONS = {
+    'Programmer Capability': "Consider investing in team training programs or augmenting the team with experienced developers to mitigate skill-gap risks and reduce potential delivery delays.",
+    'Project Manager Experience': "Engage a senior project manager as a mentor or consider bringing in experienced PM support to strengthen project governance and risk management.",
+    'Requirement Stability': "Prioritize stakeholder alignment workshops and implement formal change control procedures to minimize scope creep and rework.",
+    'Environment Adequacy': "Invest in development infrastructure, CI/CD pipelines, and modern tooling to enhance team productivity and code quality.",
+    'Product Complexity': "Break down the project into smaller, well-defined phases with clear milestones to manage complexity and enable iterative delivery.",
+    'Performance Requirements': "Allocate dedicated time for performance testing, optimization, and load testing to ensure the system meets its performance targets."
+}
+
+DEFAULT_RECOMMENDATIONS = [
+    "Maintain clear scope definition and conduct regular progress reviews to ensure alignment with project goals.",
+    "Implement agile practices with sprint retrospectives to continuously improve team efficiency and delivery.",
+    "Establish clear communication channels between stakeholders and the development team to prevent misunderstandings.",
+    "Create detailed technical documentation early to reduce onboarding time and knowledge silos.",
+    "Set up automated testing and quality gates to catch issues early and maintain code quality."
+]
 
 
-def generate_gemini_narration(
+def generate_narrative(
     effort_hours: float,
     input_features: Dict[str, float],
     feature_importance: Dict[str, float]
 ) -> str:
     """
-    Generate humanized narration using Gemini API.
+    Generate humanized narrative using template system (no API required).
+    
+    Randomly selects from 5 templates and fills in the prediction data.
     
     Args:
         effort_hours: Predicted effort in person-hours
@@ -126,17 +209,18 @@ def generate_gemini_narration(
         feature_importance: Dictionary of feature importance scores
         
     Returns:
-        Narrative text
+        Formatted narrative text
     """
     # Calculate derived values
     person_months = effort_hours / HOURS_PER_MONTH
     cost_estimate = person_months * DEFAULT_LABOR_RATE
+    cost_low = cost_estimate * 0.8
+    cost_high = cost_estimate * 1.2
     
-    # Find key drivers (lowest scoring inputs that might increase effort)
-    key_drivers = []
+    # Analyze input features for risks and drivers
     risk_features = []
+    positive_features = []
     
-    # Check for low-scoring features (potential risk areas)
     slider_features = ['product_complexity', 'performance_requirements', 'programmer_capability',
                        'pm_experience', 'requirement_stability', 'environment_adequacy']
     
@@ -147,103 +231,94 @@ def generate_gemini_narration(
         if value <= 2:
             risk_features.append((display_name, value))
         elif value >= 4:
-            key_drivers.append((display_name, value, "high"))
+            positive_features.append((display_name, value))
     
-    # Build prompt for Gemini
-    risk_text = ""
-    if risk_features:
-        risk_text = f"LOW SCORING INPUTS (potential risks): {', '.join([f'{n} ({v}/5)' for n, v in risk_features])}"
+    # Build driver text based on analysis
+    driver_text = _build_driver_text(input_features, risk_features, positive_features, feature_importance)
     
-    driver_text = ""
-    if key_drivers:
-        driver_text = f"HIGH SCORING INPUTS (positive factors): {', '.join([f'{n} ({v}/5)' for n, v, _ in key_drivers])}"
+    # Select recommendation based on lowest scoring feature
+    recommendation = _select_recommendation(risk_features)
     
-    prompt = f"""You are an AI Project Cost Estimation Assistant. Generate a professional, concise forecast narrative.
-
-INPUT DATA:
-- Predicted Effort: {effort_hours:.0f} person-hours
-- Person-Months: {person_months:.1f} (assuming {HOURS_PER_MONTH} hours/month)
-- Estimated Cost: ${cost_estimate:,.0f} (at ${DEFAULT_LABOR_RATE:,}/person-month rate)
-- Object Points: {input_features.get('object_points', 0):.0f}
-- Team Size: {input_features.get('team_size', 0):.0f} developers
-- {risk_text}
-- {driver_text}
-
-OUTPUT REQUIREMENTS (Generate exactly this structure):
-
-**AI-Powered Project Effort and Cost Forecast**
-
-**Effort Summary:**
-State the predicted effort of **{effort_hours:.0f} person-hours** in bold. Convert to person-months ({person_months:.1f} person-months at {HOURS_PER_MONTH} hours/month).
-
-**Cost Interpretation:**
-Explain that final cost = effort x labor rate. Using an industry rate of ${DEFAULT_LABOR_RATE:,}/person-month, the estimated cost is approximately **${cost_estimate:,.0f}**. Provide a range estimate (±20%).
-
-**Key Drivers:**
-Identify the 1-2 most influential factors from the inputs. If there are low-scoring features, mention how they may be elevating the estimate.
-
-**Actionable Recommendation:**
-Provide ONE specific, constructive action to mitigate risk based on the lowest-scoring input feature.
-
-TONE: Professional, concise, action-oriented. No tables, no extra sections."""
-
-    # Call Gemini API
-    narrative = call_gemini_api(prompt)
+    # Randomly select a template
+    template = random.choice(NARRATIVE_TEMPLATES)
     
-    if narrative:
-        return narrative
+    # Fill in the template
+    narrative = template.format(
+        effort_hours=effort_hours,
+        person_months=person_months,
+        cost_estimate=cost_estimate,
+        cost_low=cost_low,
+        cost_high=cost_high,
+        hours_per_month=HOURS_PER_MONTH,
+        labor_rate=DEFAULT_LABOR_RATE,
+        driver_text=driver_text,
+        recommendation=recommendation
+    )
     
-    # Fallback narrative if Gemini unavailable
-    return generate_fallback_narrative(effort_hours, person_months, cost_estimate, 
-                                       input_features, risk_features, key_drivers)
+    return narrative
 
 
-def generate_fallback_narrative(
-    effort_hours: float,
-    person_months: float,
-    cost_estimate: float,
+def _build_driver_text(
     input_features: Dict,
     risk_features: list,
-    key_drivers: list
+    positive_features: list,
+    feature_importance: Dict
 ) -> str:
-    """Generate fallback narrative when Gemini is unavailable."""
+    """Build the key drivers text section."""
     
-    # Build driver text
-    driver_text = "The estimate reflects the provided project parameters."
+    parts = []
+    
+    # Mention team size and object points as primary drivers
+    team_size = input_features.get('team_size', 0)
+    object_points = input_features.get('object_points', 0)
+    
+    if team_size > 0:
+        parts.append(f"Team size ({team_size:.0f} developers) is a significant factor in the estimation")
+    
+    if object_points > 0:
+        if object_points > 300:
+            parts.append(f"the high object point count ({object_points:.0f}) indicates substantial project scope")
+        elif object_points < 100:
+            parts.append(f"the moderate object point count ({object_points:.0f}) suggests manageable scope")
+        else:
+            parts.append(f"object points ({object_points:.0f}) reflect the project's functional complexity")
+    
+    # Mention risk factors
     if risk_features:
-        lowest = min(risk_features, key=lambda x: x[1])
-        driver_text = f"The estimate is influenced primarily by **{lowest[0]}** scoring {lowest[1]}/5."
+        lowest_risk = min(risk_features, key=lambda x: x[1])
+        parts.append(f"<strong>{lowest_risk[0]}</strong> (scored {lowest_risk[1]}/5) may be contributing to elevated effort estimates")
     
-    # Build recommendation
-    recommendation = "Maintain clear scope definition and regular progress reviews."
+    # Mention positive factors
+    if positive_features and not risk_features:
+        highest_positive = max(positive_features, key=lambda x: x[1])
+        parts.append(f"strong {highest_positive[0]} (scored {highest_positive[1]}/5) is a positive factor")
+    
+    if not parts:
+        return "The estimate is based on balanced project parameters with no significant risk factors identified."
+    
+    # Join with proper grammar
+    if len(parts) == 1:
+        return parts[0].capitalize() + "."
+    elif len(parts) == 2:
+        return parts[0].capitalize() + ", and " + parts[1] + "."
+    else:
+        return parts[0].capitalize() + "; " + "; ".join(parts[1:-1]) + "; and " + parts[-1] + "."
+
+
+def _select_recommendation(risk_features: list) -> str:
+    """Select an appropriate recommendation based on risk features."""
+    
     if risk_features:
+        # Get the lowest scoring feature
         lowest = min(risk_features, key=lambda x: x[1])
-        recommendations = {
-            'Programmer Capability': "Consider investing in team training or adding experienced developers to reduce delivery risk.",
-            'Project Manager Experience': "Engage a senior PM or provide mentorship to strengthen project governance.",
-            'Requirement Stability': "Prioritize requirements clarification workshops and implement change control procedures.",
-            'Environment Adequacy': "Invest in development tooling and infrastructure to improve team productivity.",
-            'Product Complexity': "Consider breaking the project into smaller, manageable phases with clear milestones.",
-            'Performance Requirements': "Allocate additional time for performance testing and optimization."
-        }
-        recommendation = recommendations.get(lowest[0], recommendation)
+        feature_name = lowest[0]
+        
+        # Return specific recommendation if available
+        if feature_name in RECOMMENDATIONS:
+            return RECOMMENDATIONS[feature_name]
     
-    cost_low = cost_estimate * 0.8
-    cost_high = cost_estimate * 1.2
-    
-    return f"""**AI-Powered Project Effort and Cost Forecast**
-
-**Effort Summary:**
-The predicted effort is **{effort_hours:,.0f} person-hours**, equivalent to approximately **{person_months:.1f} person-months** (at {HOURS_PER_MONTH} hours/month).
-
-**Cost Interpretation:**
-Final project cost equals effort multiplied by labor rate. Using an industry rate of ${DEFAULT_LABOR_RATE:,} per person-month, the estimated cost is approximately **${cost_estimate:,.0f}**. Accounting for typical variance, expect a range of **${cost_low:,.0f} to ${cost_high:,.0f}**.
-
-**Key Drivers:**
-{driver_text}
-
-**Actionable Recommendation:**
-{recommendation}"""
+    # Return a random default recommendation
+    return random.choice(DEFAULT_RECOMMENDATIONS)
 
 
 # ========== Prediction Logic ==========
@@ -355,15 +430,40 @@ def main():
         text-align: center;
     }
     .result-box {
-        background: #f8f9fa;
+        background: #ffffff;
         border-left: 4px solid #667eea;
-        padding: 1.5rem;
+        padding: 1.5rem 2rem;
         border-radius: 8px;
         margin: 1rem 0;
         color: #1a1a1a;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
-    .result-box h1, .result-box h2, .result-box h3, .result-box h4, .result-box p, .result-box li, .result-box strong {
-        color: #1a1a1a !important;
+    .result-box h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        font-size: 1.4rem;
+    }
+    .result-box h4 {
+        margin-top: 1.2rem;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+    .result-box p {
+        margin: 0.5rem 0;
+        line-height: 1.6;
+        color: #333;
+    }
+    .result-box ul {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+    }
+    .result-box li {
+        margin: 0.3rem 0;
+        line-height: 1.5;
+        color: #333;
+    }
+    .result-box strong {
+        color: #1E3A5F;
     }
     .stButton > button {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -546,12 +646,11 @@ def main():
         st.markdown("---")
         st.subheader("📝 AI-Generated Analysis")
         
-        with st.spinner("Generating detailed analysis with Gemini AI..."):
-            narrative = generate_gemini_narration(
-                effort_hours=effort_hours,
-                input_features=input_features,
-                feature_importance=feature_importance
-            )
+        narrative = generate_narrative(
+            effort_hours=effort_hours,
+            input_features=input_features,
+            feature_importance=feature_importance
+        )
         
         st.markdown(f'<div class="result-box">{narrative}</div>', unsafe_allow_html=True)
         
