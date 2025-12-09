@@ -105,7 +105,7 @@ def ask_gemini(prompt: str):
         raise ValueError("GEMINI_API_KEY missing in environment (.env).")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
 
     try:
         response = model.generate_content(prompt)
@@ -113,9 +113,8 @@ def ask_gemini(prompt: str):
         return response.text
     except Exception as e:
         msg = str(e)
-        if "quota" in msg.lower() or "429" in msg:
-            raise ValueError("API quota exceeded. Please check your Google Cloud / Gemini usage.")
-        raise
+        # Show the actual error for debugging
+        raise ValueError(f"Gemini API error: {msg}")
 
 # ============================================
 # Streamlit UI
