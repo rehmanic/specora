@@ -1,0 +1,71 @@
+
+# ✅ **10 CCPA-Compliant Requirements**
+
+### **1.**
+The system must provide a clear notice at or before the point of data collection describing the categories of personal information collected.
+
+### **2.**
+The system must enable users to submit requests to delete their personal information and process such requests within the statutory timeframe.
+
+### **3.**
+The system must offer an accessible method for users to request a copy of all personal information collected about them.
+
+### **4.**
+The system must provide a “Do Not Sell or Share My Personal Information” control prominently on the homepage.
+
+### **5.**
+The system must support opt-out preference signals (e.g., GPC) and interpret them as valid opt-out requests.
+
+### **6.**
+The system must classify and restrict the use of sensitive personal information when a user selects the limitation option.
+
+### **7.**
+The system must propagate deletion, correction, and opt-out requests to all service providers and contractors.
+
+### **8.**
+The system must verify user identity for access, correction, and deletion requests using reasonable verification methods.
+
+### **9.**
+The system must display an annually updated privacy policy containing all required disclosures under the CCPA.
+
+### **10.**
+The system must prevent any form of retaliation, such as denying service or increasing prices, when users exercise their CCPA rights.
+
+---
+
+# ❌ **10 CCPA-Non-Compliant Requirements**
+
+(These intentionally violate CCPA — useful for testing, training, or explaining what *not* to do.)
+
+### **1.**
+The system may sell or share personal information without providing an opt-out control.
+
+### **2.**
+The system may deny access to users who request deletion of their data.
+
+### **3.**
+The system must retain all customer data indefinitely, regardless of purpose or necessity.
+
+### **4.**
+The system may refuse to provide users with a copy of their personal information upon request.
+
+### **5.**
+The system may collect additional categories of personal information without informing the user.
+
+### **6.**
+The system may use sensitive personal information (e.g., location, health data) for advertising without offering any limitation options.
+
+### **7.**
+The system does not need to notify third-party service providers when a deletion request is processed.
+
+### **8.**
+The system may require users to create a new account to submit CCPA requests.
+
+### **9.**
+The system may change the privacy policy without notifying users or specifying effective dates.
+
+### **10.**
+The system may reject opt-out preference signals and only accept manual opt-out requests.
+
+### **11.**
+Personal data would never be deleted.

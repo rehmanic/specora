@@ -1,3 +1,5 @@
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 
 export function Message({ text, timestamp, isSender = false, className }) {
@@ -26,7 +28,9 @@ export function Message({ text, timestamp, isSender = false, className }) {
           className
         )}
       >
-        <p className="text-pretty text-sm leading-relaxed">{text}</p>
+        <div className="prose prose-sm max-w-none text-sm leading-relaxed prose-p:mb-2 last:prose-p:mb-0 prose-li:my-0 dark:prose-invert">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+        </div>
         <time
           className="text-[10px] opacity-70 sm:text-xs self-end"
           dateTime={timestamp instanceof Date ? timestamp.toISOString() : timestamp}

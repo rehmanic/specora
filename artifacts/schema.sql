@@ -4,6 +4,34 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 ------------------------------------------------------------
+-- ROLES TABLE
+------------------------------------------------------------
+CREATE TABLE Roles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) UNIQUE NOT NULL
+);
+
+------------------------------------------------------------
+-- PERMISSIONS TABLE
+------------------------------------------------------------
+CREATE TABLE Permissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) UNIQUE NOT NULL
+);
+
+------------------------------------------------------------
+-- ROLE-PERMISSION TABLE
+------------------------------------------------------------
+CREATE TABLE RolePermission (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    role_id UUID NOT NULL,
+    permission_id UUID NOT NULL,
+    FOREIGN KEY (role_id) REFERENCES Roles(id),
+    FOREIGN KEY (permission_id) REFERENCES Permissions(id),
+    UNIQUE (role_id, permission_id)
+);
+
+------------------------------------------------------------
 -- USERS TABLE
 ------------------------------------------------------------
 CREATE TABLE users (
@@ -24,19 +52,19 @@ CREATE TABLE users (
 ------------------------------------------------------------
 CREATE TABLE projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) UNIQUE NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
     description TEXT,
-    cover_image_url TEXT DEFAULT 'https://freepik.com/vector/api-illustration',
-    icon_url TEXT DEFAULT 'https://flaticon.com/icon/backlog',
+    cover_image_url TEXT DEFAULT 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fHNvZnR3YXJlfGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=600',
+    icon_url TEXT DEFAULT 'https://cdn-icons-png.flaticon.com/128/1383/1383970.png',
     status VARCHAR(50) DEFAULT 'active',
-    start_date DATE,
-    end_date DATE,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
     tags JSONB DEFAULT '[]',
 	members JSONB DEFAULT '[]',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by VARCHAR(100) REFERENCES users(username) ON DELETE SET NULL
+    created_by UUID REFERENCES users(id) ON DELETE CASCADE
 );
 
 ------------------------------------------------------------
@@ -44,8 +72,9 @@ CREATE TABLE projects (
 ------------------------------------------------------------
 CREATE TABLE specbot_chats (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title VARCHAR(255),
+    title VARCHAR(255) UNIQUE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
+	updated_at TIMESTAMPTZ DEFAULT NOW();
 	user_id UUID REFERENCES users(id) ON DELETE CASCADE,
 	project_id UUID REFERENCES projects(id) ON DELETE CASCADE
 );
@@ -63,14 +92,19 @@ CREATE TABLE group_chats (
 ------------------------------------------------------------
 -- MESSAGES TABLE
 ------------------------------------------------------------
+-- Create enums
+CREATE TYPE chat_type_enum AS ENUM ('specbot','group');
+CREATE TYPE sender_type_enum AS ENUM ('user','bot');
+
 CREATE TABLE messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    chat_type VARCHAR(50) NOT NULL CHECK (chat_type IN ('specbot', 'group')),
-    chat_id UUID NOT NULL, -- references depends on chat_type
+    chat_type chat_type_enum NOT NULL,
+    chat_id UUID NOT NULL, -- reference depends on chat_type
     content TEXT NOT NULL,
     metadata JSONB DEFAULT '{}', -- For reactions, etc.
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    sender_id UUID REFERENCES users(id) ON DELETE SET NULL
+    sender_type sender_type_enum NOT NULL,
+	sender_id UUID REFERENCES users(id) ON DELETE SET NULL DEFAULT NULL
 );
 
 ------------------------------------------------------------

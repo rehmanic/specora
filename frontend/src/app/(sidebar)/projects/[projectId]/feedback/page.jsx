@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { FeedbackTable } from "@/components/feedback/FeedbackTable";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import useUserStore from "@/store/authStore";
+import useProjectsStore from "@/store/projectsStore";
 
 export default function Page() {
   const { user } = useUserStore();
+  const { projects = [], fetchProjects } = useProjectsStore();
+  let firstProject = projects[0];
 
   const isClient = user?.role === "client";
   const isManager = user?.role === "manager";
@@ -31,7 +34,10 @@ export default function Page() {
             {/* Show "Create Feedback" button only if NOT client */}
             {!isClient && (
               <Button asChild aria-label="Create new feedback">
-                <Link href="/feedback/create" className="flex items-center">
+                <Link
+                  href={`/projects/${firstProject?.slug}/feedback/create`}
+                  className="flex items-center"
+                >
                   <span aria-hidden="true" className="mr-2 font-medium">
                     +
                   </span>

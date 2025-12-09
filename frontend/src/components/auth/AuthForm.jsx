@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,11 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import useAuthStore from "@/store/authStore";
 import { useRouter } from "next/navigation";
+import ErrorBox from "@/components/common/ErrorBox";
 
 export default function AuthForm({ className, variant = "login", ...props }) {
   const isLogin = variant === "login";
-  // We still import the store, but we will bypass 'login' to fix the URL issue locally
-  const { loading: storeLoading, error: storeError } = useAuthStore();
+  const { login, signup, loading, error } = useAuthStore();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -28,81 +28,54 @@ export default function AuthForm({ className, variant = "login", ...props }) {
   });
 
   const [localError, setLocalError] = useState(null);
-  // Add local loading state since we are handling login manually
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Clear errors when variant changes
+  useEffect(() => {
+    setLocalError(null);
+    useAuthStore.setState({ error: null });
+  }, [variant]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
+    // Clear errors when user starts typing
+    if (localError || error) {
+      setLocalError(null);
+      useAuthStore.setState({ error: null });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError(null);
-    setIsSubmitting(true);
+    useAuthStore.setState({ error: null });
 
     try {
       if (isLogin) {
-        // FIX: Manually fetch login to ensure we hit port 5000 (Backend)
-        // This bypasses the broken URL in the store's login() function
-        const res = await fetch("http://localhost:5000/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: formData.username,
-            password: formData.password,
-          }),
+        await login({
+          username: formData.username,
+          password: formData.password,
         });
-
-        // Check response status BEFORE parsing JSON to avoid parsing HTML error pages
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ message: "Login failed" }));
-          throw new Error(errorData.message || "Login failed");
-        }
-
-        const data = await res.json();
-
-        // Save token to localStorage
-        localStorage.setItem("token", data.token);
-
-        // CRITICAL FIX: Update Zustand store with user data so ProtectedRoute can access it
-        useAuthStore.setState({
-          user: data.user,
-          token: data.token,
-        });
-
-        // Use router.push instead of window.location to avoid full page reload
         router.push("/dashboard");
       } else {
-        // signup (This was already working correctly)
-        const res = await fetch("http://localhost:5000/api/auth/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+        await signup({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
         });
 
-        // Check response status BEFORE parsing JSON to avoid parsing HTML error pages
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ message: "Signup failed" }));
-          throw new Error(errorData.message || "Signup failed");
-        }
-
-        const data = await res.json();
-
-        alert("Signup successful! Please login.");
-        router.push("/login");
+        router.push("/dashboard");
       }
     } catch (err) {
-      setLocalError(err.message);
-    } finally {
-      setIsSubmitting(false);
+      const errorMessage =
+        err?.message || "An unexpected error occurred. Please try again.";
+      setLocalError(errorMessage);
     }
   };
 
-  const isLoading = storeLoading || isSubmitting;
-  const errorMessage = localError || storeError;
+  const isLoading = loading;
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -131,6 +104,9 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                   value={formData.username}
                   onChange={handleChange}
                   required
+                  minLength={5}
+                  maxLength={20}
+                  pattern="(?=.*[A-Za-z]{3,})[A-Za-z\d]+"
                 />
               </div>
 
@@ -144,6 +120,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
+                    required
                   />
                 </div>
               )}
@@ -168,12 +145,14 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  minLength={6}
+                  maxLength={32}
                 />
               </div>
 
               {/* Error display */}
-              {errorMessage && (
-                <p className="text-red-600 text-sm">{errorMessage}</p>
+              {(localError || error) && (
+                <ErrorBox message={localError || error} />
               )}
 
               <div className="flex flex-col gap-3">

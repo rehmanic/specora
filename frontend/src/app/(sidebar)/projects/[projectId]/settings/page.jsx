@@ -1,11 +1,11 @@
-import ProjectSettings from "@/components/project/ProjectsSettings";
+import ProjectInfo from "@/components/project/ProjectInfo";
 import ProtectedRoute  from "@/components/auth/ProtectedRoute";
 
 export default function ProjectSettingsPage() {
   return (
     <ProtectedRoute allowedRoles={["manager"]}>
       <section className="border w-full">
-        <ProjectSettings />
+        <ProjectInfo variant="project-settings" />
       </section>
     </ProtectedRoute>
   );

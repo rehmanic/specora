@@ -55,4 +55,4 @@ bower_components/
 # Docker
 docker-compose.override.yml
 
-/generated/prisma
+prisma/

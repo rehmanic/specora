@@ -22,145 +22,161 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MoreHorizontal, Pencil, Trash2, Shield, Mail } from "lucide-react";
+import { deleteUserRequest } from "@/api/users";
+import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import ErrorBox from "@/components/common/ErrorBox";
 
-// Safe, dynamic avatar generator (DiceBear)
-const getAvatarUrl = (name) =>
-  `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(
-    name
-  )}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+export function UsersTable({ users: initialUsers = [] }) {
+  const router = useRouter();
 
-const initialUsers = [
-  {
-    id: 1,
-    username: "john.doe",
-    email: "john.doe@example.com",
-    fullName: "John Doe",
-    role: "Admin",
-    status: "Active",
-    permissions: ["read", "write", "delete"],
-    lastLogin: "2025-01-04",
-  },
-  {
-    id: 2,
-    username: "jane.smith",
-    email: "jane.smith@example.com",
-    fullName: "Jane Smith",
-    role: "Editor",
-    status: "Active",
-    permissions: ["read", "write"],
-    lastLogin: "2025-01-05",
-  },
-  {
-    id: 3,
-    username: "bob.wilson",
-    email: "bob.wilson@example.com",
-    fullName: "Bob Wilson",
-    role: "Viewer",
-    status: "Inactive",
-    permissions: ["read"],
-    lastLogin: "2024-12-28",
-  },
-  {
-    id: 4,
-    username: "alice.johnson",
-    email: "alice.johnson@example.com",
-    fullName: "Alice Johnson",
-    role: "Editor",
-    status: "Active",
-    permissions: ["read", "write", "delete"],
-    lastLogin: "2025-01-05",
-  },
-];
+  const [users, setUsers] = useState(
+    Array.isArray(initialUsers) ? initialUsers : []
+  );
+  const [loading, setLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-export function UsersTable() {
-  const [users, setUsers] = useState(initialUsers);
+  const handleDelete = async (username) => {
+    setUserToDelete(username);
+    setDeleteError(null);
+  };
 
-  const handleDelete = (id) => {
-    if (confirm("Are you sure you want to delete this user?")) {
-      setUsers(users.filter((user) => user.id !== id));
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      setDeleteError(null);
+      await deleteUserRequest(userToDelete);
+      setUsers((prevUsers) => prevUsers.filter((u) => u.username !== userToDelete));
+      setUserToDelete(null);
+    } catch (error) {
+      setDeleteError(error.message || "Failed to delete user");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const handleEdit = (id) => {
-    console.log("Edit user:", id);
+  const handleEdit = (username) => {
+    router.push(`/users/update/${username}`);
   };
 
   const getRoleBadgeVariant = (role) => {
     switch (role) {
-      case "Admin":
+      case "manager":
         return "default";
-      case "Editor":
+      case "requirements_engineer":
         return "secondary";
-      case "Viewer":
+      case "client":
         return "outline";
       default:
         return "secondary";
     }
   };
 
-  const getStatusBadgeVariant = (status) => {
-    return status === "Active" ? "default" : "secondary";
-  };
+  const userBeingDeleted = users.find((u) => u.username === userToDelete);
 
   return (
     <Card className="overflow-hidden">
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => {
+        if (!open) {
+          setUserToDelete(null);
+          setDeleteError(null);
+        }
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete
+              the user "{userBeingDeleted?.display_name || userBeingDeleted?.username || userToDelete}" and all their data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteError && <ErrorBox message={deleteError} />}
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setUserToDelete(null);
+                setDeleteError(null);
+              }}
+              disabled={isDeleting}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[250px]">User</TableHead>
-              <TableHead className="hidden md:table-cell">Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="hidden lg:table-cell">Status</TableHead>
-              <TableHead className="hidden xl:table-cell">Last Login</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-1/4 text-center">User</TableHead>
+              <TableHead className="w-1/4 hidden md:table-cell text-center">
+                Email
+              </TableHead>
+              <TableHead className="w-1/4 text-center">Role</TableHead>
+              <TableHead className="w-1/4 text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
+                <TableCell className="text-center">
+                  <div className="flex items-center justify-start gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage
-                        src={getAvatarUrl(user.fullName)}
-                        alt={user.fullName}
+                        src={user.profile_pic_url}
+                        alt={user.display_name || user.username || "User"}
                       />
                       <AvatarFallback>
-                        {user.fullName
+                        {(user.display_name || user.username || "U")
                           .split(" ")
                           .map((n) => n[0])
-                          .join("")}
+                          .join("")
+                          .toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{user.fullName}</span>
-                      <span className="text-sm text-muted-foreground">
-                        @{user.username}
+                    <div className="flex flex-col text-left">
+                      <span className="font-medium truncate">
+                        {user.display_name?.trim() || user.username?.trim() || "Unknown User"}
+                      </span>
+                      <span className="text-sm text-muted-foreground truncate">
+                        @{user.username?.trim() || "unknown"}
                       </span>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <TableCell className="hidden md:table-cell text-center">
+                  <div className="flex items-center justify-start gap-2 text-sm text-muted-foreground">
                     <Mail className="h-4 w-4" />
                     {user.email}
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-center">
                   <Badge variant={getRoleBadgeVariant(user.role)}>
                     {user.role}
                   </Badge>
                 </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <Badge variant={getStatusBadgeVariant(user.status)}>
-                    {user.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
-                  {user.lastLogin}
-                </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-center">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
@@ -171,13 +187,18 @@ export function UsersTable() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleEdit(user.id)}>
+                      <DropdownMenuItem
+                        onClick={() => handleEdit(user.username)}
+                      >
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit User
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => handleDelete(user.id)}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          handleDelete(user.username);
+                        }}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />

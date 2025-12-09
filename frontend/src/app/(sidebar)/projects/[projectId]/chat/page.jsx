@@ -46,7 +46,7 @@ export default function ChatPage() {
     <ProtectedRoute
       allowedRoles={["manager", "client", "requirements_engineer"]}
     >
-      <section className="flex flex-col h-screen border w-full p-4 space-y-3 overflow-y-auto">
+      <section className="flex flex-col justify-around h-screen border w-full p-4 space-y-3 overflow-y-auto">
         {messages.map((msg) => (
           <Message
             key={msg.id}

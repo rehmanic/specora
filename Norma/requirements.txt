@@ -1,0 +1,14 @@
+streamlit
+streamlit-chat
+transformers
+sentence-transformers
+torch
+faiss-cpu
+pdfplumber
+PyPDF2
+python-dotenv
+loguru
+tqdm
+joblib
+google-generativeai
+numpy

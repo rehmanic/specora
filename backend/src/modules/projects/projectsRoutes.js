@@ -1,31 +1,47 @@
 import express from "express";
-import { body, param, query } from "express-validator";
-import { createProject, getAllProjects, getProjectById, getProjectBySlug, 
-  updateProject, deleteProject, searchProjects, addMember, removeMember } from "./projectsController.js";
+import {
+  createProject,
+  getAllProjects,
+  updateProject,
+  deleteProject,
+  getSingleUserProjects,
+} from "./projectsController.js";
+import { verifyToken } from "../../middlewares/common/verifyToken.js";
+import { requireManager } from "../../middlewares/common/roleCheck.js";
+import checkUserExists from "../../middlewares/common/checkUserExists.js";
+import checkProjectExists from "../../middlewares/projects/checkProjectExists.js";
+import requireFeilds from "../../middlewares/common/requireFields.js";
+import { validateProjectDataInput } from "../../middlewares/projects/inputValidation.js";
 
 const router = express.Router();
 
-const createValidation = [
-  body("name").trim().notEmpty().withMessage("Project name is required").isLength({ max: 255 }).withMessage("Name too long"),
-  body("slug").trim().notEmpty().withMessage("Project slug is required").isLength({ max: 255 }).withMessage("Slug too long"),
-];
+router.use(verifyToken);
 
-const updateValidation = [
-  param("id").notEmpty().withMessage("Project id is required"),
-];
+// CREATE - Manager only
+router.post(
+  "/create",
+  requireManager,
+  requireFeilds(["name", "start_date", "end_date"]),
+  validateProjectDataInput,
+  checkProjectExists("create"),
+  createProject
+);
 
-// Routes
-router.get("/all", getAllProjects);
-router.get("/search", searchProjects);
-router.get("/slug/:slug", getProjectBySlug);
-router.get("/:id", getProjectById);
+// READ
+router.get("/all", requireManager, getAllProjects); // Manager only - all projects
+router.get("/:userId", getSingleUserProjects); // All authenticated users - their projects
 
-router.post("/create", createValidation, createProject);
-router.put("/:id", updateValidation, updateProject);
-router.delete("/:id", deleteProject);
+// UPDATE - Manager only
+router.put(
+  "/update/:projectId",
+  requireManager,
+  requireFeilds(["name", "start_date", "end_date"]),
+  validateProjectDataInput,
+  checkProjectExists("update"),
+  updateProject
+);
 
-// members
-router.post("/:id/members", addMember);
-router.delete("/:id/members", removeMember);
+// DELETE - Manager only
+router.delete("/delete/:projectId", requireManager, deleteProject);
 
 export default router;

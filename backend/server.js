@@ -1,16 +1,17 @@
 import dotenv from "dotenv";
-import http from "http";
-import app from "./app.js";
-import prisma from "./prisma/prismaClient.js";
+import http from "http"; // Node HTTP module to create server
+import app from "./app.js"; // Express app instance
+import prisma from "./config/db/prismaClient.js"; // Prisma client for DB access
 
-dotenv.config();
+dotenv.config(); // Initialize environment variables
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000; 
 const server = http.createServer(app);
 
+// ----- Initialize Server & Database -----
 async function init() {
   try {
-    await prisma.$connect();
+    await prisma.$connect(); // Connect DB
     console.log("✅ Database connected successfully");
 
     server.listen(PORT, () => {
@@ -19,15 +20,16 @@ async function init() {
       );
     });
   } catch (err) {
-    console.error("❌ Database connection failed:", err.message);
-    process.exit(1);
+    console.error("❌ Database connection failed:", err.message); // Log DB connection errors
+    process.exit(1); // Exit process with error code
   }
 }
 
+// ----- Graceful Shutdown -----
 process.on("SIGINT", async () => {
-  await prisma.$disconnect();
+  await prisma.$disconnect(); // Disconnect DB
   console.log("🛑 Prisma disconnected. Server shutting down.");
-  process.exit(0);
+  process.exit(0); // Exit process successfully
 });
 
-init();
+init(); // Run initialization
