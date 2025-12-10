@@ -10,7 +10,8 @@ EffortLens is a machine learning system that predicts software development effor
 - **8 Project Inputs**: Team size, complexity, object points, and 5 other key factors
 - **Cost Calculation**: Automatic conversion from effort to cost estimates
 - **Smart Narratives**: Template-based professional reports (no API key needed)
-- **Streamlit UI**: Clean, user-friendly web interface
+- **Interactive Visualizations**: Radar charts, feature importance, cost gauges, and duration charts
+- **Streamlit UI**: Clean, user-friendly web interface with progress indicators
 - **Risk Detection**: Identifies low-scoring inputs as risk factors
 - **Docker Ready**: Containerized deployment with docker-compose
 - **Offline Ready**: Works completely offline without external dependencies
@@ -183,7 +184,7 @@ pytest tests/ -v
 │       ↓                                                 │
 │  Cost Calculation (effort → person-months → USD)        │
 │       ↓                                                 │
-│  Gemini API → Professional Narrative                    │
+│  Template-Based → Professional Narrative                │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -192,8 +193,8 @@ pytest tests/ -v
 ### Issue: "Model artifacts not found"
 **Solution**: Run `python src/train_model.py` first
 
-### Issue: "Gemini API error"
-**Solution**: Check your `GEMINI_API_KEY` in `.env` file
+### Issue: "Narrative generation error"
+**Solution**: The app uses template-based narratives (no API needed). Restart the app.
 
 ### Issue: Import errors
 **Solution**: Activate virtual environment and install requirements
