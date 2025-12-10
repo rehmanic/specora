@@ -3,9 +3,9 @@
 EffortLens Streamlit Application - Project Cost and Effort Estimator.
 
 A Streamlit app that uses a trained XGBoost ML model to predict project effort (person-hours)
-and leverages the Gemini API for humanized narration of results.
+and generates professional narratives using smart templates with interactive visualizations.
 
-Pipeline: ML Model (XGBoost) -> Prediction -> Gemini API (Narration)
+Pipeline: ML Model (XGBoost) -> Prediction -> Template Narrative -> Visual Analytics
 """
 
 import json

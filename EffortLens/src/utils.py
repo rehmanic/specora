@@ -171,7 +171,10 @@ def generate_effort_narrative_prompt(
     feature_importance: Dict[str, float] = None
 ) -> str:
     """
-    Generate the prompt for Gemini API to create effort narrative.
+    Generate a prompt for narrative generation (legacy function - now uses templates).
+    
+    Note: This function is kept for backward compatibility but the app now uses
+    template-based narrative generation instead of external API calls.
     
     Args:
         effort_hours: Predicted effort
