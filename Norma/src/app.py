@@ -9,7 +9,8 @@ import streamlit as st
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 
-import google.generativeai as genai
+# GEMINI DISABLED - Uncomment to re-enable LLM integration
+# import google.generativeai as genai
 
 load_dotenv()
 
@@ -99,22 +100,23 @@ Context:
 """
     return prompt
 
-def ask_gemini(prompt: str):
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY missing in environment (.env).")
-
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.5-flash")
-
-    try:
-        response = model.generate_content(prompt)
-        # response.text is the main generated text
-        return response.text
-    except Exception as e:
-        msg = str(e)
-        # Show the actual error for debugging
-        raise ValueError(f"Gemini API error: {msg}")
+# GEMINI DISABLED - Uncomment to re-enable LLM integration
+# def ask_gemini(prompt: str):
+#     api_key = os.getenv("GEMINI_API_KEY")
+#     if not api_key:
+#         raise ValueError("GEMINI_API_KEY missing in environment (.env).")
+#
+#     genai.configure(api_key=api_key)
+#     model = genai.GenerativeModel("gemini-2.5-flash")
+#
+#     try:
+#         response = model.generate_content(prompt)
+#         # response.text is the main generated text
+#         return response.text
+#     except Exception as e:
+#         msg = str(e)
+#         # Show the actual error for debugging
+#         raise ValueError(f"Gemini API error: {msg}")
 
 # ============================================
 # Streamlit UI
@@ -122,11 +124,12 @@ def ask_gemini(prompt: str):
 st.set_page_config(page_title="Norma", layout="wide")
 st.title("Norma (Legal Advisor)")
 st.write("Provide a software requirement to check its compliance.")
+st.info("🔧 Running in **Retrieval-Only Mode** (Gemini LLM disabled)")
 
-# Ensure GEMINI key visible early
-if not os.getenv("GEMINI_API_KEY"):
-    st.error("GEMINI_API_KEY is missing in your environment (.env). Add GEMINI_API_KEY and reload.")
-    st.stop()
+# GEMINI DISABLED - Uncomment to re-enable API key check
+# if not os.getenv("GEMINI_API_KEY"):
+#     st.error("GEMINI_API_KEY is missing in your environment (.env). Add GEMINI_API_KEY and reload.")
+#     st.stop()
 
 # Try loading resources with friendly errors
 try:
@@ -149,27 +152,28 @@ if st.button("Ask"):
     retrieved = retrieve(query_vec, index, metadata, chunks)
 
     if len(retrieved) == 0 or retrieved[0]["score"] < SIM_THRESHOLD:
-        st.error("I don’t have that in the Legal DB.")
+        st.error("I don't have that in the Legal DB.")
         st.stop()
 
-    final_prompt = format_prompt(user_query, retrieved)
+    # GEMINI DISABLED - Show retrieved chunks directly instead of LLM answer
+    # final_prompt = format_prompt(user_query, retrieved)
+    # with st.spinner("Thinking with Gemini..."):
+    #     try:
+    #         answer = ask_gemini(final_prompt)
+    #     except ValueError as e:
+    #         st.error(str(e))
+    #         st.stop()
+    #     except Exception as e:
+    #         st.error(f"Unexpected error from Gemini: {e}")
+    #         st.stop()
+    # st.subheader("Answer")
+    # st.write(answer)
 
-    with st.spinner("Thinking with Gemini..."):
-        try:
-            answer = ask_gemini(final_prompt)
-        except ValueError as e:
-            st.error(str(e))
-            st.stop()
-        except Exception as e:
-            st.error(f"Unexpected error from Gemini: {e}")
-            st.stop()
+    st.subheader("Retrieved Legal Context")
+    st.success(f"Found {len(retrieved)} relevant chunks for your query.")
 
-    st.subheader("Answer")
-    st.write(answer)
-
-    with st.expander("Sources (page refs)"):
-        for r in retrieved:
-            st.markdown(f"### Chunk {r['chunk_id']} — Page {r['page']} — {r['section']}")
-            st.write(r["text"])
-            st.write(f"**Similarity:** {r['score']:.3f}")
-            st.markdown("---")
+    for r in retrieved:
+        st.markdown(f"### Chunk {r['chunk_id']} — Page {r['page']} — {r['section']}")
+        st.write(r["text"])
+        st.write(f"**Similarity:** {r['score']:.3f}")
+        st.markdown("---")
