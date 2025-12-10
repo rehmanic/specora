@@ -124,7 +124,7 @@ Context:
 st.set_page_config(page_title="Norma", layout="wide")
 st.title("Norma (Legal Advisor)")
 st.write("Provide a software requirement to check its compliance.")
-st.info("🔧 Running in **Retrieval-Only Mode** (Gemini LLM disabled)")
+st.info("🔧 Running in **Retrieval-Only Mode**")
 
 # GEMINI DISABLED - Uncomment to re-enable API key check
 # if not os.getenv("GEMINI_API_KEY"):
