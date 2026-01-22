@@ -1,2 +1,128 @@
-tasks/
-/backend/storage/
+# =========================
+# GLOBAL / OS / EDITORS (KEEP GENERIC)
+# =========================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+.kdev4/
+*.sublime-workspace
+
+# =========================
+# DEPENDENCIES & LOGS (KEEP GENERIC)
+# =========================
+# Matches node_modules in ANY subdirectory (fe/node_modules, be/node_modules)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+logs/
+*.log
+*.pid
+*.pid.lock
+*.seed
+
+# =========================
+# ENVIRONMENT VARIABLES
+# =========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+!.env.example
+
+# =========================
+# TESTING & COVERAGE
+# =========================
+coverage/
+.nyc_output/
+.tox/
+.nox/
+.hypothesis/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+htmlcov/
+
+# =========================
+# FRONTEND (Specora/fe)
+# =========================
+fe/.next/
+fe/out/
+fe/build/
+fe/dist/
+fe/.vercel/
+fe/*.tsbuildinfo
+fe/next-env.d.ts
+
+# =========================
+# BACKEND (Specora/be)
+# =========================
+be/dist/
+be/build/
+# Prisma
+be/prisma/
+be/*.db
+be/*.db-journal
+
+# =========================
+# NORMA (Specora/Norma)
+# =========================
+# Python Cache (Must match recursively, so NO PREFIX)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+develop-eggs/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments (Prefixed to Norma root)
+Norma/venv/
+Norma/env/
+Norma/ENV/
+Norma/.venv/
+# .env is handled globally
+
+# Jupyter
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Scrapy
+.scrapy
