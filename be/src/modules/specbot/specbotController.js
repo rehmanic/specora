@@ -33,10 +33,10 @@ const fileExists = async (filePath) => {
 
 export const createSpecbotChat = async (req, res) => {
     try {
-        const { title, user_id, project_id } = req.body;
+        const { title, project_id } = req.body;
 
         // Check if project exists
-        const project = await prisma.projects.findUnique({
+        const project = await prisma.project.findUnique({
             where: { id: project_id },
         });
 
@@ -44,20 +44,10 @@ export const createSpecbotChat = async (req, res) => {
             return res.status(404).json({ message: "Project not found" });
         }
 
-        // Check if user exists
-        const user = await prisma.users.findUnique({
-            where: { id: user_id },
-        });
-
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Create Specbot Chat
-        const newChat = await prisma.specbot_chats.create({
+        // Create Specbot Chat (no user_id in schema, only project_id)
+        const newChat = await prisma.specbot_chat.create({
             data: {
                 title,
-                user_id,
                 project_id,
             },
         });
@@ -77,23 +67,36 @@ export const deleteSpecbotChat = async (req, res) => {
         const { chatId } = req.params;
         const userId = req.user.userId;
 
-        const chat = await prisma.specbot_chats.findUnique({
+        const chat = await prisma.specbot_chat.findUnique({
             where: { id: chatId },
+            include: {
+                project: {
+                    include: {
+                        project_member: {
+                            where: { member_id: userId },
+                        },
+                        app_user: true, // creator
+                    },
+                },
+            },
         });
 
         if (!chat) {
             return res.status(404).json({ message: "Chat not found" });
         }
 
-        if (chat.user_id !== userId) {
-            return res.status(403).json({ message: "Access denied. You can only delete your own chats." });
+        // Check access: user must be creator or project member
+        const isCreator = chat.project.created_by === userId;
+        const isMember = chat.project.project_member.length > 0;
+        if (!isCreator && !isMember) {
+            return res.status(403).json({ message: "Access denied. You can only delete chats in projects you're part of." });
         }
 
         await prisma.$transaction([
-            prisma.messages.deleteMany({
-                where: { chat_id: chatId },
+            prisma.specbot_message.deleteMany({
+                where: { specbot_chat_id: chatId },
             }),
-            prisma.specbot_chats.delete({
+            prisma.specbot_chat.delete({
                 where: { id: chatId },
             }),
         ]);
@@ -118,28 +121,36 @@ export const getAllSpecbotChats = async (req, res) => {
             return res.status(400).json({ message: "Project ID is required" });
         }
 
-        const whereClause = { project_id: projectId };
-        // Clients can only see their own chats, managers/requirements engineers can see all for the project
-        if (role === "client") {
-            whereClause.user_id = userId;
+        // Check if user has access to this project
+        const project = await prisma.project.findUnique({
+            where: { id: projectId },
+            include: {
+                project_member: {
+                    where: { member_id: userId },
+                },
+            },
+        });
+
+        if (!project) {
+            return res.status(404).json({ message: "Project not found" });
         }
-        const chats = await prisma.specbot_chats.findMany({
-            where: whereClause,
+
+        const isCreator = project.created_by === userId;
+        const isMember = project.project_member.length > 0;
+        if (!isCreator && !isMember && role === "client") {
+            return res.status(403).json({ message: "Access denied. You don't have access to this project." });
+        }
+
+        const chats = await prisma.specbot_chat.findMany({
+            where: { project_id: projectId },
             orderBy: {
                 created_at: 'desc',
             },
             include: {
-                projects: {
+                project: {
                     select: {
                         name: true,
                         slug: true
-                    }
-                },
-                users: {
-                    select: {
-                        id: true,
-                        username: true,
-                        display_name: true
                     }
                 }
             }
@@ -162,19 +173,31 @@ export const updateSpecbotChat = async (req, res) => {
         const { title } = req.body;
         const userId = req.user.userId;
 
-        const chat = await prisma.specbot_chats.findUnique({
+        const chat = await prisma.specbot_chat.findUnique({
             where: { id: chatId },
+            include: {
+                project: {
+                    include: {
+                        project_member: {
+                            where: { member_id: userId },
+                        },
+                    },
+                },
+            },
         });
 
         if (!chat) {
             return res.status(404).json({ message: "Chat not found" });
         }
 
-        if (chat.user_id !== userId) {
-            return res.status(403).json({ message: "Access denied. You can only update your own chats." });
+        // Check access: user must be creator or project member
+        const isCreator = chat.project.created_by === userId;
+        const isMember = chat.project.project_member.length > 0;
+        if (!isCreator && !isMember) {
+            return res.status(403).json({ message: "Access denied. You can only update chats in projects you're part of." });
         }
 
-        const updatedChat = await prisma.specbot_chats.update({
+        const updatedChat = await prisma.specbot_chat.update({
             where: { id: chatId },
             data: {
                 title,
@@ -241,42 +264,52 @@ export const createMessage = async (req, res) => {
 
 // Helper function for creating messages
 const createMessageCore = async ({ chat_type, chat_id, content, sender_type, sender_id }) => {
-    // Verify chat exists based on type
+    // Verify chat exists based on type and create message in appropriate table
     if (chat_type === 'specbot') {
-        const chat = await prisma.specbot_chats.findUnique({
+        const chat = await prisma.specbot_chat.findUnique({
             where: { id: chat_id },
         });
         if (!chat) {
             throw new Error("Specbot chat not found");
         }
+
+        // Create specbot message (metadata can store sender info if needed)
+        return await prisma.specbot_message.create({
+            data: {
+                specbot_chat_id: chat_id,
+                content,
+                metadata: sender_type === 'user' ? { sender_type, sender_id } : { sender_type },
+            },
+        });
     } else if (chat_type === 'group') {
-        const chat = await prisma.group_chats.findUnique({
+        const chat = await prisma.group_chat.findUnique({
             where: { id: chat_id },
         });
         if (!chat) {
             throw new Error("Group chat not found");
         }
-    }
 
-    // Verify sender exists if it's a user
-    if (sender_type === 'user') {
-        const user = await prisma.users.findUnique({
-            where: { id: sender_id },
-        });
-        if (!user) {
-            throw new Error("Sender (User) not found");
+        // Verify sender exists if it's a user
+        if (sender_type === 'user') {
+            const user = await prisma.app_user.findUnique({
+                where: { id: sender_id },
+            });
+            if (!user) {
+                throw new Error("Sender (User) not found");
+            }
         }
-    }
 
-    return await prisma.messages.create({
-        data: {
-            chat_type,
-            chat_id,
-            content,
-            sender_type,
-            sender_id,
-        },
-    });
+        // Create group message (metadata can store sender info if needed)
+        return await prisma.group_message.create({
+            data: {
+                group_chat_id: chat_id,
+                content,
+                metadata: sender_type === 'user' ? { sender_type, sender_id } : { sender_type },
+            },
+        });
+    } else {
+        throw new Error("Invalid chat_type");
+    }
 };
 
 
@@ -290,38 +323,33 @@ export const getAllMessages = async (req, res) => {
         const role = req.user.role;
 
         // Check Specbot Chat
-        const specbotChat = await prisma.specbot_chats.findUnique({
+        const specbotChat = await prisma.specbot_chat.findUnique({
             where: { id: chatId },
-            select: {
-                id: true,
-                user_id: true,
-                project_id: true
-            }
+            include: {
+                project: {
+                    include: {
+                        project_member: {
+                            where: { member_id: userId },
+                        },
+                    },
+                },
+            },
         });
-
-        if (specbotChat) {
-            if (role === "client" && specbotChat.user_id !== userId) {
-                return res.status(403).json({ message: "Access denied. You can only view your own chats." });
-            }
-        }
 
         if (!specbotChat) {
             return res.status(404).json({ message: "Chat not found" });
         }
 
-        const messages = await prisma.messages.findMany({
-            where: { chat_id: chatId },
+        // Check access: user must be creator or project member
+        const isCreator = specbotChat.project.created_by === userId;
+        const isMember = specbotChat.project.project_member.length > 0;
+        if (!isCreator && !isMember && role === "client") {
+            return res.status(403).json({ message: "Access denied. You can only view chats in projects you're part of." });
+        }
+
+        const messages = await prisma.specbot_message.findMany({
+            where: { specbot_chat_id: chatId },
             orderBy: { created_at: 'asc' },
-            include: {
-                users: {
-                    select: {
-                        id: true,
-                        username: true,
-                        display_name: true,
-                        profile_pic_url: true
-                    }
-                }
-            }
         });
 
         res.status(200).json({
@@ -397,16 +425,22 @@ export const downloadSpecbotChat = async (req, res) => {
         const userId = req.user.userId;
         const role = req.user.role;
 
-        const chat = await prisma.specbot_chats.findUnique({
+        const chat = await prisma.specbot_chat.findUnique({
             where: { id: chatId },
             include: {
-                projects: { select: { id: true, name: true, slug: true } },
-                users: {
-                    select: {
-                        id: true,
-                        username: true,
-                        display_name: true,
-                        role: true,
+                project: {
+                    select: { id: true, name: true, slug: true },
+                    include: {
+                        app_user: {
+                            select: {
+                                id: true,
+                                username: true,
+                                display_name: true,
+                            },
+                        },
+                        project_member: {
+                            where: { member_id: userId },
+                        },
                     },
                 },
             },
@@ -416,14 +450,17 @@ export const downloadSpecbotChat = async (req, res) => {
             return res.status(404).json({ message: "Chat not found" });
         }
 
-        if (role === "client" && chat.user_id !== userId) {
+        // Check access: user must be creator or project member
+        const isCreator = chat.project.created_by === userId;
+        const isMember = chat.project.project_member.length > 0;
+        if (!isCreator && !isMember && role === "client") {
             return res
                 .status(403)
-                .json({ message: "Access denied. You can only download your own chats." });
+                .json({ message: "Access denied. You can only download chats in projects you're part of." });
         }
 
-        const messages = await prisma.messages.findMany({
-            where: { chat_id: chatId },
+        const messages = await prisma.specbot_message.findMany({
+            where: { specbot_chat_id: chatId },
             orderBy: { created_at: "asc" },
         });
 
@@ -433,8 +470,8 @@ export const downloadSpecbotChat = async (req, res) => {
         const exportedAt = new Date().toISOString();
         const payload = {
             chat,
-            project: chat.projects,
-            owner: chat.users,
+            project: chat.project,
+            owner: chat.project.app_user,
             messages,
             exported_at: exportedAt,
         };
@@ -468,12 +505,16 @@ export const summarizeSpecbotChat = async (req, res) => {
         const userId = req.user.userId;
         const role = req.user.role;
 
-        const chat = await prisma.specbot_chats.findUnique({
+        const chat = await prisma.specbot_chat.findUnique({
             where: { id: chatId },
-            select: {
-                id: true,
-                user_id: true,
-                project_id: true,
+            include: {
+                project: {
+                    include: {
+                        project_member: {
+                            where: { member_id: userId },
+                        },
+                    },
+                },
             },
         });
 
@@ -481,10 +522,13 @@ export const summarizeSpecbotChat = async (req, res) => {
             return res.status(404).json({ message: "Chat not found" });
         }
 
-        if (role === "client" && chat.user_id !== userId) {
+        // Check access: user must be creator or project member
+        const isCreator = chat.project.created_by === userId;
+        const isMember = chat.project.project_member.length > 0;
+        if (!isCreator && !isMember && role === "client") {
             return res
                 .status(403)
-                .json({ message: "Access denied. You can only summarize your own chats." });
+                .json({ message: "Access denied. You can only summarize chats in projects you're part of." });
         }
 
         const artifactPaths = buildArtifactPaths(chat.project_id, chatId);
@@ -498,8 +542,10 @@ export const summarizeSpecbotChat = async (req, res) => {
         const storedChat = JSON.parse(storedChatRaw);
         const transcript = storedChat.messages
             .map(
-                (msg) =>
-                    `${msg.sender_type === "bot" ? "BOT" : "USER"}: ${msg.content}`
+                (msg) => {
+                    const senderType = msg.metadata?.sender_type || (msg.metadata ? "bot" : "user");
+                    return `${senderType === "bot" ? "BOT" : "USER"}: ${msg.content}`;
+                }
             )
             .join("\n");
 
@@ -552,12 +598,16 @@ export const extractRequirementsFromChat = async (req, res) => {
         const userId = req.user.userId;
         const role = req.user.role;
 
-        const chat = await prisma.specbot_chats.findUnique({
+        const chat = await prisma.specbot_chat.findUnique({
             where: { id: chatId },
-            select: {
-                id: true,
-                user_id: true,
-                project_id: true,
+            include: {
+                project: {
+                    include: {
+                        project_member: {
+                            where: { member_id: userId },
+                        },
+                    },
+                },
             },
         });
 
@@ -565,9 +615,12 @@ export const extractRequirementsFromChat = async (req, res) => {
             return res.status(404).json({ message: "Chat not found" });
         }
 
-        if (role === "client" && chat.user_id !== userId) {
+        // Check access: user must be creator or project member
+        const isCreator = chat.project.created_by === userId;
+        const isMember = chat.project.project_member.length > 0;
+        if (!isCreator && !isMember && role === "client") {
             return res.status(403).json({
-                message: "Access denied. You can only extract requirements for your own chats.",
+                message: "Access denied. You can only extract requirements for chats in projects you're part of.",
             });
         }
 
@@ -582,8 +635,10 @@ export const extractRequirementsFromChat = async (req, res) => {
         const storedChat = JSON.parse(storedChatRaw);
         const transcript = storedChat.messages
             .map(
-                (msg) =>
-                    `${msg.sender_type === "bot" ? "BOT" : "USER"}: ${msg.content}`
+                (msg) => {
+                    const senderType = msg.metadata?.sender_type || (msg.metadata ? "bot" : "user");
+                    return `${senderType === "bot" ? "BOT" : "USER"}: ${msg.content}`;
+                }
             )
             .join("\n");
 

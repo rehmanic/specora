@@ -19,22 +19,25 @@ const sessionTimestamps = new Map();
  */
 async function buildChatHistory(chatId, maxMessages = 20) {
     try {
-        const messages = await prisma.messages.findMany({
-            where: { chat_id: chatId },
+        const messages = await prisma.specbot_message.findMany({
+            where: { specbot_chat_id: chatId },
             orderBy: { created_at: 'asc' },
             take: maxMessages,
             select: {
                 content: true,
-                sender_type: true,
+                metadata: true,
                 created_at: true
             }
         });
 
         // Convert to Gemini chat history format
-        return messages.map(msg => ({
-            role: msg.sender_type === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.content }]
-        }));
+        return messages.map(msg => {
+            const senderType = msg.metadata?.sender_type || (msg.metadata ? "bot" : "user");
+            return {
+                role: senderType === 'user' ? 'user' : 'model',
+                parts: [{ text: msg.content }]
+            };
+        });
     } catch (error) {
         console.error("Error building chat history:", error);
         return [];

@@ -17,7 +17,7 @@ export const createProject = async (req, res) => {
     projectData.end_date = endDate;
     projectData.created_by = projectData.created_by || req.user.userId;
 
-    const project = await prisma.projects.create({
+    const project = await prisma.project.create({
       data: projectData,
     });
 
@@ -36,7 +36,7 @@ export const createProject = async (req, res) => {
 // ======================
 export const getAllProjects = async (req, res) => {
   try {
-    const projects = await prisma.projects.findMany();
+    const projects = await prisma.project.findMany();
 
     res.status(200).json({
       message: "Fetching all projects successful",
@@ -67,32 +67,28 @@ export const getSingleUserProjects = async (req, res) => {
     // and filter for those where user is in members array
     
     // Step 1: Get projects where user is the creator
-    const createdProjects = await prisma.projects.findMany({
+    const createdProjects = await prisma.project.findMany({
       where: {
         created_by: userId,
       },
       orderBy: { created_at: "desc" },
     });
 
-    // Step 2: Get all projects (excluding those already found) and filter for members
-    // We'll get projects where created_by != userId to avoid duplicates
-    const allOtherProjects = await prisma.projects.findMany({
+    // Step 2: Get projects where user is a member
+    const memberProjectsData = await prisma.project_member.findMany({
       where: {
-        NOT: {
-          created_by: userId,
-        },
+        member_id: userId,
       },
-      orderBy: { created_at: "desc" },
+      include: {
+        project: true,
+      },
     });
 
-    // Step 3: Filter projects where user is in the members array
-    const memberProjects = allOtherProjects.filter((project) => {
-      const members = Array.isArray(project.members) ? project.members : [];
-      // Check if userId (as string) is in the members array
-      return members.some((memberId) => String(memberId) === String(userId));
-    });
+    const memberProjects = memberProjectsData
+      .map((pm) => pm.project)
+      .filter((project) => project.created_by !== userId); // Exclude projects already in createdProjects
 
-    // Step 4: Combine both lists and sort by created_at descending
+    // Step 3: Combine both lists and sort by created_at descending
     const userProjects = [...createdProjects, ...memberProjects].sort((a, b) => {
       const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
       const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
@@ -135,7 +131,7 @@ export const updateProject = async (req, res) => {
     projectData.end_date = endDate;
     projectData.updated_at = new Date();
 
-    const updatedProject = await prisma.projects.update({
+    const updatedProject = await prisma.project.update({
       where: { id: projectId },
       data: projectData,
     });
@@ -157,7 +153,7 @@ export const deleteProject = async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    const existingProject = await prisma.projects.findUnique({
+    const existingProject = await prisma.project.findUnique({
       where: { id: projectId },
     });
 
@@ -165,7 +161,7 @@ export const deleteProject = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    await prisma.projects.delete({
+    await prisma.project.delete({
       where: { id: projectId },
     });
 

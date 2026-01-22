@@ -8,12 +8,12 @@ export default function checkProjectExists(action) {
       let project;
 
       if (action === "create") {
-        project = await prisma.projects.findUnique({ where: { name } });
+        project = await prisma.project.findUnique({ where: { name } });
         if (project) {
           return res.status(409).json({ message: "Project already exists" });
         }
       } else if (action === "update") {
-        project = await prisma.projects.findUnique({
+        project = await prisma.project.findUnique({
           where: { id: projectId },
         });
         if (!project) {

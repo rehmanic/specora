@@ -11,35 +11,46 @@ export const createUser = async (req, res) => {
     // Hash password
     const password_hash = await bcrypt.hash(user.password, 10);
 
+    // Get role
+    const role = await prisma.role.findUnique({ where: { name: user.role || "client" } });
+    if (!role) {
+      return res.status(500).json({ message: "Role not found" });
+    }
+
     // Create new user
-    const newUser = await prisma.users.create({
+    const newUser = await prisma.app_user.create({
       data: {
         username: user.username,
         password_hash,
-        role: user.role,
-        permissions: user.permissions,
+        role_id: role.id,
         email: user.email,
         profile_pic_url: user.profile_pic_url,
         display_name: user.display_name,
       },
-      select: {
-        id: true,
-        username: true,
-        password_hash: true,
-        role: true,
-        permissions: true,
-        email: true,
-        profile_pic_url: true,
-        display_name: true,
-        created_at: true,
+      include: {
+        role: {
+          include: {
+            role_permission: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
       },
     });
 
     const { password_hash: _, ...userWithoutPassword } = newUser;
 
+    const finalUser = {
+      ...userWithoutPassword,
+      role: newUser.role?.name,
+      permissions: newUser.role?.role_permission?.map((rp) => rp.permission.name) || [],
+    };
+
     res.status(201).json({
       message: "User created successfully",
-      user: userWithoutPassword,
+      user: finalUser,
     });
   } catch (error) {
     console.error("Error creating user:", error);
@@ -52,17 +63,17 @@ export const createUser = async (req, res) => {
 // ======================
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await prisma.users.findMany({
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        display_name: true,
-        profile_pic_url: true,
-        permissions: true,
-        created_at: true,
-        updated_at: true,
+    const users = await prisma.app_user.findMany({
+      include: {
+        role: {
+          include: {
+            role_permission: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -70,10 +81,22 @@ export const getAllUsers = async (req, res) => {
       return res.status(404).json({ message: "No users found" });
     }
 
+    const formattedUsers = users.map((user) => ({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      display_name: user.display_name,
+      profile_pic_url: user.profile_pic_url,
+      role: user.role?.name,
+      permissions: user.role?.role_permission?.map((rp) => rp.permission.name) || [],
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    }));
+
     res.status(200).json({
       message: "Users retrieved successfully",
-      count: users.length,
-      users,
+      count: formattedUsers.length,
+      users: formattedUsers,
     });
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -88,18 +111,18 @@ export const getUserByUsername = async (req, res) => {
   try {
     const { username } = req.params;
 
-    const user = await prisma.users.findUnique({
+    const user = await prisma.app_user.findUnique({
       where: { username },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        permissions: true,
-        display_name: true,
-        profile_pic_url: true,
-        created_at: true,
-        updated_at: true,
+      include: {
+        role: {
+          include: {
+            role_permission: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -107,9 +130,21 @@ export const getUserByUsername = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    const formattedUser = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      display_name: user.display_name,
+      profile_pic_url: user.profile_pic_url,
+      role: user.role?.name,
+      permissions: user.role?.role_permission?.map((rp) => rp.permission.name) || [],
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    };
+
     res
       .status(200)
-      .json({ user: user, message: "User retrieved successfully" });
+      .json({ user: formattedUser, message: "User retrieved successfully" });
   } catch (error) {
     console.error("Error fetching user by username:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -127,29 +162,41 @@ export const getUsersByIds = async (req, res) => {
       return res.status(400).json({ message: "userIds array is required" });
     }
 
-    const users = await prisma.users.findMany({
+    const users = await prisma.app_user.findMany({
       where: {
         id: {
           in: userIds,
         },
       },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        display_name: true,
-        profile_pic_url: true,
-        permissions: true,
-        created_at: true,
-        updated_at: true,
+      include: {
+        role: {
+          include: {
+            role_permission: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
       },
     });
 
+    const formattedUsers = users.map((user) => ({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      display_name: user.display_name,
+      profile_pic_url: user.profile_pic_url,
+      role: user.role?.name,
+      permissions: user.role?.role_permission?.map((rp) => rp.permission.name) || [],
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    }));
+
     res.status(200).json({
       message: "Users retrieved successfully",
-      count: users.length,
-      data: users,
+      count: formattedUsers.length,
+      data: formattedUsers,
     });
   } catch (error) {
     console.error("Error fetching users by IDs:", error);
@@ -167,39 +214,52 @@ export const updateUser = async (req, res) => {
     // Prepare update data
     const updateData = {
       username: user.username,
-      role: user.role,
-      permissions: user.permissions,
       email: user.email,
       profile_pic_url: user.profile_pic_url,
       display_name: user.display_name,
     };
+
+    // Update role if provided
+    if (user.role) {
+      const role = await prisma.role.findUnique({ where: { name: user.role } });
+      if (!role) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+      updateData.role_id = role.id;
+    }
 
     // Only hash and update password if provided
     if (user.password && user.password.trim().length > 0) {
       updateData.password_hash = await bcrypt.hash(user.password, 10);
     }
 
-    const updatedUser = await prisma.users.update({
+    const updatedUser = await prisma.app_user.update({
       where: { username: user.username },
       data: updateData,
-      select: {
-        id: true,
-        username: true,
-        password_hash: true,
-        role: true,
-        permissions: true,
-        email: true,
-        profile_pic_url: true,
-        display_name: true,
-        updated_at: true,
+      include: {
+        role: {
+          include: {
+            role_permission: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
       },
     });
 
     const { password_hash: _, ...userWithoutPassword } = updatedUser;
 
+    const finalUser = {
+      ...userWithoutPassword,
+      role: updatedUser.role?.name,
+      permissions: updatedUser.role?.role_permission?.map((rp) => rp.permission.name) || [],
+    };
+
     res.status(200).json({
       message: "User updated successfully",
-      user: userWithoutPassword,
+      user: finalUser,
     });
   } catch (error) {
     console.error("Error updating user:", error);
@@ -214,12 +274,12 @@ export const deleteUser = async (req, res) => {
   try {
     const { username } = req.params;
 
-    const existingUser = await prisma.users.findUnique({ where: { username } });
+    const existingUser = await prisma.app_user.findUnique({ where: { username } });
     if (!existingUser) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    await prisma.users.delete({ where: { username } });
+    await prisma.app_user.delete({ where: { username } });
 
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {

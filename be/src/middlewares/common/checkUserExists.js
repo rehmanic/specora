@@ -7,20 +7,33 @@ export default function checkUserExists(action) {
 
       if (action === "by-username") {
         const { username } = req.body || req.params;
-        user = await prisma.users.findUnique({ where: { username } });
+        user = await prisma.app_user.findUnique({
+          where: { username },
+          include: {
+            role: {
+              include: {
+                role_permission: {
+                  include: {
+                    permission: true,
+                  },
+                },
+              },
+            },
+          },
+        });
 
         if (!user) {
           return res.status(404).json({ message: "User not found" });
         }
       } else if (action === "by-id") {
         const { userId } = req.params;
-        user = await prisma.users.findUnique({ where: { id: userId } });
+        user = await prisma.app_user.findUnique({ where: { id: userId } });
         if (!user) {
           return res.status(404).json({ message: "User not found" });
         }
       } else if (action === "by-username-email") {
         const { username, email } = req.body;
-        user = await prisma.users.findFirst({
+        user = await prisma.app_user.findFirst({
           where: { OR: [{ username }, { email }] },
         });
 
