@@ -1,6 +1,6 @@
 // ----- Core Libraries -----
 import express from "express"; // Web framework for building REST APIs
-
+import dotenv from "dotenv";
 // ----- Middleware -----
 import morgan from "morgan"; // HTTP request logger
 import helmet from "helmet"; // Security middleware for setting HTTP headers
@@ -16,6 +16,7 @@ import specbotRoutes from "./src/modules/specbot/specbotRoutes.js";
 
 const app = express();
 
+dotenv.config();
 app.use(helmet());
 app.use(express.json());
 

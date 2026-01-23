@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import useAuthStore from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import ErrorBox from "@/components/common/ErrorBox";
+import { notify } from "@/components/common/Notification";
 
 export default function AuthForm({ className, variant = "login", ...props }) {
   const isLogin = variant === "login";
@@ -59,6 +60,9 @@ export default function AuthForm({ className, variant = "login", ...props }) {
           password: formData.password,
         });
 
+        notify.success("Welcome back!", {
+          description: `Logged in as ${formData.username}`,
+        });
         router.push("/dashboard");
       } else {
         await signup({
@@ -67,12 +71,18 @@ export default function AuthForm({ className, variant = "login", ...props }) {
           password: formData.password,
         });
 
+        notify.success("Account created successfully!", {
+          description: "Welcome to Specora",
+        });
         router.push("/dashboard");
       }
     } catch (err) {
       const errorMessage =
         err?.message || "An unexpected error occurred. Please try again.";
       setLocalError(errorMessage);
+      notify.error(isLogin ? "Login failed" : "Signup failed", {
+        description: errorMessage,
+      });
     }
   };
 
@@ -165,8 +175,8 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                       ? "Logging in..."
                       : "Signing up..."
                     : isLogin
-                    ? "Login"
-                    : "Sign up"}
+                      ? "Login"
+                      : "Sign up"}
                 </Button>
               </div>
             </div>

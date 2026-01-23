@@ -16,7 +16,7 @@ import { validateUserDataInput } from "../../middlewares/users/inputValidation.j
 const router = express.Router();
 
 router.use(verifyToken);
-router.use(requireManager);
+//router.use(requireManager);
 
 // CREATE
 router.post(
