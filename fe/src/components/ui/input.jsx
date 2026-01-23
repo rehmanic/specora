@@ -1,14 +1,12 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import * as React from "react"
 
-function Input({ className, type, ...props }) {
-  
-  const safeProps = Object.fromEntries(
-    Object.entries(props).filter(
-      ([key, value]) => value !== null && value !== undefined
-    )
-  );
+import { cn } from "@/lib/utils"
 
+function Input({
+  className,
+  type,
+  ...props
+}) {
   return (
     <input
       type={type}
@@ -19,9 +17,8 @@ function Input({ className, type, ...props }) {
         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
         className
       )}
-      {...safeProps}
-    />
+      {...props} />
   );
 }
 
-export { Input };
+export { Input }

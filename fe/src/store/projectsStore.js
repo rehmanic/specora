@@ -1,12 +1,33 @@
 // src/store/projectsStore.js
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getUserProjects } from "@/api/projects";
+import useAuthStore from "./authStore";
 
 const useProjectsStore = create(
   persist(
     (set) => ({
       selectedProject: null,
+      projects: [],
+      isLoading: false,
       error: null,
+
+      // ✅ Fetch Projects from API
+      fetchProjects: async () => {
+        set({ isLoading: true });
+        try {
+          const { user } = useAuthStore.getState();
+          if (!user?.id) throw new Error("User not authenticated");
+
+          const data = await getUserProjects(user.id);
+          const projectsList = Array.isArray(data) ? data : (data.projects || []);
+
+          set({ projects: projectsList, isLoading: false });
+        } catch (error) {
+          console.error("Fetch projects error:", error);
+          set({ error: error.message || "Failed to fetch projects", isLoading: false });
+        }
+      },
 
       // ✅ Set selected project only
       setSelectedProject: (project) =>

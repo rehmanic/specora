@@ -9,7 +9,6 @@
 
 /* Google Fonts - Add to layout.jsx head */
 
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -422,4 +421,13 @@ select:focus {
   transform: translateY(-2px);
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
   border-color: oklch(0.55 0.25 285 / 0.3);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

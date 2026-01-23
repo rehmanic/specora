@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { cn } from "../../lib/utils"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -11,72 +11,139 @@ import {
   MessageCircleQuestion,
   Users,
   Settings,
-} from "lucide-react"
+  FolderOpen,
+  ClipboardList,
+  ChevronRight
+} from "lucide-react";
+import useProjectsStore from "@/store/projectsStore";
+import { TeamSwitcher } from "./TeamSwitcher";
+import { NavUser } from "./NavUser";
+import {
+  Sidebar as ShadcnSidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+  SidebarRail,
+  SidebarFooter,
+} from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 
-const items = [
-  { name: "Dashboard", href: "#", icon: LayoutDashboard },
-  { name: "Chat", href: "#", icon: MessageSquare },
-  { name: "SpecBot", href: "#", icon: Bot },
-  { name: "Meetings", href: "#", icon: CalendarDays },
+// items specific to a project
+const projectTools = [
+  { name: "Chat", href: "/chat", icon: MessageSquare },
+  { name: "SpecBot", href: "/specbot", icon: Bot },
+  { name: "Requirements", href: "/requirements", icon: ClipboardList },
+  { name: "Meetings", href: "/meetings", icon: CalendarDays },
   { name: "Feedback", href: "/feedback", icon: MessageCircleQuestion },
-  { name: "Users", href: "#", icon: Users },
-  { name: "Settings", href: "#", icon: Settings },
-]
+  { name: "Settings", href: "/settings", icon: Settings },
+];
 
-export default function Sidebar({ active }) {
-  const pathname = usePathname()
+export function Sidebar({ ...props }) {
+  const pathname = usePathname();
+  const { selectedProject } = useProjectsStore();
+
+  // Helper to determine if a link is active
+  const isLinkActive = (href) => pathname === href || pathname.startsWith(href);
 
   return (
-    <aside
-      className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border w-64 shrink-0 h-dvh sticky top-0 hidden md:flex flex-col"
-      aria-label="Primary"
-    >
-      <div className="flex items-center gap-2 p-4">
-        <div className="size-9 rounded-lg bg-sidebar-accent grid place-items-center border border-sidebar-border">
-          <span className="sr-only">App logo</span>
-          <span aria-hidden className="text-sm font-semibold">S</span>
-        </div>
-        <span className="font-semibold">Specora</span>
-      </div>
+    <ShadcnSidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+        <TeamSwitcher />
+      </SidebarHeader>
 
-      <nav className="flex-1 p-2">
-        <ul className="space-y-1">
-          {items.map((item) => {
-            const Icon = item.icon
-            const isActive =
-              active === item.name ||
-              (item.href !== "#" && pathname?.startsWith(item.href))
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {/* Dashboard */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/dashboard"} tooltip="Dashboard">
+                  <Link href="/dashboard">
+                    <LayoutDashboard />
+                    <span>Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
-            return (
-              <li key={item.name}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                    "hover:bg-sidebar-accent",
-                    isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground"
-                  )}
-                >
-                  <Icon className="size-5" aria-hidden="true" />
-                  <span className="text-pretty">{item.name}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
+              {/* Projects with Submenu */}
+              <Collapsible defaultOpen className="group/collapsible" asChild>
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Projects" isActive={pathname.startsWith("/projects")}>
+                      <FolderOpen />
+                      <span>Projects</span>
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
 
-      <div className="mt-auto p-4 border-t border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="size-9 rounded-full bg-muted border border-border" />
-          <div className="min-w-0">
-            <p className="text-sm font-medium leading-tight truncate">John Doe</p>
-            <p className="text-xs text-muted-foreground truncate">john.doe@gmail.com</p>
-          </div>
-        </div>
-      </div>
-    </aside>
-  )
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {/* If a project is selected, show tools */}
+                      {selectedProject ? (
+                        <>
+                          {projectTools.map((tool) => {
+                            const projectBase = `/projects/${selectedProject.slug}`;
+                            const href = tool.href ? `${projectBase}${tool.href}` : projectBase;
+                            const isActive = pathname === href;
+
+                            return (
+                              <SidebarMenuSubItem key={tool.name}>
+                                <SidebarMenuSubButton asChild isActive={isActive}>
+                                  <Link href={href}>
+                                    <tool.icon className="h-4 w-4 mr-2" />
+                                    <span>{tool.name}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
+                        </>
+                      ) : (
+                        <SidebarMenuSubItem>
+                          <span className="px-2 py-1 text-xs text-muted-foreground">No project selected</span>
+                        </SidebarMenuSubItem>
+                      )}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+
+              {/* Users */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname.startsWith("/users")} tooltip="Users">
+                  <Link href="/users">
+                    <Users />
+                    <span>Users</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Global Settings */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/settings"} tooltip="Settings">
+                  <Link href="/settings">
+                    <Settings />
+                    <span>Global Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <NavUser />
+      </SidebarFooter>
+      <SidebarRail />
+    </ShadcnSidebar>
+  );
 }
