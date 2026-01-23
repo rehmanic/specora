@@ -35,14 +35,12 @@ export default function MeetingCard({ meeting, type }) {
   };
 
   const handleJoinMeeting = async () => {
-    // If meeting already has a link, just navigate to it
     if (meeting.meeting_link) {
       const roomId = meeting.meeting_link.split('/').pop();
       router.push(`/meetings/room/${roomId}`);
       return;
     }
 
-    // Otherwise create a new room
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/video/create-room`,
@@ -77,22 +75,23 @@ export default function MeetingCard({ meeting, type }) {
   };
 
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200 cursor-pointer group">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg mb-2 group-hover:text-primary transition-colors">
+    <Card className="card-interactive overflow-hidden">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg mb-1 truncate group-hover:text-primary transition-colors font-display">
               {meeting.name}
             </CardTitle>
-            <CardDescription className="line-clamp-2">
+            <CardDescription className="line-clamp-2 text-sm">
               {meeting.description}
             </CardDescription>
           </div>
-          {type === "completed" && (
-            <Badge variant="secondary" className="ml-2">
-              Completed
-            </Badge>
-          )}
+          <Badge
+            variant={type === "completed" ? "secondary" : "default"}
+            className={type === "upcoming" ? "bg-success/15 text-success border-success/30" : ""}
+          >
+            {type === "completed" ? "Completed" : "Upcoming"}
+          </Badge>
         </div>
       </CardHeader>
 
@@ -100,11 +99,11 @@ export default function MeetingCard({ meeting, type }) {
         {/* Scheduled Date & Time */}
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="w-4 h-4" />
+            <Calendar className="w-4 h-4 text-primary" />
             <span>{formatDate(meeting.scheduled_at)}</span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Clock className="w-4 h-4" />
+            <Clock className="w-4 h-4 text-primary" />
             <span>{formatTime(meeting.scheduled_at)}</span>
           </div>
         </div>
@@ -112,26 +111,26 @@ export default function MeetingCard({ meeting, type }) {
         {/* Scheduled By */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="w-4 h-4" />
-          <span>Scheduled by {meeting.scheduled_by}</span>
+          <span>Scheduled by <span className="font-medium text-foreground">{meeting.scheduled_by}</span></span>
         </div>
 
         {/* Stakeholders */}
         <div>
-          <p className="text-xs text-muted-foreground mb-2">Stakeholders</p>
+          <p className="text-xs text-muted-foreground mb-2">Participants</p>
           <div className="flex -space-x-2">
             {meeting.stakeholders.slice(0, 5).map((stakeholder, idx) => (
               <Avatar
                 key={idx}
-                className="border-2 border-background w-8 h-8"
+                className="border-2 border-card w-8 h-8 hover:z-10 transition-transform hover:scale-110"
                 title={stakeholder}
               >
-                <AvatarFallback className="text-xs">
+                <AvatarFallback className="text-xs bg-primary/10 text-primary">
                   {getInitials(stakeholder)}
                 </AvatarFallback>
               </Avatar>
             ))}
             {meeting.stakeholders.length > 5 && (
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted border-2 border-background text-xs font-medium">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted border-2 border-card text-xs font-medium">
                 +{meeting.stakeholders.length - 5}
               </div>
             )}
@@ -143,17 +142,17 @@ export default function MeetingCard({ meeting, type }) {
           <div className="bg-muted/50 rounded-lg p-3 space-y-2">
             <p className="text-xs font-medium text-muted-foreground">Meeting Link</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 text-xs bg-background px-2 py-1 rounded border truncate">
+              <code className="flex-1 text-xs bg-card px-2 py-1.5 rounded border truncate">
                 {meeting.meeting_link}
               </code>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={copyMeetingLink}
-                className="shrink-0"
+                className="shrink-0 h-8 w-8 p-0"
               >
                 {copied ? (
-                  <Check className="w-4 h-4 text-green-600" />
+                  <Check className="w-4 h-4 text-success" />
                 ) : (
                   <Copy className="w-4 h-4" />
                 )}
@@ -162,7 +161,7 @@ export default function MeetingCard({ meeting, type }) {
             <Button
               variant="link"
               size="sm"
-              className="h-auto p-0 text-xs"
+              className="h-auto p-0 text-xs text-primary"
               onClick={handleJoinMeeting}
             >
               <ExternalLink className="w-3 h-3 mr-1" />
@@ -175,33 +174,30 @@ export default function MeetingCard({ meeting, type }) {
         <div className="flex gap-2 pt-2">
           {type === "upcoming" && (
             <Button
-              variant="default"
               size="sm"
-              className="flex-1"
+              className="flex-1 gap-2 gradient-primary border-0"
               onClick={handleJoinMeeting}
             >
-              <Video className="w-4 h-4 mr-2" />
+              <Video className="w-4 h-4" />
               Start Meeting
             </Button>
           )}
-          
+
           {type === "completed" && meeting.recording_link && (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => setShowVideoPlayer(!showVideoPlayer)}
-              >
-                <Play className="w-4 h-4 mr-2" />
-                {showVideoPlayer ? "Hide Recording" : "View Recording"}
-              </Button>
-            </>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-2"
+              onClick={() => setShowVideoPlayer(!showVideoPlayer)}
+            >
+              <Play className="w-4 h-4" />
+              {showVideoPlayer ? "Hide Recording" : "View Recording"}
+            </Button>
           )}
         </div>
 
         {showVideoPlayer && meeting.recording_link && (
-          <div className="mt-4">
+          <div className="mt-4 rounded-lg overflow-hidden">
             <VideoPlayer
               src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${meeting.recording_link}`}
             />

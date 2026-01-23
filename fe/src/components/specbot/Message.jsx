@@ -1,42 +1,94 @@
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { cn } from "@/lib/utils";
+"use client";
 
-export function Message({ text, timestamp, isSender = false, className }) {
-  const formattedTimestamp =
-    timestamp instanceof Date
-      ? timestamp.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : timestamp;
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Bot, User, Copy, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+
+export function Message({ text, timestamp, isSender }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div
       className={cn(
-        "flex w-full",
-        isSender ? "justify-end" : "justify-start"
+        "flex gap-3 group animate-fade-in",
+        isSender ? "flex-row-reverse" : "flex-row"
       )}
     >
+      {/* Avatar */}
+      <Avatar className={cn(
+        "h-8 w-8 shrink-0",
+        !isSender && "gradient-primary"
+      )}>
+        <AvatarFallback className={cn(
+          "text-xs",
+          isSender ? "bg-muted text-foreground" : "bg-transparent text-white"
+        )}>
+          {isSender ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+        </AvatarFallback>
+      </Avatar>
+
+      {/* Message content */}
       <div
         className={cn(
-          "flex w-fit max-w-[75%] flex-col gap-1 rounded-2xl px-4 py-2.5 shadow-sm",
-          "sm:max-w-md sm:px-5 sm:py-3",
-          isSender
-            ? "bg-primary text-primary-foreground rounded-br-none"
-            : "bg-muted text-foreground rounded-bl-none",
-          className
+          "flex flex-col max-w-[80%] lg:max-w-[70%]",
+          isSender ? "items-end" : "items-start"
         )}
       >
-        <div className="prose prose-sm max-w-none text-sm leading-relaxed prose-p:mb-2 last:prose-p:mb-0 prose-li:my-0 dark:prose-invert">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
-        </div>
-        <time
-          className="text-[10px] opacity-70 sm:text-xs self-end"
-          dateTime={timestamp instanceof Date ? timestamp.toISOString() : timestamp}
+        {/* Name & timestamp */}
+        <div
+          className={cn(
+            "flex items-center gap-2 mb-1 text-xs text-muted-foreground",
+            isSender && "flex-row-reverse"
+          )}
         >
-          {formattedTimestamp}
-        </time>
+          <span className="font-medium">{isSender ? "You" : "SpecBot"}</span>
+          <span>•</span>
+          <span>{timestamp}</span>
+        </div>
+
+        {/* Bubble */}
+        <div className="relative group/bubble">
+          <div
+            className={cn(
+              "px-4 py-3 rounded-2xl text-sm leading-relaxed",
+              isSender
+                ? "bg-primary text-primary-foreground rounded-br-md"
+                : "bg-card border border-border rounded-bl-md shadow-sm"
+            )}
+          >
+            {/* Format AI responses with markdown-like styling */}
+            <div className={cn(
+              "whitespace-pre-wrap",
+              !isSender && "[&>p]:mb-2 [&>ul]:list-disc [&>ul]:pl-4 [&>code]:bg-muted [&>code]:px-1 [&>code]:rounded"
+            )}>
+              {text}
+            </div>
+          </div>
+
+          {/* Copy button for AI messages */}
+          {!isSender && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCopy}
+              className="absolute -bottom-2 right-2 h-7 w-7 opacity-0 group-hover/bubble:opacity-100 transition-opacity bg-card border shadow-sm"
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-success" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

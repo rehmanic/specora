@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreHorizontal, Pencil, Trash2, Shield, Mail } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Mail, Users } from "lucide-react";
 import { deleteUserRequest } from "@/api/users";
 import { useRouter } from "next/navigation";
 import {
@@ -33,9 +32,23 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import ErrorBox from "@/components/common/ErrorBox";
+
+// Empty State Component
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+        <Users className="h-8 w-8 text-primary" />
+      </div>
+      <h3 className="text-lg font-semibold font-display mb-1">No users found</h3>
+      <p className="text-sm text-muted-foreground max-w-xs">
+        Create your first user to start managing access and permissions.
+      </p>
+    </div>
+  );
+}
 
 export function UsersTable({ users: initialUsers = [] }) {
   const router = useRouter();
@@ -43,7 +56,6 @@ export function UsersTable({ users: initialUsers = [] }) {
   const [users, setUsers] = useState(
     Array.isArray(initialUsers) ? initialUsers : []
   );
-  const [loading, setLoading] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -73,23 +85,36 @@ export function UsersTable({ users: initialUsers = [] }) {
     router.push(`/users/update/${username}`);
   };
 
-  const getRoleBadgeVariant = (role) => {
+  const getRoleBadgeClass = (role) => {
     switch (role) {
       case "manager":
-        return "default";
+        return "bg-primary/15 text-primary border-primary/30";
       case "requirements_engineer":
-        return "secondary";
+        return "bg-accent/15 text-accent border-accent/30";
       case "client":
-        return "outline";
+        return "bg-success/15 text-success border-success/30";
       default:
-        return "secondary";
+        return "";
     }
+  };
+
+  const getRoleLabel = (role) => {
+    const labels = {
+      manager: "Manager",
+      requirements_engineer: "Engineer",
+      client: "Client",
+    };
+    return labels[role] || role;
   };
 
   const userBeingDeleted = users.find((u) => u.username === userToDelete);
 
+  if (users.length === 0) {
+    return <EmptyState />;
+  }
+
   return (
-    <Card className="overflow-hidden">
+    <>
       <AlertDialog open={!!userToDelete} onOpenChange={(open) => {
         if (!open) {
           setUserToDelete(null);
@@ -98,10 +123,13 @@ export function UsersTable({ users: initialUsers = [] }) {
       }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete
-              the user "{userBeingDeleted?.display_name || userBeingDeleted?.username || userToDelete}" and all their data.
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {userBeingDeleted?.display_name || userBeingDeleted?.username || userToDelete}
+              </span>
+              ? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           {deleteError && <ErrorBox message={deleteError} />}
@@ -125,29 +153,32 @@ export function UsersTable({ users: initialUsers = [] }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-1/4 text-center">User</TableHead>
-              <TableHead className="w-1/4 hidden md:table-cell text-center">
-                Email
-              </TableHead>
-              <TableHead className="w-1/4 text-center">Role</TableHead>
-              <TableHead className="w-1/4 text-center">Actions</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[300px]">User</TableHead>
+              <TableHead className="hidden md:table-cell">Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead className="w-[100px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="text-center">
-                  <div className="flex items-center justify-start gap-3">
-                    <Avatar className="h-10 w-10">
+            {users.map((user, index) => (
+              <TableRow
+                key={user.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 0.03}s` }}
+              >
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border-2 border-card">
                       <AvatarImage
-                        src={user.profile_pic_url}
+                        src={user.profile_pic_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`}
                         alt={user.display_name || user.username || "User"}
                       />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 text-primary">
                         {(user.display_name || user.username || "U")
                           .split(" ")
                           .map((n) => n[0])
@@ -155,31 +186,31 @@ export function UsersTable({ users: initialUsers = [] }) {
                           .toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col text-left">
-                      <span className="font-medium truncate">
+                    <div>
+                      <p className="font-medium">
                         {user.display_name?.trim() || user.username?.trim() || "Unknown User"}
-                      </span>
-                      <span className="text-sm text-muted-foreground truncate">
+                      </p>
+                      <p className="text-sm text-muted-foreground">
                         @{user.username?.trim() || "unknown"}
-                      </span>
+                      </p>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="hidden md:table-cell text-center">
-                  <div className="flex items-center justify-start gap-2 text-sm text-muted-foreground">
+                <TableCell className="hidden md:table-cell">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Mail className="h-4 w-4" />
                     {user.email}
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
-                  <Badge variant={getRoleBadgeVariant(user.role)}>
-                    {user.role}
+                <TableCell>
+                  <Badge variant="outline" className={getRoleBadgeClass(user.role)}>
+                    {getRoleLabel(user.role)}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Open menu</span>
                       </Button>
@@ -189,6 +220,7 @@ export function UsersTable({ users: initialUsers = [] }) {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => handleEdit(user.username)}
+                        className="cursor-pointer"
                       >
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit User
@@ -199,7 +231,7 @@ export function UsersTable({ users: initialUsers = [] }) {
                           e.preventDefault();
                           handleDelete(user.username);
                         }}
-                        className="text-destructive focus:text-destructive"
+                        className="text-destructive focus:text-destructive cursor-pointer"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete User
@@ -212,6 +244,6 @@ export function UsersTable({ users: initialUsers = [] }) {
           </TableBody>
         </Table>
       </div>
-    </Card>
+    </>
   );
 }

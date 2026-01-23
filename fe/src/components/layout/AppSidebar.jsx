@@ -8,6 +8,7 @@ import {
   MessageCircle,
   Settings,
   Clipboard,
+  ChevronRight,
 } from "lucide-react";
 
 import { NavMain } from "@/components/layout/NavMain";
@@ -19,6 +20,8 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  SidebarGroup,
+  SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 
 import useAuthStore from "@/store/authStore";
@@ -30,22 +33,50 @@ const allSidebarItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
+    description: "Overview & projects",
   },
-  { id: "chat", title: "Chat", url: "/chat", icon: MessageSquare },
-  { id: "specbot", title: "SpecBot", url: "/specbot", icon: Bot },
-  { id: "meetings", title: "Meetings", url: "/meetings", icon: Video },
-  { id: "feedback", title: "Feedback", url: "/feedback", icon: MessageCircle },
+  {
+    id: "chat",
+    title: "Team Chat",
+    url: "/chat",
+    icon: MessageSquare,
+    description: "Collaborate with team",
+  },
+  {
+    id: "specbot",
+    title: "SpecBot",
+    url: "/specbot",
+    icon: Bot,
+    description: "AI assistant",
+    badge: "AI",
+  },
+  {
+    id: "meetings",
+    title: "Meetings",
+    url: "/meetings",
+    icon: Video,
+    description: "Schedule & record",
+  },
+  {
+    id: "feedback",
+    title: "Feedback",
+    url: "/feedback",
+    icon: MessageCircle,
+    description: "Collect insights",
+  },
   {
     id: "requirements",
     title: "Requirements",
     url: "/requirements",
     icon: Clipboard,
+    description: "Manage specs",
   },
   {
     id: "project_settings",
     title: "Settings",
     url: "/settings",
     icon: Settings,
+    description: "Project settings",
   },
 ];
 
@@ -69,7 +100,7 @@ export function AppSidebar(props) {
     }
   });
 
-  // ✅ Add project slug to all except /dashboard
+  // Add project slug to all except /dashboard
   const projectScopedSidebarItems = sidebarItems.map((item) => {
     if (["/dashboard"].includes(item.url)) {
       return item;
@@ -86,12 +117,12 @@ export function AppSidebar(props) {
   });
 
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border" {...props}>
+      <SidebarHeader className="border-b border-sidebar-border">
         <TeamSwitcher />
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-2 py-3">
         {projectScopedSidebarItems.length > 0 ? (
           <NavMain items={projectScopedSidebarItems} />
         ) : (
@@ -101,7 +132,7 @@ export function AppSidebar(props) {
         )}
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="border-t border-sidebar-border">
         <NavUser />
       </SidebarFooter>
 

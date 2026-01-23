@@ -1,63 +1,70 @@
-import { ChevronRight } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import {
   SidebarGroup,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import Link from "next/link";
 
 export function NavMain({ items }) {
+  const pathname = usePathname();
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
   return (
     <SidebarGroup>
       <SidebarMenu>
         {items.map((item) => {
-          const hasSubItems = item.items && item.items.length > 0;
+          const isActive = pathname === item.url ||
+            (item.url !== "/dashboard" && pathname.startsWith(item.url));
+          const Icon = item.icon;
 
-          return hasSubItems ? (
-            <Collapsible
-              key={item.id}
-              asChild
-              defaultOpen={item.isActive}
-              className="group/collapsible"
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={item.title}>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {item.items?.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.id}>
-                        <SidebarMenuSubButton asChild>
-                          <Link href={subItem.url}>
-                            <span>{subItem.title}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-          ) : (
+          return (
             <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton tooltip={item.title} asChild>
-                <Link href={item.url}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
+              <SidebarMenuButton
+                asChild
+                disabled={item.disabled}
+                tooltip={isCollapsed ? item.title : undefined}
+                className={cn(
+                  "relative h-10 transition-all duration-200",
+                  isActive && "bg-sidebar-accent text-primary font-medium",
+                  item.disabled && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <Link
+                  href={item.disabled ? "#" : item.url}
+                  className={cn(
+                    "flex items-center gap-3 px-3 rounded-lg",
+                    item.disabled && "pointer-events-none"
+                  )}
+                >
+                  {/* Active indicator */}
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                  )}
+
+                  <Icon className={cn(
+                    "h-4 w-4 shrink-0 transition-colors",
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  )} />
+
+                  <span className="flex-1 truncate">{item.title}</span>
+
+                  {/* Badge */}
+                  {item.badge && !isCollapsed && (
+                    <Badge
+                      variant="secondary"
+                      className="h-5 text-[10px] px-1.5 bg-primary/10 text-primary border-0"
+                    >
+                      {item.badge}
+                    </Badge>
+                  )}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

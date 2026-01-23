@@ -1,3 +1,7 @@
 export default function PublicLayout({ children }) {
-  return <>{children}</>;
+  return (
+    <div className="min-h-screen w-full">
+      {children}
+    </div>
+  );
 }

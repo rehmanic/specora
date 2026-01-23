@@ -1,33 +1,52 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const outfit = Outfit({
+  variable: "--font-display",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata = {
   title: "Specora",
-  description: "AI assisted requirements engineering",
+  description: "AI-powered requirements engineering platform. Collaborate, communicate, and create better software specifications.",
   icons: {
     icon: "/fav.svg",
+  },
+  keywords: ["requirements engineering", "AI", "collaboration", "software development"],
+  authors: [{ name: "Specora Team" }],
+  openGraph: {
+    title: "Specora",
+    description: "AI-powered requirements engineering platform",
+    type: "website",
   },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${outfit.variable} antialiased`}
+        style={{ fontFamily: "var(--font-sans)" }}
       >
         {children}
-        <Toaster richColors closeButton position="top-right" />
+        <Toaster
+          richColors
+          closeButton
+          position="top-right"
+          toastOptions={{
+            style: {
+              fontFamily: "var(--font-sans)",
+            },
+          }}
+        />
       </body>
     </html>
   );

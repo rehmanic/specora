@@ -1,35 +1,63 @@
+"use client";
+
+import { Lightbulb, FileText, Search, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const starters = [
+  {
+    icon: FileText,
+    title: "Draft Requirements",
+    description: "Help me create a requirements document",
+    prompt: "Help me draft a requirements document for my project",
+  },
+  {
+    icon: Search,
+    title: "Analyze Requirements",
+    description: "Review and improve existing specs",
+    prompt: "Can you analyze these requirements and suggest improvements?",
+  },
+  {
+    icon: Lightbulb,
+    title: "Brainstorm Features",
+    description: "Generate feature ideas",
+    prompt: "Help me brainstorm features for my application",
+  },
+  {
+    icon: Zap,
+    title: "Quick Question",
+    description: "Ask anything about RE",
+    prompt: "I have a question about requirements engineering",
+  },
+];
+
 export default function Starter({ onSelect }) {
-  // Starter prompts to guide requirements discovery
-  const starterQuestions = [
-    "List the primary user roles and their goals for this project.",
-    "What business outcomes must this release achieve?",
-    "What are the top 5 constraints (tech, budget, timeline, compliance)?",
-    "Describe the main user journey from sign-up to success.",
-    "Identify critical integrations and their data exchange needs.",
-    "What non-functional requirements (performance, security, availability) matter most?",
-    "List edge cases or failure scenarios we must handle.",
-    "Define acceptance criteria for the main feature in this project.",
-  ];
-
-  const handleClick = (question) => {
-    if (onSelect) {
-      onSelect(question);
-    }
-  };
-
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
-        {starterQuestions.map((question, index) => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {starters.map((starter, index) => {
+        const Icon = starter.icon;
+        return (
           <button
             key={index}
-            onClick={() => handleClick(question)}
-            className="cursor-pointer px-3 py-2 sm:px-4 sm:py-2.5 bg-secondary hover:bg-accent text-secondary-foreground rounded-full text-sm sm:text-base transition-colors duration-200 border border-border hover:border-ring focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            onClick={() => onSelect(starter.prompt)}
+            className={cn(
+              "flex flex-col items-start gap-2 p-4 rounded-xl",
+              "bg-card border border-border hover:border-primary/50",
+              "text-left transition-all duration-200 hover-lift",
+              "group cursor-pointer"
+            )}
           >
-            {question}
+            <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <Icon className="h-4 w-4" />
+            </div>
+            <div>
+              <h4 className="font-medium text-sm">{starter.title}</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {starter.description}
+              </p>
+            </div>
           </button>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }

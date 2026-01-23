@@ -1,9 +1,10 @@
 "use client";
 
-import { Plus, MessageSquare, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { Plus, MessageSquare, Trash2, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+import Logo from "@/components/common/Logo";
 
 export default function LeftSidebar({
   collapsed,
@@ -11,117 +12,116 @@ export default function LeftSidebar({
   chats = [],
   onChatSelect,
   onNewChat,
-  onDeleteChat,
   activeChatId,
-  hideNewChat = false,
-  readOnly = false,
+  onDeleteChat,
   deletingChatId,
 }) {
-  const formatTime = (dateString) => {
-    try {
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
-    } catch {
-      return "Recently";
-    }
-  };
-  if (collapsed) {
-    return (
-      <div className="flex h-full flex-col items-center border-r border-border bg-card py-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleCollapse}
-          className="mb-4"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </Button>
-        {!hideNewChat && (
-          <div className="flex flex-col gap-2">
-            <Button variant="ghost" size="icon" onClick={onNewChat}>
-              <Plus className="h-5 w-5" />
-            </Button>
+  return (
+    <div
+      className={cn(
+        "flex flex-col h-full bg-card border-r border-border transition-all duration-300",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 border-b border-border">
+        {!collapsed && (
+          <div className="flex items-center gap-2">
+            <Logo showText={false} size="sm" />
+            <span className="font-semibold font-display text-sm">SpecBot</span>
           </div>
         )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-full flex-col border-r border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border px-4 py-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Chats
-        </h2>
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggleCollapse}
-          className="h-8 w-8"
+          className="h-8 w-8 shrink-0"
         >
-          <ChevronLeft className="h-4 w-4" />
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
       {/* New Chat Button */}
-      {!hideNewChat && (
-        <div className="p-4">
-          <Button className="w-full justify-start gap-2" size="lg" onClick={onNewChat}>
-            <Plus className="h-5 w-5" />
-            <span className="font-medium">New Chat</span>
-          </Button>
-        </div>
-      )}
+      <div className="p-3">
+        <Button
+          onClick={onNewChat}
+          className={cn(
+            "w-full gap-2 gradient-primary border-0",
+            collapsed && "px-0"
+          )}
+        >
+          <Plus className="h-4 w-4" />
+          {!collapsed && <span>New Chat</span>}
+        </Button>
+      </div>
 
-      {/* Recent Chats */}
-      <div className="flex-1 overflow-hidden">
-        <div className="px-4 py-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Recent Chats
-          </h2>
-        </div>
-        <ScrollArea className="h-[calc(100vh-12rem)]">
-          <div className="space-y-1 px-2 pb-4">
-            {chats.length === 0 ? (
-              <div className="px-3 py-8 text-center text-sm text-muted-foreground">
-                No chats yet. Start a new conversation!
-              </div>
-            ) : (
-              chats.map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => onChatSelect(chat)}
-                  className={`flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-secondary ${activeChatId === chat.id ? "bg-secondary" : ""
-                    }`}
-                >
-                  <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {chat.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatTime(chat.updated_at || chat.created_at)}
-                    </p>
-                  </div>
-                  {onDeleteChat && !readOnly && (
-                    <button
-                      type="button"
-                      className="ml-2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+      {/* Chat List */}
+      <ScrollArea className="flex-1">
+        <div className="p-2 space-y-1">
+          {chats.length === 0 ? (
+            !collapsed && (
+              <p className="text-xs text-muted-foreground text-center p-4">
+                No chats yet. Create one to get started!
+              </p>
+            )
+          ) : (
+            chats.map((chat) => (
+              <div
+                key={chat.id}
+                className={cn(
+                  "group flex items-center gap-2 rounded-lg transition-all cursor-pointer",
+                  collapsed ? "p-2 justify-center" : "px-3 py-2",
+                  activeChatId === chat.id
+                    ? "bg-primary/10 text-primary"
+                    : "hover:bg-muted"
+                )}
+                onClick={() => onChatSelect(chat)}
+              >
+                <MessageSquare className="h-4 w-4 shrink-0" />
+
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 truncate text-sm">
+                      {chat.title || "Untitled Chat"}
+                    </span>
+
+                    {/* Delete button */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                       onClick={(e) => {
                         e.stopPropagation();
                         onDeleteChat(chat);
                       }}
-                      aria-label="Delete chat"
                       disabled={deletingChatId === chat.id}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </ScrollArea>
-      </div>
+                      {deletingChatId === chat.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </ScrollArea>
+
+      {/* Footer info */}
+      {!collapsed && (
+        <div className="p-3 border-t border-border">
+          <p className="text-[10px] text-muted-foreground text-center">
+            Powered by AI • Use responsibly
+          </p>
+        </div>
+      )}
     </div>
   );
 }

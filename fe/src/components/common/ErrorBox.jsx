@@ -1,13 +1,30 @@
-import { AlertTriangle } from "lucide-react";
+"use client";
 
-export default function ErrorBox({ message }) {
+import { AlertCircle, X } from "lucide-react";
+import { useState } from "react";
+
+export default function ErrorBox({ message, dismissible = false, onDismiss }) {
+  const [isVisible, setIsVisible] = useState(true);
+
+  if (!message || !isVisible) return null;
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    onDismiss?.();
+  };
+
   return (
-    <div
-      className="p-3 rounded-md bg-red-50 border border-red-200 text-red-700 
-                    flex items-center gap-3"
-    >
-      <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-      <p className="text-sm leading-tight">{message}</p>
+    <div className="flex items-start gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive animate-fade-in">
+      <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+      <p className="text-sm flex-1">{message}</p>
+      {dismissible && (
+        <button
+          onClick={handleDismiss}
+          className="shrink-0 text-destructive/70 hover:text-destructive transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }

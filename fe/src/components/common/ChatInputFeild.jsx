@@ -1,93 +1,120 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { Paperclip, Send } from "lucide-react";
+import { useState, useRef } from "react";
+import { Send, Paperclip, Smile, Mic } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export default function InputField({
-  value: controlledValue,
-  onChange: controlledOnChange,
-  onSend: controlledOnSend,
+export default function ChatInputField({
+  value = "",
+  onChange,
+  onSend,
   disabled = false,
-  placeholder = "Type your message here..."
+  placeholder = "Type a message...",
 }) {
-  const [internalValue, setInternalValue] = useState("");
-  const fileInputRef = useRef(null);
+  const [localValue, setLocalValue] = useState(value);
+  const [isFocused, setIsFocused] = useState(false);
+  const textareaRef = useRef(null);
 
-  // Use controlled value if provided, otherwise use internal state
-  const inputValue = controlledValue !== undefined ? controlledValue : internalValue;
-  const setInputValue = controlledOnChange || setInternalValue;
-
-  const handleFileClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      console.log("Selected file:", files[0].name);
-      // Handle file upload logic here
-    }
-  };
+  const currentValue = onChange ? value : localValue;
+  const setCurrentValue = onChange || setLocalValue;
 
   const handleSend = () => {
-    if (inputValue.trim() && !disabled) {
-      if (controlledOnSend) {
-        controlledOnSend(inputValue);
-      } else {
-        console.log("Sending message:", inputValue);
-        setInputValue("");
-      }
+    if (currentValue.trim() && !disabled) {
+      onSend?.(currentValue);
+      if (!onChange) setLocalValue("");
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
-  return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-2 shadow-sm focus-within:ring-2 focus-within:ring-ring">
-        {/* File Upload Button */}
-        <button
-          type="button"
-          onClick={handleFileClick}
-          className="flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors cursor-pointer hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Attach file"
-        >
-          <Paperclip className="h-5 w-5" />
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          onChange={handleFileChange}
-          className="hidden"
-          aria-hidden="true"
-        />
+  // Auto resize textarea
+  const handleInput = (e) => {
+    setCurrentValue(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+    }
+  };
 
-        {/* Input Field */}
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={handleKeyPress}
+  return (
+    <div
+      className={cn(
+        "flex items-end gap-2 p-3 rounded-xl border bg-card transition-all duration-200",
+        isFocused ? "border-primary ring-2 ring-primary/20" : "border-input",
+        disabled && "opacity-60"
+      )}
+    >
+      {/* Attachment button */}
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+        disabled={disabled}
+      >
+        <Paperclip className="h-5 w-5" />
+      </Button>
+
+      {/* Text input */}
+      <div className="flex-1 min-w-0">
+        <textarea
+          ref={textareaRef}
+          value={currentValue}
+          onChange={handleInput}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
           disabled={disabled}
-          className="flex-1 bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none md:text-base disabled:opacity-50"
+          rows={1}
+          className="w-full resize-none bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed max-h-[120px]"
+          style={{ minHeight: "24px" }}
         />
+      </div>
 
-        {/* Send Button */}
-        <button
+      {/* Right actions */}
+      <div className="flex items-center gap-1 shrink-0">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 text-muted-foreground hover:text-foreground"
+          disabled={disabled}
+        >
+          <Smile className="h-5 w-5" />
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 text-muted-foreground hover:text-foreground"
+          disabled={disabled}
+        >
+          <Mic className="h-5 w-5" />
+        </Button>
+
+        {/* Send button */}
+        <Button
           type="button"
           onClick={handleSend}
-          disabled={!inputValue.trim() || disabled}
-          className="flex items-center justify-center rounded-md p-2 transition-colors cursor-pointer bg-primary text-primary-foreground hover:bg-black focus:outline-none focus:ring-2 focus:ring-ring disabled:pointer-events-none disabled:opacity-50"
-          aria-label="Send message"
+          disabled={disabled || !currentValue.trim()}
+          size="icon"
+          className={cn(
+            "h-9 w-9 rounded-lg transition-all",
+            currentValue.trim()
+              ? "gradient-primary border-0 hover:opacity-90"
+              : "bg-muted text-muted-foreground"
+          )}
         >
-          <Send className="h-5 w-5" />
-        </button>
+          <Send className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
