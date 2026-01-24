@@ -21,8 +21,11 @@ export function Message({
   avatarUrl,
   menuOpenId,
   setMenuOpenId,
+  onDelete,
+  metadata
 }) {
   const [copied, setCopied] = useState(false);
+  const isDeleted = metadata?.is_deleted;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
@@ -68,57 +71,60 @@ export function Message({
         <div className="relative">
           <div
             className={cn(
-              "px-4 py-2.5 rounded-2xl text-sm leading-relaxed",
+              "px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-all",
               isSender
                 ? "bg-primary text-primary-foreground rounded-br-md"
-                : "bg-muted text-foreground rounded-bl-md"
+                : "bg-muted text-foreground rounded-bl-md",
+              isDeleted && "italic text-muted-foreground opacity-80 bg-muted/50"
             )}
           >
             {text}
           </div>
 
           {/* Actions menu */}
-          <div
-            className={cn(
-              "absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity",
-              isSender ? "-left-10" : "-right-10"
-            )}
-          >
-            <DropdownMenu
-              open={menuOpenId === id}
-              onOpenChange={(open) => setMenuOpenId(open ? id : null)}
+          {!isDeleted && (
+            <div
+              className={cn(
+                "absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity",
+                isSender ? "-left-10" : "-right-10"
+              )}
             >
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full hover:bg-muted"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align={isSender ? "start" : "end"}>
-                <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
-                  {copied ? (
-                    <Check className="mr-2 h-4 w-4 text-success" />
-                  ) : (
-                    <Copy className="mr-2 h-4 w-4" />
-                  )}
-                  {copied ? "Copied!" : "Copy"}
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Reply className="mr-2 h-4 w-4" />
-                  Reply
-                </DropdownMenuItem>
-                {isSender && (
-                  <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
+              <DropdownMenu
+                open={menuOpenId === id}
+                onOpenChange={(open) => setMenuOpenId(open ? id : null)}
+              >
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full hover:bg-muted"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align={isSender ? "start" : "end"}>
+                  <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
+                    {copied ? (
+                      <Check className="mr-2 h-4 w-4 text-success" />
+                    ) : (
+                      <Copy className="mr-2 h-4 w-4" />
+                    )}
+                    {copied ? "Copied!" : "Copy"}
                   </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+
+                  {isSender && (
+                    <DropdownMenuItem
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                      onClick={() => onDelete && onDelete(id)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </div>
       </div>
     </div>

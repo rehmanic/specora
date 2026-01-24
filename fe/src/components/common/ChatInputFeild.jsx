@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Send, Paperclip, Smile, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import EmojiPicker from "emoji-picker-react";
 
 export default function ChatInputField({
   value = "",
@@ -16,6 +17,8 @@ export default function ChatInputField({
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef(null);
 
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
   const currentValue = onChange ? value : localValue;
   const setCurrentValue = onChange || setLocalValue;
 
@@ -23,6 +26,7 @@ export default function ChatInputField({
     if (currentValue.trim() && !disabled) {
       onSend?.(currentValue);
       if (!onChange) setLocalValue("");
+      setShowEmojiPicker(false);
     }
   };
 
@@ -31,6 +35,13 @@ export default function ChatInputField({
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const onEmojiClick = (emojiObject) => {
+    const emoji = emojiObject.emoji;
+    setCurrentValue((prev) => prev + emoji);
+    // Focus back to textarea
+    setTimeout(() => textareaRef.current?.focus(), 0);
   };
 
   // Auto resize textarea
@@ -45,7 +56,7 @@ export default function ChatInputField({
   return (
     <div
       className={cn(
-        "flex items-end gap-2 p-3 rounded-xl border bg-card transition-all duration-200",
+        "flex items-end gap-2 p-3 rounded-xl border bg-card transition-all duration-200 relative",
         isFocused ? "border-primary ring-2 ring-primary/20" : "border-input",
         disabled && "opacity-60"
       )}
@@ -79,26 +90,39 @@ export default function ChatInputField({
       </div>
 
       {/* Right actions */}
-      <div className="flex items-center gap-1 shrink-0">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 text-muted-foreground hover:text-foreground"
-          disabled={disabled}
-        >
-          <Smile className="h-5 w-5" />
-        </Button>
+      <div className="flex items-center gap-1 shrink-0 relative">
+        <div className="relative">
+          {showEmojiPicker && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowEmojiPicker(false)}
+              />
+              <div className="absolute bottom-12 right-0 z-50 shadow-xl rounded-xl border bg-background">
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  theme="auto"
+                  width={300}
+                  height={400}
+                />
+              </div>
+            </>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-9 w-9 text-muted-foreground hover:text-foreground",
+              showEmojiPicker && "text-primary bg-accent"
+            )}
+            disabled={disabled}
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          >
+            <Smile className="h-5 w-5" />
+          </Button>
+        </div>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 text-muted-foreground hover:text-foreground"
-          disabled={disabled}
-        >
-          <Mic className="h-5 w-5" />
-        </Button>
 
         {/* Send button */}
         <Button

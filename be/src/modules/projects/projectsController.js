@@ -81,6 +81,9 @@ export const getSingleUserProjects = async (req, res) => {
       where: {
         created_by: userId,
       },
+      include: {
+        project_member: true, // Include members
+      },
       orderBy: { created_at: "desc" },
     });
 
@@ -90,22 +93,33 @@ export const getSingleUserProjects = async (req, res) => {
         member_id: userId,
       },
       include: {
-        project: true,
+        project: {
+          include: {
+            project_member: true, // Include members for these projects too
+          },
+        },
       },
     });
 
     const memberProjects = memberProjectsData
       .map((pm) => pm.project)
-      .filter((project) => project.created_by !== userId); // Exclude projects already in createdProjects
+      .filter((project) => project.created_by !== userId);
 
-    // Step 3: Combine both lists and sort by created_at descending
-    const userProjects = [...createdProjects, ...memberProjects].sort((a, b) => {
+    // Step 3: Combine and format
+    const allProjects = [...createdProjects, ...memberProjects].sort((a, b) => {
       const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
       const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
       return dateB - dateA;
     });
 
-    if (!userProjects || userProjects.length === 0) {
+    // Format projects to include flat 'members' array of IDs
+    const formattedProjects = allProjects.map(p => ({
+      ...p,
+      members: p.project_member.map(pm => pm.member_id),
+      project_member: undefined, // Setup cleaner response
+    }));
+
+    if (!formattedProjects || formattedProjects.length === 0) {
       return res.status(200).json({
         message: "No projects found for this user",
         count: 0,
@@ -115,8 +129,8 @@ export const getSingleUserProjects = async (req, res) => {
 
     res.status(200).json({
       message: "Fetching user projects successful",
-      count: userProjects.length,
-      projects: userProjects,
+      count: formattedProjects.length,
+      projects: formattedProjects,
     });
   } catch (error) {
     console.error("Error fetching user projects:", error);
@@ -141,14 +155,57 @@ export const updateProject = async (req, res) => {
     projectData.end_date = endDate;
     projectData.updated_at = new Date();
 
-    const updatedProject = await prisma.project.update({
-      where: { id: projectId },
-      data: projectData,
+    const { members, ...dataToUpdate } = projectData;
+    console.log("Update Payload:", { members, dataToUpdateKeys: Object.keys(dataToUpdate) });
+
+    // Transaction to update project and members
+    const updatedProject = await prisma.$transaction(async (prisma) => {
+      // 1. Update Project Details
+      const project = await prisma.project.update({
+        where: { id: projectId },
+        data: dataToUpdate,
+        // We can't include here if we are about to delete/create members (race condition in result?)
+        // Actually, update happens first. Then we delete/create. 
+        // So the returned 'project' will have OLD members if we include here.
+        // We need to fetch it again or manually construct result.
+      });
+
+      // 2. Sync Members if provided
+      if (members && Array.isArray(members)) {
+        // Remove existing members
+        await prisma.project_member.deleteMany({
+          where: { project_id: projectId },
+        });
+
+        // Add new members
+        if (members.length > 0) {
+          await prisma.project_member.createMany({
+            data: members.map((memberId) => ({
+              project_id: projectId,
+              member_id: memberId,
+            })),
+          });
+        }
+      }
+
+      // 3. Return updated project with members
+      // Since we modified members table, we should re-fetch to be safe and accurate
+      return await prisma.project.findUnique({
+        where: { id: projectId },
+        include: { project_member: true }
+      });
     });
+
+    // Format response
+    const formattedProject = {
+      ...updatedProject,
+      members: updatedProject.project_member.map(pm => pm.member_id),
+      project_member: undefined
+    };
 
     return res.status(200).json({
       message: "Project updated successfully",
-      project: updatedProject,
+      project: formattedProject,
     });
   } catch (error) {
     console.error("Error updating project:", error);

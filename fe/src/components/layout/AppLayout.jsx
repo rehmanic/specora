@@ -21,7 +21,8 @@ export function AppLayout({ children }) {
                     <div className="flex flex-1 overflow-hidden">
                         <main
                             className={cn(
-                                "flex-1 overflow-auto bg-muted/10 relative flex flex-col",
+                                "flex-1 bg-muted/10 relative flex flex-col",
+                                isFullWidthObj ? "overflow-hidden" : "overflow-auto",
                                 !isFullWidthObj && "p-4 md:p-6 lg:p-8"
                             )}
                         >

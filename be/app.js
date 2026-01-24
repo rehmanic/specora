@@ -11,8 +11,7 @@ import authRoutes from "./src/modules/auth/authRoutes.js";
 import userRoutes from "./src/modules/users/userRoutes.js";
 import projectRoutes from "./src/modules/projects/projectsRoutes.js";
 import specbotRoutes from "./src/modules/specbot/specbotRoutes.js";
-
-
+import chatRoutes from "./src/modules/chat/chatRoutes.js";
 
 const app = express();
 
@@ -43,6 +42,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/specbot", specbotRoutes);
+app.use("/api/chat", chatRoutes);
 
 // ----- 404 Handler -----
 app.use((req, res) => {

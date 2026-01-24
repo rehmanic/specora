@@ -56,8 +56,11 @@ model group_message {
   id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   content       String
   metadata      Json?
+  created_at    DateTime?  @default(now()) @db.Timestamptz(6)
   group_chat_id String     @db.Uuid
   group_chat    group_chat @relation(fields: [group_chat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sender_id     String     @db.Uuid
+  sender        app_user   @relation(fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model permission {
