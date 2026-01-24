@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import useAuthStore from "@/store/authStore";
 import useProjectsStore from "@/store/projectsStore";
 
-export function NavUser() {
+export function UserMenu() {
   const { user, logout } = useAuthStore();
   const { clearSelectedProject } = useProjectsStore();
   const router = useRouter();
