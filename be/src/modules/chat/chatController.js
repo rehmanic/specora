@@ -95,15 +95,36 @@ export const getGroupMessages = async (req, res) => {
 export const saveGroupMessage = async (req, res) => {
     try {
         const { chatId } = req.params;
-        const { content, senderId } = req.body;
+        const { content, senderId, metadata } = req.body;
 
         const message = await prisma.group_message.create({
             data: {
                 group_chat_id: chatId,
                 content,
                 sender_id: senderId,
+                metadata: metadata || undefined,
             }
         });
+
+        // Update group_chat attachments if present
+        if (metadata?.attachments && Array.isArray(metadata.attachments) && metadata.attachments.length > 0) {
+            try {
+                const chat = await prisma.group_chat.findUnique({ where: { id: chatId } });
+                if (chat) {
+                    let currentAttachments = chat.attachments || [];
+                    if (!Array.isArray(currentAttachments)) currentAttachments = [];
+
+                    const newAttachments = [...currentAttachments, ...metadata.attachments];
+
+                    await prisma.group_chat.update({
+                        where: { id: chatId },
+                        data: { attachments: newAttachments }
+                    });
+                }
+            } catch (attachErr) {
+                console.error("Failed to update group_chat attachments via API:", attachErr);
+            }
+        }
 
         res.status(201).json({
             message: "Message saved",

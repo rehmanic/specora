@@ -21,6 +21,7 @@ model app_user {
   role            role             @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   project         project[]
   project_member  project_member[]
+  group_message   group_message[]
 }
 
 model feedback {
@@ -49,6 +50,7 @@ model group_chat {
   id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   project_id    String          @db.Uuid
   project       project         @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  attachments   Json?
   group_message group_message[]
 }
 

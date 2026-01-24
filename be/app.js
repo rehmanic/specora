@@ -12,12 +12,16 @@ import userRoutes from "./src/modules/users/userRoutes.js";
 import projectRoutes from "./src/modules/projects/projectsRoutes.js";
 import specbotRoutes from "./src/modules/specbot/specbotRoutes.js";
 import chatRoutes from "./src/modules/chat/chatRoutes.js";
+import uploadRoutes from "./src/modules/upload/uploadRoutes.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
 dotenv.config();
-app.use(helmet());
-app.use(express.json());
 
 // ----- CORS Configuration -----
 app.use(
@@ -26,6 +30,14 @@ app.use(
     credentials: true,  // cookies/auth headers are allowed for that site
   })
 );
+
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+app.use(express.json());
+
+// ----- Static Files -----
+app.use("/uploads", express.static(path.join(__dirname, "storage", "uploads")));
 
 // ----- Development Logging -----
 if (process.env.NODE_ENV === "development") {
@@ -43,6 +55,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/specbot", specbotRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // ----- 404 Handler -----
 app.use((req, res) => {

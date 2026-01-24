@@ -72,6 +72,7 @@ be/build/
 be/prisma/
 be/*.db
 be/*.db-journal
+be/storage/
 
 # =========================
 # NORMA (Specora/Norma)

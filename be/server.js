@@ -46,7 +46,7 @@ io.on("connection", (socket) => {
     // I'll go with option 2 (Socket-first) as it's faster for chat, keeping API as fallback/initial load.
 
     try {
-      const { chatId, content, senderId, projectId } = data;
+      const { chatId, content, senderId, projectId, metadata } = data;
 
       // Save to DB
       const newMessage = await prisma.group_message.create({
@@ -54,8 +54,30 @@ io.on("connection", (socket) => {
           group_chat_id: chatId,
           content,
           sender_id: senderId,
+          metadata: metadata || undefined,
         }
       });
+
+      // Update group_chat attachments if present in metadata
+      if (metadata?.attachments && Array.isArray(metadata.attachments) && metadata.attachments.length > 0) {
+        try {
+          const chat = await prisma.group_chat.findUnique({ where: { id: chatId } });
+          if (chat) {
+            let currentAttachments = chat.attachments || [];
+            if (!Array.isArray(currentAttachments)) currentAttachments = [];
+
+            const newAttachments = [...currentAttachments, ...metadata.attachments];
+
+            await prisma.group_chat.update({
+              where: { id: chatId },
+              data: { attachments: newAttachments }
+            });
+          }
+        } catch (attachErr) {
+          console.error("Failed to update group_chat attachments:", attachErr);
+          // Don't fail the message send if attachment tracking fails, just log it
+        }
+      }
 
       // Fetch sender details manually (schema relation is missing)
       const sender = await prisma.app_user.findUnique({

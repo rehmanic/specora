@@ -88,7 +88,7 @@ const useChatStore = create((set, get) => ({
     },
 
     // Send Message
-    sendMessage: (projectId, content, senderId) => {
+    sendMessage: (projectId, content, senderId, metadata = null) => {
         const { currentChatId } = get();
         if (!socket || !currentChatId) return;
 
@@ -97,7 +97,8 @@ const useChatStore = create((set, get) => ({
             chatId: currentChatId,
             content,
             senderId,
-            projectId
+            projectId,
+            metadata // Pass metadata (attachments)
         });
     },
 

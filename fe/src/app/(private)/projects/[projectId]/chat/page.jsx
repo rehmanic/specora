@@ -44,9 +44,9 @@ export default function ChatPage() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    const handleSendMessage = (content) => {
-        if (content.trim()) {
-            sendMessage(projectId, content, user.id);
+    const handleSendMessage = (content, metadata = null) => {
+        if (content.trim() || (metadata?.attachments?.length > 0)) {
+            sendMessage(projectId, content, user.id, metadata);
         }
     };
 
