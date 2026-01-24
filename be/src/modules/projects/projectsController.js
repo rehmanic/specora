@@ -6,7 +6,8 @@ import { generateSlug } from "../../utils/slugGenerator.js";
 // ======================
 export const createProject = async (req, res) => {
   try {
-    const projectData = req.body;
+    const { members, ...rest } = req.body;
+    const projectData = { ...rest };
 
     let slug = generateSlug(projectData.name);
     let startDate = new Date(projectData.start_date);
@@ -16,6 +17,15 @@ export const createProject = async (req, res) => {
     projectData.start_date = startDate;
     projectData.end_date = endDate;
     projectData.created_by = projectData.created_by || req.user.userId;
+
+    // Handle members relation
+    if (members && Array.isArray(members) && members.length > 0) {
+      projectData.project_member = {
+        create: members.map((memberId) => ({
+          member_id: memberId,
+        })),
+      };
+    }
 
     const project = await prisma.project.create({
       data: projectData,
@@ -65,7 +75,7 @@ export const getSingleUserProjects = async (req, res) => {
     // Get projects where user is creator or member
     // Strategy: Get projects where user is creator, then get all other projects
     // and filter for those where user is in members array
-    
+
     // Step 1: Get projects where user is the creator
     const createdProjects = await prisma.project.findMany({
       where: {

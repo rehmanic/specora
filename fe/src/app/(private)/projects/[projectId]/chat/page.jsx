@@ -3,10 +3,8 @@ import { useState } from "react";
 import { Message } from "@/components/chat/Message";
 import ChatInputField from "@/components/common/ChatInputFeild";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import { Search, MoreVertical } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ChatPage() {
@@ -53,10 +51,7 @@ export default function ChatPage() {
                 {/* Chat Header */}
                 <div className="flex items-center justify-between px-6 py-3 border-b bg-card">
                     <div>
-                        <h2 className="font-semibold font-display text-lg">Team Chat</h2>
-                        <p className="text-xs text-muted-foreground">
-                            Project Development Channel
-                        </p>
+                        <h2 className="font-semibold font-display text-lg">Group Chat</h2>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -67,9 +62,6 @@ export default function ChatPage() {
                                 className="pl-9 w-[200px] h-8 text-sm bg-muted/50 border-0 focus-visible:bg-background transition-colors"
                             />
                         </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                        </Button>
                     </div>
                 </div>
 

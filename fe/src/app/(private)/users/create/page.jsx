@@ -9,12 +9,7 @@ export default function CreateUserPage() {
   return (
     <ProtectedRoute allowedRoles={["manager"]}>
       <div className="min-h-screen bg-background">
-        {/* Top Navbar */}
-        <nav className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
-          <div className="flex items-center justify-between px-6 h-16">
-            <Logo size="default" />
-          </div>
-        </nav>
+
 
         {/* Main Content */}
         <main className="p-6 lg:p-8">

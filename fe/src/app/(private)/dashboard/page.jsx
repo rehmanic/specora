@@ -124,7 +124,7 @@ export default function DashboardPage() {
           {getGreeting()}, {user?.username}! 👋
         </h1>
         <p className="text-muted-foreground">
-          Here&apos;s your project overview and recent activity.
+          Here&apos;s your project overview.
         </p>
       </div>
 
@@ -211,13 +211,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Activity Feed Placeholder - Bottom Section according to requirements */}
-      <div className="space-y-4 pt-4 border-t border-border/50">
-        <h2 className="text-xl font-semibold font-display">Recent Activity</h2>
-        <div className="bg-card border border-border rounded-xl p-6 text-center text-muted-foreground">
-          Activity feed coming soon...
-        </div>
-      </div>
     </div>
   );
 }

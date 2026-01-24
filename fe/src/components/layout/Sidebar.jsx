@@ -76,9 +76,9 @@ export function Sidebar({ ...props }) {
               <Collapsible defaultOpen className="group/collapsible" asChild>
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip="Projects" isActive={pathname.startsWith("/projects")}>
+                    <SidebarMenuButton tooltip="Project" isActive={pathname.startsWith("/projects")}>
                       <FolderOpen />
-                      <span>Projects</span>
+                      <span>Project</span>
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>

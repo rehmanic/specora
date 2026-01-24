@@ -27,7 +27,6 @@ export default function LeftSidebar({
       <div className="flex items-center justify-between p-3 border-b border-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <Logo showText={false} size="sm" />
             <span className="font-semibold font-display text-sm">SpecBot</span>
           </div>
         )}

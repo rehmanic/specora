@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 export function AppLayout({ children }) {
     const pathname = usePathname();
     const isChat = pathname.includes('/chat');
+    const isSpecbot = pathname.includes('/specbot');
+    const isFullWidthObj = isChat || isSpecbot;
 
     return (
         <SidebarProvider>
@@ -20,12 +22,12 @@ export function AppLayout({ children }) {
                         <main
                             className={cn(
                                 "flex-1 overflow-auto bg-muted/10 relative flex flex-col",
-                                !isChat && "p-4 md:p-6 lg:p-8"
+                                !isFullWidthObj && "p-4 md:p-6 lg:p-8"
                             )}
                         >
                             <div className={cn(
                                 "mx-auto w-full h-full",
-                                !isChat && "max-w-[1400px]"
+                                !isFullWidthObj && "max-w-[1400px]"
                             )}>
                                 {children}
                             </div>
