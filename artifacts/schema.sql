@@ -82,6 +82,7 @@ CREATE TABLE project_member (
 CREATE TABLE group_chat (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	project_id UUID NOT NULL,
+    attachments JSONB,
 	FOREIGN KEY (project_id) REFERENCES project(id)
 );
 
@@ -92,8 +93,11 @@ CREATE TABLE group_message(
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	content TEXT NOT NULL,
 	metadata JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
 	group_chat_id UUID NOT NULL,
-	FOREIGN KEY (group_chat_id) REFERENCES group_chat(id)
+    sender_id UUID NOT NULL,
+	FOREIGN KEY (group_chat_id) REFERENCES group_chat(id),
+    FOREIGN KEY (sender_id) REFERENCES app_user(id)
 );
 
 ------------------------------------------------------------
