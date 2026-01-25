@@ -16,6 +16,15 @@ class EmailService {
         pass: process.env.SMTP_PASS
       }
     });
+
+    // Verify connection on init
+    this.transporter.verify((error, success) => {
+      if (error) {
+        console.error('❌ SMTP connection failed:', error.message);
+      } else {
+        console.log('✅ SMTP connection verified');
+      }
+    });
   }
 
   // Generate calendar invite (.ics file)
@@ -28,12 +37,12 @@ class EmailService {
     }
     
     calendar.createEvent({
-      start: new Date(meeting.scheduledAt),
-      end: new Date(new Date(meeting.scheduledAt).getTime() + meeting.durationMinutes * 60000),
+      start: new Date(meeting.scheduledAt || meeting.scheduled_at),
+      end: new Date(new Date(meeting.scheduledAt || meeting.scheduled_at).getTime() + (meeting.durationMinutes || meeting.duration_minutes || 60) * 60000),
       summary: meeting.title,
-      description: description,
-      location: meeting.location || meeting.meetingLink || 'Virtual',
-      url: meeting.meetingLink,
+      description: meeting.description || '',
+      location: meeting.location || meeting.meetingLink || meeting.meeting_link || 'Virtual',
+      url: meeting.meetingLink || meeting.meeting_link,
       uid: meeting.id,
       sequence: 0,
       status: 'CONFIRMED'
@@ -42,213 +51,212 @@ class EmailService {
     return calendar.toString();
   }
 
-  // Send meeting invitation
+  // Send meeting invitation email
   async sendMeetingInvitation(meeting, participant) {
-    const calendar = this.generateCalendarInvite(meeting);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const rsvpToken = Buffer.from(`${meeting.id}:${participant.id}`).toString('base64');
-    
-    const acceptUrl = `${frontendUrl}/api/meetings/${meeting.id}/rsvp?token=${rsvpToken}&response=accepted`;
-    const declineUrl = `${frontendUrl}/api/meetings/${meeting.id}/rsvp?token=${rsvpToken}&response=declined`;
-    const tentativeUrl = `${frontendUrl}/api/meetings/${meeting.id}/rsvp?token=${rsvpToken}&response=tentative`;
-
-    const mailOptions = {
-      from: `"Specora Meetings" <${process.env.SMTP_USER}>`,
-      to: participant.email || participant.userId, // Handle both external and internal
-      subject: `Meeting Invitation: ${meeting.title}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #4F46E5; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
-            .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
-            .meeting-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-            .detail-row { margin: 10px 0; }
-            .label { font-weight: bold; color: #6b7280; }
-            .value { color: #111827; }
-            .buttons { text-align: center; margin: 30px 0; }
-            .button { display: inline-block; padding: 12px 30px; margin: 0 5px; text-decoration: none; border-radius: 6px; font-weight: bold; }
-            .btn-accept { background: #10b981; color: white; }
-            .btn-decline { background: #ef4444; color: white; }
-            .btn-tentative { background: #f59e0b; color: white; }
-            .footer { text-align: center; color: #6b7280; font-size: 12px; margin-top: 20px; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1 style="margin: 0;">📅 Meeting Invitation</h1>
-            </div>
-            <div class="content">
-              <p>Hello ${participant.name || 'there'},</p>
-              <p>You've been invited to attend the following meeting:</p>
-              
-              <div class="meeting-details">
-                <h2 style="margin-top: 0; color: #4F46E5;">${meeting.title}</h2>
-                ${meeting.description ? `<p>${meeting.description}</p>` : ''}
-                
-                <div class="detail-row">
-                  <span class="label">📆 When:</span>
-                  <span class="value">${new Date(meeting.scheduledAt).toLocaleString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</span>
-                </div>
-                
-                <div class="detail-row">
-                  <span class="label">⏱️ Duration:</span>
-                  <span class="value">${meeting.durationMinutes} minutes</span>
-                </div>
-                
-                ${meeting.meetingType === 'virtual' ? `
-                  <div class="detail-row">
-                    <span class="label">🌐 Type:</span>
-                    <span class="value">Virtual Meeting</span>
-                  </div>
-                ` : ''}
-                
-                ${meeting.location ? `
-                  <div class="detail-row">
-                    <span class="label">📍 Location:</span>
-                    <span class="value">${meeting.location}</span>
-                  </div>
-                ` : ''}
-                
-                ${meeting.meetingLink ? `
-                  <div class="detail-row">
-                    <span class="label">🎥 Meeting Link:</span>
-                    <span class="value"><a href="${meeting.meetingLink}" style="color: #4F46E5; text-decoration: none; font-weight: bold;">${meeting.meetingLink}</a></span>
-                  </div>
-                ` : ''}
-              </div>
-
-              ${meeting.meetingLink ? `
-                <div style="text-align: center; margin: 20px 0;">
-                  <a href="${meeting.meetingLink}" style="display: inline-block; padding: 15px 40px; background: #4F46E5; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
-                    🎥 Join Meeting
-                  </a>
-                  <p style="color: #6b7280; font-size: 12px; margin-top: 10px;">
-                    Click the button above to join the video meeting
-                  </p>
-                </div>
-              ` : ''}
-
-              <div class="buttons">
-                <a href="${acceptUrl}" class="button btn-accept">✓ Accept</a>
-                <a href="${tentativeUrl}" class="button btn-tentative">? Tentative</a>
-                <a href="${declineUrl}" class="button btn-decline">✗ Decline</a>
-              </div>
-
-              <p style="text-align: center; color: #6b7280; font-size: 14px;">
-                A calendar invitation (.ics file) is attached to this email.
-              </p>
-
-              <div class="footer">
-                <p>This is an automated message from Specora Meetings</p>
-                <p>© ${new Date().getFullYear()} Specora. All rights reserved.</p>
-              </div>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
-      icalEvent: {
-        filename: 'meeting.ics',
-        method: 'REQUEST',
-        content: calendar
-      }
-    };
-
     try {
-      await this.transporter.sendMail(mailOptions);
-      console.log(`✓ Invitation sent to ${participant.email || participant.userId}`);
-      return true;
+      if (!meeting.meetingLink && !meeting.meeting_link) {
+        console.warn('⚠️  No meeting link available for email');
+      }
+
+      const meetingLink = meeting.meetingLink || meeting.meeting_link;
+      const calendar = this.generateCalendarInvite(meeting);
+      const participantEmail = participant.email || participant.userId;
+      const participantName = participant.name || participantEmail.split('@')[0];
+
+      const mailOptions = {
+        from: `"${process.env.EMAIL_FROM_NAME || 'Specora Meetings'}" <${process.env.SMTP_USER}>`,
+        to: participantEmail,
+        subject: `📅 Meeting Invitation: ${meeting.title}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+              .email-wrapper { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+              .header h1 { margin: 0; font-size: 28px; }
+              .content { padding: 30px 20px; }
+              .meeting-details { background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
+              .detail-row { margin: 12px 0; display: flex; align-items: flex-start; }
+              .detail-icon { width: 24px; margin-right: 10px; font-size: 18px; }
+              .detail-label { font-weight: 600; color: #667eea; min-width: 80px; }
+              .detail-value { color: #111827; }
+              .participants { margin: 15px 0; }
+              .participant-item { background: white; padding: 8px 12px; margin: 5px 0; border-radius: 4px; border: 1px solid #e5e7eb; font-size: 14px; }
+              .join-button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+              .join-button:hover { background: #5568d3; }
+              .calendar-notice { background: #dbeafe; color: #1e40af; padding: 12px; border-radius: 4px; font-size: 13px; margin: 15px 0; border-left: 4px solid #1e40af; }
+              .footer { background: #f9fafb; padding: 20px; text-align: center; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb; }
+              .divider { height: 1px; background: #e5e7eb; margin: 20px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="email-wrapper">
+                <div class="header">
+                  <h1>📅 Meeting Invitation</h1>
+                </div>
+                
+                <div class="content">
+                  <p>Hello <strong>${participantName}</strong>,</p>
+                  <p>You've been invited to attend the following meeting:</p>
+                  
+                  <div class="meeting-details">
+                    <h2 style="margin-top: 0; color: #667eea; font-size: 20px;">${meeting.title}</h2>
+                    ${meeting.description ? `<p style="margin: 10px 0; color: #6b7280;">${meeting.description}</p>` : ''}
+                    
+                    <div class="detail-row">
+                      <span class="detail-icon">📆</span>
+                      <div>
+                        <span class="detail-label">Date:</span>
+                        <span class="detail-value">${new Date(meeting.scheduledAt || meeting.scheduled_at).toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}</span>
+                      </div>
+                    </div>
+                    
+                    <div class="detail-row">
+                      <span class="detail-icon">⏰</span>
+                      <div>
+                        <span class="detail-label">Time:</span>
+                        <span class="detail-value">${new Date(meeting.scheduledAt || meeting.scheduled_at).toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit',
+                          hour12: true
+                        })}</span>
+                      </div>
+                    </div>
+                    
+                    <div class="detail-row">
+                      <span class="detail-icon">⏱️</span>
+                      <div>
+                        <span class="detail-label">Duration:</span>
+                        <span class="detail-value">${meeting.durationMinutes || meeting.duration_minutes || 60} minutes</span>
+                      </div>
+                    </div>
+
+                    ${meeting.location ? `
+                      <div class="detail-row">
+                        <span class="detail-icon">📍</span>
+                        <div>
+                          <span class="detail-label">Location:</span>
+                          <span class="detail-value">${meeting.location}</span>
+                        </div>
+                      </div>
+                    ` : ''}
+                  </div>
+
+                  <div class="participants">
+                    <p style="font-weight: 600; color: #667eea; margin-bottom: 8px;">👥 Participants:</p>
+                    ${meeting.participants && meeting.participants.length > 0 
+                      ? meeting.participants.map(p => `<div class="participant-item">${p.email || p.name || p.userId}</div>`).join('')
+                      : '<div class="participant-item">No other participants</div>'
+                    }
+                  </div>
+
+                  ${meetingLink ? `
+                    <div style="text-align: center;">
+                      <a href="${meetingLink}" class="join-button">Click to Join Meeting</a>
+                    </div>
+                    <p style="text-align: center; color: #6b7280; font-size: 14px;">
+                      <strong>Meeting Link:</strong><br/>
+                      <a href="${meetingLink}" style="color: #667eea; word-break: break-all;">${meetingLink}</a>
+                    </p>
+                  ` : ''}
+
+                  <div class="calendar-notice">
+                    📎 A calendar invitation (.ics file) is attached to this email. You can import it to your calendar application.
+                  </div>
+
+                  <div style="text-align: center; margin-top: 30px;">
+                    <p style="color: #6b7280; font-size: 14px;">If you have any questions, please don't hesitate to reach out.</p>
+                  </div>
+                </div>
+                
+                <div class="footer">
+                  <p style="margin: 0;">This is an automated message from <strong>Specora Meetings</strong></p>
+                  <p style="margin: 5px 0;">© ${new Date().getFullYear()} Specora. All rights reserved.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+          </html>
+        `,
+        attachments: [
+          {
+            filename: 'meeting.ics',
+            content: calendar,
+            contentType: 'text/calendar'
+          }
+        ]
+      };
+
+      const result = await this.transporter.sendMail(mailOptions);
+      console.log(`✅ Email sent to ${participantEmail}. Message ID: ${result.messageId}`);
+      return { success: true, messageId: result.messageId, email: participantEmail };
     } catch (error) {
-      console.error('✗ Failed to send invitation:', error);
+      console.error(`❌ Failed to send email to ${participant.email || participant.userId}:`, error.message);
       throw error;
     }
-  }
-
-  // Send meeting reminder
-  async sendMeetingReminder(meeting, participant, minutesBefore) {
-    const mailOptions = {
-      from: `"Specora Meetings" <${process.env.SMTP_USER}>`,
-      to: participant.email || participant.userId,
-      subject: `Reminder: ${meeting.title} starts in ${minutesBefore} minutes`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #4F46E5;">🔔 Meeting Reminder</h2>
-          <p>Your meeting "<strong>${meeting.title}</strong>" starts in ${minutesBefore} minutes.</p>
-          <p><strong>Time:</strong> ${new Date(meeting.scheduledAt).toLocaleString()}</p>
-          ${meeting.meetingLink ? `<p><a href="${meeting.meetingLink}" style="display: inline-block; padding: 10px 20px; background: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">Join Meeting</a></p>` : ''}
-        </div>
-      `
-    };
-
-    await this.transporter.sendMail(mailOptions);
-  }
-
-  // Send meeting summary
-  async sendMeetingSummary(meeting, participants, summary) {
-    const participantEmails = participants.map(p => p.email || p.userId).filter(Boolean);
-
-    const mailOptions = {
-      from: `"Specora Meetings" <${process.env.SMTP_USER}>`,
-      to: participantEmails,
-      subject: `Meeting Summary: ${meeting.title}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #4F46E5;">📝 Meeting Summary</h2>
-          <h3>${meeting.title}</h3>
-          <p><strong>Date:</strong> ${new Date(meeting.scheduledAt).toLocaleDateString()}</p>
-          <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            ${summary}
-          </div>
-          <p style="color: #6b7280; font-size: 12px;">Generated by Specora AI</p>
-        </div>
-      `
-    };
-
-    await this.transporter.sendMail(mailOptions);
   }
 }
 
 // Queue processors
 emailQueue.process('send-invitation', async (job) => {
-  const emailService = new EmailService();
-  const { meeting, participant, participants } = job.data;
-  
-  // Handle both single participant and multiple participants
-  if (participant) {
-    await emailService.sendMeetingInvitation(meeting, participant);
-  } else if (participants && Array.isArray(participants)) {
-    for (const p of participants) {
+  try {
+    const emailService = new EmailService();
+    const { meeting, participants } = job.data;
+
+    if (!participants || participants.length === 0) {
+      console.log('⚠️  No participants to send emails to');
+      return { skipped: true, reason: 'No participants' };
+    }
+
+    console.log(`📧 Processing email job for meeting: ${meeting.title} (${participants.length} participants)`);
+
+    const results = [];
+    for (const participant of participants) {
       try {
-        await emailService.sendMeetingInvitation(meeting, p);
+        const result = await emailService.sendMeetingInvitation(meeting, participant);
+        results.push(result);
       } catch (error) {
-        console.error(`Failed to send invitation to ${p.email}:`, error.message);
+        console.error(`Failed to send to ${participant.email || participant.userId}:`, error.message);
+        results.push({
+          success: false,
+          email: participant.email || participant.userId,
+          error: error.message
+        });
       }
     }
+
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+    console.log(`📊 Email job completed: ${successCount} sent, ${failCount} failed`);
+
+    return {
+      success: true,
+      sent: successCount,
+      failed: failCount,
+      results
+    };
+  } catch (error) {
+    console.error('❌ Error processing email job:', error.message);
+    throw error;
   }
 });
 
-emailQueue.process('send-reminder', async (job) => {
-  const emailService = new EmailService();
-  const { meeting, participant, minutesBefore } = job.data;
-  await emailService.sendMeetingReminder(meeting, participant, minutesBefore);
+emailQueue.on('completed', (job) => {
+  console.log(`✓ Email job ${job.id} completed successfully`);
 });
 
-emailQueue.process('send-summary', async (job) => {
-  const emailService = new EmailService();
-  const { meeting, participants, summary } = job.data;
-  await emailService.sendMeetingSummary(meeting, participants, summary);
+emailQueue.on('failed', (job, err) => {
+  console.error(`✗ Email job ${job.id} failed:`, err.message);
 });
 
 export default new EmailService();

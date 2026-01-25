@@ -1,6 +1,7 @@
 import meetingsRepository from './repository.js';
 import eventBus from '../../core/events/eventBus.js';
 import { emailQueue, aiQueue, isQueueHealthy } from '../../core/services/queueService.js';
+import emailService from '../../core/services/emailService.js';
 import dailyVideoService from './dailyService.js';
 import dotenv from "dotenv";
 
@@ -63,6 +64,33 @@ class MeetingsService {
           console.error('⚠️  Failed to create Daily.co room:', error.message);
           // Continue anyway - room can be created later when starting meeting
         }
+      }
+
+      // Send email invitations to all participants (direct send + optional queue)
+      if (meeting.participants && meeting.participants.length > 0) {
+        console.log(`📧 Sending email invitations to ${meeting.participants.length} participants (direct send)...`);
+        // Always send directly so we are not blocked by Redis availability
+        sendEmailsDirect(meeting, meeting.participants);
+
+        // Best-effort queue (non-blocking) if Redis is healthy
+        if (isQueueHealthy()) {
+          emailQueue.add('send-invitation', {
+            meeting,
+            participants: meeting.participants
+          }, {
+            delay: 1000,
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 2000 }
+          }).then(() => {
+            console.log('✅ Email job also queued to Redis successfully (optional)');
+          }).catch((emailError) => {
+            console.error('⚠️  Queue add failed (will rely on direct send):', emailError.message);
+          });
+        } else {
+          console.warn('⚠️  Redis queue not healthy - using direct send only');
+        }
+      } else {
+        console.log('⚠️  No participants to email');
       }
 
       // Emit event for meeting created
@@ -489,6 +517,28 @@ class MeetingsService {
         }, { delay });
       }
     }
+  }
+}
+
+/**
+ * Direct-send helper: send all emails immediately (used always; queue is optional best-effort)
+ */
+async function sendEmailsDirect(meeting, participants) {
+  try {
+    console.log(`📧 Sending ${participants.length} emails directly...`);
+    const meetingPlain = meeting.toJSON ? meeting.toJSON() : meeting;
+
+    for (const participant of participants) {
+      try {
+        await emailService.sendMeetingInvitation(meetingPlain, participant.toJSON ? participant.toJSON() : participant);
+      } catch (error) {
+        console.error(`❌ Failed to send email to ${participant.email || participant.userId}:`, error.message);
+      }
+    }
+
+    console.log('✅ Direct email sending completed');
+  } catch (error) {
+    console.error('❌ Direct email sending failed:', error.message);
   }
 }
 
