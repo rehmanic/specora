@@ -2,8 +2,9 @@
 
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreVertical, Copy, Reply, Trash2, Check, Download } from "lucide-react";
+import { MoreVertical, Copy, Reply, Trash2, Check, Download, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ReactMarkdown from "react-markdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +23,8 @@ export function Message({
   menuOpenId,
   setMenuOpenId,
   onDelete,
-  metadata
+  metadata,
+  allowedActions = ["copy", "delete", "reply"]
 }) {
   const [copied, setCopied] = useState(false);
   const isDeleted = metadata?.is_deleted;
@@ -64,8 +66,8 @@ export function Message({
       {/* Avatar */}
       <Avatar className="h-8 w-8 shrink-0">
         <AvatarImage src={avatarUrl} alt={name} />
-        <AvatarFallback className="text-xs">
-          {name?.charAt(0).toUpperCase()}
+        <AvatarFallback className={cn("text-xs", name === "SpecBot" && "bg-primary text-primary-foreground")}>
+          {name === "SpecBot" ? <Bot className="h-4 w-4" /> : name?.charAt(0).toUpperCase()}
         </AvatarFallback>
       </Avatar>
 
@@ -93,14 +95,23 @@ export function Message({
           {text && (
             <div
               className={cn(
-                "px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-all",
+                "px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words",
                 isSender
                   ? "bg-primary text-primary-foreground rounded-br-md"
                   : "bg-muted text-foreground rounded-bl-md",
                 isDeleted && "italic text-muted-foreground opacity-80 bg-muted/50"
               )}
             >
-              {text}
+              <div className={cn("prose prose-sm dark:prose-invert max-w-none", isSender ? "prose-invert" : "")}>
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                    a: ({ href, children }) => <a href={href} className="underline" target="_blank" rel="noopener noreferrer">{children}</a>
+                  }}
+                >
+                  {text}
+                </ReactMarkdown>
+              </div>
             </div>
           )}
 
@@ -187,7 +198,7 @@ export function Message({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={isSender ? "start" : "end"}>
-                  {text && (
+                  {allowedActions.includes("copy") && (
                     <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
                       {copied ? (
                         <Check className="mr-2 h-4 w-4 text-success" />
@@ -198,7 +209,7 @@ export function Message({
                     </DropdownMenuItem>
                   )}
 
-                  {isSender && (
+                  {isSender && allowedActions.includes("delete") && (
                     <DropdownMenuItem
                       className="cursor-pointer text-destructive focus:text-destructive"
                       onClick={() => onDelete && onDelete(id)}

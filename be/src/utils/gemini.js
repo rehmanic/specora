@@ -21,23 +21,35 @@ async function buildChatHistory(chatId, maxMessages = 20) {
     try {
         const messages = await prisma.specbot_message.findMany({
             where: { specbot_chat_id: chatId },
-            orderBy: { created_at: 'asc' },
+            orderBy: { created_at: 'desc' }, // Get latest messages
             take: maxMessages,
             select: {
                 content: true,
                 metadata: true,
+                sender_type: true, // Select new field
                 created_at: true
             }
         });
 
+        // Reverse to chronological order (oldest -> newest) for Gemini
+        const chronologicalMessages = messages.reverse();
+
         // Convert to Gemini chat history format
-        return messages.map(msg => {
-            const senderType = msg.metadata?.sender_type || (msg.metadata ? "bot" : "user");
+        let history = chronologicalMessages.map(msg => {
+            const senderType = msg.sender_type || msg.metadata?.sender_type || (msg.metadata ? "bot" : "user");
             return {
                 role: senderType === 'user' ? 'user' : 'model',
                 parts: [{ text: msg.content }]
             };
         });
+
+        // Gemini restriction: History must start with 'user'.
+        // If the starting message is 'model', remove it.
+        while (history.length > 0 && history[0].role === 'model') {
+            history.shift();
+        }
+
+        return history;
     } catch (error) {
         console.error("Error building chat history:", error);
         return [];

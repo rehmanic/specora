@@ -278,7 +278,8 @@ const createMessageCore = async ({ chat_type, chat_id, content, sender_type, sen
             data: {
                 specbot_chat_id: chat_id,
                 content,
-                metadata: sender_type === 'user' ? { sender_type, sender_id } : { sender_type },
+                sender_type,
+                metadata: sender_type === 'user' ? { sender_id } : {}, // Remove redundant data
             },
         });
     } else if (chat_type === 'group') {
@@ -429,7 +430,6 @@ export const downloadSpecbotChat = async (req, res) => {
             where: { id: chatId },
             include: {
                 project: {
-                    select: { id: true, name: true, slug: true },
                     include: {
                         app_user: {
                             select: {
@@ -543,7 +543,7 @@ export const summarizeSpecbotChat = async (req, res) => {
         const transcript = storedChat.messages
             .map(
                 (msg) => {
-                    const senderType = msg.metadata?.sender_type || (msg.metadata ? "bot" : "user");
+                    const senderType = msg.sender_type || (msg.metadata?.sender_type || "user");
                     return `${senderType === "bot" ? "BOT" : "USER"}: ${msg.content}`;
                 }
             )
@@ -636,7 +636,7 @@ export const extractRequirementsFromChat = async (req, res) => {
         const transcript = storedChat.messages
             .map(
                 (msg) => {
-                    const senderType = msg.metadata?.sender_type || (msg.metadata ? "bot" : "user");
+                    const senderType = msg.sender_type || (msg.metadata?.sender_type || "user");
                     return `${senderType === "bot" ? "BOT" : "USER"}: ${msg.content}`;
                 }
             )

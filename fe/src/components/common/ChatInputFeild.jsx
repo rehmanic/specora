@@ -7,12 +7,14 @@ import { cn } from "@/lib/utils";
 import EmojiPicker from "emoji-picker-react";
 import useFileUpload from "@/hooks/useFileUpload";
 
+// Modified to accept showAttachments prop
 export default function ChatInputField({
   value = "",
   onChange,
   onSend,
   disabled = false,
   placeholder = "Type a message...",
+  showAttachments = true,
 }) {
   const [localValue, setLocalValue] = useState(value);
   const [isFocused, setIsFocused] = useState(false);
@@ -37,6 +39,7 @@ export default function ChatInputField({
   };
 
   const handleFileSelect = async (e) => {
+    if (!showAttachments) return;
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
@@ -97,30 +100,34 @@ export default function ChatInputField({
       )}
     >
       {/* Attachment button */}
-      <input
-        type="file"
-        multiple
-        className="hidden"
-        ref={fileInputRef}
-        onChange={handleFileSelect}
-      />
+      {showAttachments && (
+        <input
+          type="file"
+          multiple
+          className="hidden"
+          ref={fileInputRef}
+          onChange={handleFileSelect}
+        />
+      )}
       {/* Attachment button */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
-        disabled={disabled || uploading}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <Paperclip className="h-5 w-5" />
-      </Button>
+      {showAttachments && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+          disabled={disabled || uploading}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Paperclip className="h-5 w-5" />
+        </Button>
+      )}
 
       {/* Text input */}
       {/* Text input & Previews */}
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         {/* Attachment Previews */}
-        {(attachments.length > 0 || uploading) && (
+        {showAttachments && (attachments.length > 0 || uploading) && (
           <div className="flex flex-wrap gap-2 px-1">
             {attachments.map((file, i) => (
               <div key={i} className="relative group/att bg-muted rounded-md p-1 pr-6 flex items-center gap-2 text-xs border">

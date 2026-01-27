@@ -145,8 +145,11 @@ model specbot_message {
   id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   content         String
   metadata        Json?
-  specbot_chat_id String       @db.Uuid
-  specbot_chat    specbot_chat @relation(fields: [specbot_chat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sender_type     sender_type_enum @default(user)
+  created_at      DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?        @default(now()) @db.Timestamptz(6)
+  specbot_chat_id String           @db.Uuid
+  specbot_chat    specbot_chat     @relation(fields: [specbot_chat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 enum chat_type_enum {

@@ -49,8 +49,20 @@ export default function ChatLayout() {
   });
   const [actionLoading, setActionLoading] = useState(false);
 
-  const canAccess =
-    user?.role === "manager" || user?.role === "requirements_engineer";
+  const canAccess = true; // access control is handled by Sidebar and API, but we can double check
+  const isClient = user?.role === "client";
+  const isManager = user?.role === "manager";
+  const isReqEngineer = user?.role === "requirements_engineer";
+
+  // Clients can create/delete chats but not attach files
+  // RE/Managers can download/summarize/extract but not create chats (maybe?) 
+  // Wait, req said "Client can create SpecBot chat, delete SpecBot chat".
+  // Req also said "Requirements Engineer can download chat, summarize it, and extract requirements".
+
+  const canCreateChat = isClient; // "The client can create a specbot chat" - strictly enforcing this based on user feedback.
+
+  const canAnalyze = isManager || isReqEngineer;
+  const showAttachments = !isClient; // "Remove the file attachment option from the chat" for Client
 
   useEffect(() => {
     if (!canAccess) return;
@@ -158,8 +170,8 @@ export default function ChatLayout() {
           }
           chats={chats}
           onChatSelect={handleChatSelect}
-          hideNewChat
-          readOnly
+          hideNewChat={!canCreateChat}
+          readOnly={!isClient}
           activeChatId={currentChat?.id}
         />
       </div>
@@ -173,11 +185,12 @@ export default function ChatLayout() {
           loading={loading}
           error={error}
           onDismissError={clearError}
-          onDownload={() => handleAction("download")}
-          onSummarize={() => handleAction("summarize")}
-          onExtract={() => handleAction("extract")}
+          onDownload={canAnalyze ? () => handleAction("download") : undefined}
+          onSummarize={canAnalyze ? () => handleAction("summarize") : undefined}
+          onExtract={canAnalyze ? () => handleAction("extract") : undefined}
           actionsDisabled={actionLoading}
           downloaded={downloaded}
+          showAttachments={showAttachments}
         />
       </div>
 

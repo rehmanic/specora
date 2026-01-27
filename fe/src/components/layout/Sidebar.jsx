@@ -22,9 +22,12 @@ import {
   SidebarRail,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import useAuthStore from "@/store/authStore";
 
 export function Sidebar({ ...props }) {
   const pathname = usePathname();
+  const { user } = useAuthStore();
+  const isManager = user?.role === "manager";
 
   return (
     <ShadcnSidebar collapsible="icon" {...props} className="border-r-0">
@@ -50,24 +53,28 @@ export function Sidebar({ ...props }) {
               <ProjectNavigation />
 
               {/* Users */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith("/users")} tooltip="Users">
-                  <Link href="/users">
-                    <Users />
-                    <span>Users</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {isManager && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith("/users")} tooltip="Users">
+                    <Link href="/users">
+                      <Users />
+                      <span>Users</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
               {/* Global Settings */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === "/settings"} tooltip="Global Settings">
-                  <Link href="/settings">
-                    <Settings />
-                    <span>Global Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {isManager && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname === "/settings"} tooltip="Global Settings">
+                    <Link href="/settings">
+                      <Settings />
+                      <span>Global Settings</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
             </SidebarMenu>
           </SidebarGroupContent>

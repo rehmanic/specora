@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import ChatInputFeild from "@/components/common/ChatInputFeild";
-import { Message } from "@/components/specbot/Message";
+import { Message } from "@/components/chat/Message";
+import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import Starter from "@/components/specbot/Starters";
 import ChatLayout from "@/components/specbot/team/ChatLayout";
 import LeftSidebar from "@/components/specbot/team/LeftSidebar";
@@ -33,7 +34,8 @@ export default function SpecbotPage() {
     sendMessage,
     deleteChat,
     clearError,
-    clearCurrentChat, // <-- add this from store
+    clearCurrentChat,
+    updateChat,
   } = useSpecbotStore();
 
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
@@ -41,6 +43,7 @@ export default function SpecbotPage() {
   const [newChatDialogOpen, setNewChatDialogOpen] = useState(false);
   const [creatingChat, setCreatingChat] = useState(false);
   const [deletingChatId, setDeletingChatId] = useState(null);
+  const [menuOpenId, setMenuOpenId] = useState(null); // New state for message menu
   const messagesEndRef = useRef(null);
 
   // Fetch chats on mount and clear chat state on project change
@@ -102,6 +105,14 @@ export default function SpecbotPage() {
     }
   };
 
+  const handleRenameChat = async (chatId, newTitle) => {
+    try {
+      await updateChat(chatId, { title: newTitle });
+    } catch (err) {
+      console.error("Failed to rename chat:", err);
+    }
+  };
+
   // Handle send message
   const handleSendMessage = async (content) => {
     if (!content.trim() || !currentChat) return;
@@ -144,6 +155,7 @@ export default function SpecbotPage() {
           onNewChat={handleNewChat}
           activeChatId={currentChat?.id}
           onDeleteChat={handleDeleteChat}
+          onRenameChat={handleRenameChat}
           deletingChatId={deletingChatId}
         />
       </div>
@@ -182,11 +194,19 @@ export default function SpecbotPage() {
                   {messages.map((msg) => (
                     <Message
                       key={msg.id}
+                      id={msg.id}
                       text={msg.content}
                       timestamp={formatTimestamp(msg.created_at)}
                       isSender={msg.sender_type === "user"}
+                      name={msg.sender_type === "user" ? user?.username || "You" : "SpecBot"}
+                      avatarUrl={msg.sender_type === "user" ? user?.profile_pic_url : null}
+                      metadata={msg.metadata}
+                      allowedActions={["copy"]}
+                      menuOpenId={menuOpenId}
+                      setMenuOpenId={setMenuOpenId}
                     />
                   ))}
+                  <TypingIndicator isVisible={sendingMessage} />
                   <div ref={messagesEndRef} />
                 </>
               )}
@@ -224,6 +244,7 @@ export default function SpecbotPage() {
                       ? "Waiting for response..."
                       : "Type your message here..."
                   }
+                  showAttachments={false}
                 />
               </div>
             </div>

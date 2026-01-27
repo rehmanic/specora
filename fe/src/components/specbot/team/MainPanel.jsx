@@ -1,6 +1,7 @@
 import { Loader2, Download, FileText, ListChecks } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Message } from "../Message";
+import { Message } from "@/components/chat/Message";
+import { TypingIndicator } from "@/components/chat/TypingIndicator";
 
 export default function MainPanel({
   hasProject,
@@ -122,13 +123,19 @@ export default function MainPanel({
             return (
               <Message
                 key={msg.id}
+                id={msg.id}
                 text={msg.content}
                 timestamp={formattedTime}
                 isSender={msg.sender_type === "user"}
+                name={msg.sender_type === "user" ? "User" : "SpecBot"}
+                avatarUrl={null}
+                metadata={msg.metadata}
+                allowedActions={["copy"]}
               />
             );
           })
         )}
+        <TypingIndicator isVisible={loading && messages.length > 0} />
       </div>
 
       {error && (

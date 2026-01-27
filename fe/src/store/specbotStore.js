@@ -128,17 +128,33 @@ const useSpecbotStore = create((set, get) => ({
     // ======================
     sendMessage: async (messageData) => {
         set({ sendingMessage: true, error: null });
+
+        // Optimistic UI: Add temporary user message immediately
+        const tempId = `temp-${Date.now()}`;
+        const optimisticMessage = {
+            id: tempId,
+            content: messageData.content,
+            sender_type: "user",
+            created_at: new Date().toISOString(),
+            metadata: { sender_type: "user", sender_id: messageData.sender_id }
+        };
+
+        set((state) => ({
+            messages: [...state.messages, optimisticMessage]
+        }));
+
         try {
             const data = await createMessage(messageData);
 
             // Add user message and bot response to messages
+            // Replace optimistic message with real one
             const newMessages = [data.data];
             if (data.botMessage) {
                 newMessages.push(data.botMessage);
             }
 
             set((state) => ({
-                messages: [...state.messages, ...newMessages],
+                messages: state.messages.map(m => m.id === tempId ? data.data : m).concat(data.botMessage ? [data.botMessage] : []),
                 sendingMessage: false,
             }));
 
@@ -149,7 +165,14 @@ const useSpecbotStore = create((set, get) => ({
                     err.message.toLowerCase().includes("internal server error")
                     ? "Specbot ran into an issue. Please try again in a moment."
                     : err?.message || "Specbot could not send your message.";
-            set({ sendingMessage: false, error: friendlyMessage });
+
+            // Rollback optimistic message on error
+            set((state) => ({
+                messages: state.messages.filter(m => m.id !== tempId),
+                sendingMessage: false,
+                error: friendlyMessage
+            }));
+
             throw err;
         }
     },

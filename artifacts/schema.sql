@@ -103,6 +103,8 @@ CREATE TABLE group_message(
 ------------------------------------------------------------
 -- SPECBOT_CHAT TABLE
 ------------------------------------------------------------
+CREATE TYPE sender_type_enum AS ENUM ('user', 'bot');
+
 CREATE TABLE specbot_chat (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(255) UNIQUE NOT NULL,
@@ -119,6 +121,9 @@ CREATE TABLE specbot_message(
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	content TEXT NOT NULL,
 	metadata JSONB,
+    sender_type sender_type_enum DEFAULT 'user',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+	updated_at TIMESTAMPTZ DEFAULT NOW(),
 	specbot_chat_id UUID NOT NULL,
 	FOREIGN KEY (specbot_chat_id) REFERENCES specbot_chat(id)
 );

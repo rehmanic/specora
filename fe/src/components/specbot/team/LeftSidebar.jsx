@@ -1,10 +1,11 @@
 "use client";
 
-import { Plus, MessageSquare, Trash2, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Plus, MessageSquare, Trash2, ChevronLeft, ChevronRight, Loader2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/common/Logo";
+import { useState } from "react";
 
 export default function LeftSidebar({
   collapsed,
@@ -14,8 +15,25 @@ export default function LeftSidebar({
   onNewChat,
   activeChatId,
   onDeleteChat,
+  onRenameChat,
   deletingChatId,
+  hideNewChat,
+  readOnly,
 }) {
+  const [editingChatId, setEditingChatId] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+
+  const handleStartEdit = (chat) => {
+    setEditingChatId(chat.id);
+    setEditTitle(chat.title || "");
+  };
+
+  const handleSaveEdit = (chatId) => {
+    if (editTitle.trim()) {
+      onRenameChat && onRenameChat(chatId, editTitle.trim());
+    }
+    setEditingChatId(null);
+  };
   return (
     <div
       className={cn(
@@ -45,18 +63,20 @@ export default function LeftSidebar({
       </div>
 
       {/* New Chat Button */}
-      <div className="p-3">
-        <Button
-          onClick={onNewChat}
-          className={cn(
-            "w-full gap-2 gradient-primary border-0",
-            collapsed && "px-0"
-          )}
-        >
-          <Plus className="h-4 w-4" />
-          {!collapsed && <span>New Chat</span>}
-        </Button>
-      </div>
+      {!hideNewChat && (
+        <div className="p-3">
+          <Button
+            onClick={onNewChat}
+            className={cn(
+              "w-full gap-2 gradient-primary border-0",
+              collapsed && "px-0"
+            )}
+          >
+            <Plus className="h-4 w-4" />
+            {!collapsed && <span>New Chat</span>}
+          </Button>
+        </div>
+      )}
 
       {/* Chat List */}
       <ScrollArea className="flex-1">
@@ -80,31 +100,64 @@ export default function LeftSidebar({
                 )}
                 onClick={() => onChatSelect(chat)}
               >
-                <MessageSquare className="h-4 w-4 shrink-0" />
+                <div onClick={(e) => editingChatId === chat.id && e.stopPropagation()}>
+                  <MessageSquare className="h-4 w-4 shrink-0" />
+                </div>
 
                 {!collapsed && (
                   <>
-                    <span className="flex-1 truncate text-sm">
-                      {chat.title || "Untitled Chat"}
-                    </span>
+                    {editingChatId === chat.id ? (
+                      <div className="flex-1 flex gap-1 items-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          autoFocus
+                          className="flex-1 bg-background border rounded px-1 text-sm h-6 min-w-0"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveEdit(chat.id);
+                            if (e.key === 'Escape') setEditingChatId(null);
+                          }}
+                          onBlur={() => handleSaveEdit(chat.id)}
+                        />
+                      </div>
+                    ) : (
+                      <span className="flex-1 truncate text-sm">
+                        {chat.title || "Untitled Chat"}
+                      </span>
+                    )}
 
-                    {/* Delete button */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteChat(chat);
-                      }}
-                      disabled={deletingChatId === chat.id}
-                    >
-                      {deletingChatId === chat.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-3 w-3" />
-                      )}
-                    </Button>
+                    {/* Actions */}
+                    {!readOnly && editingChatId !== chat.id && (
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartEdit(chat);
+                          }}
+                        >
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteChat(chat);
+                          }}
+                          disabled={deletingChatId === chat.id}
+                        >
+                          {deletingChatId === chat.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
