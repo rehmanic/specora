@@ -149,7 +149,9 @@ CREATE TABLE feedback_response (
     created_at TIMESTAMPTZ DEFAULT NOW(),
 	updated_at TIMESTAMPTZ DEFAULT NOW(),
     feedback_id UUID NOT NULL,
-	FOREIGN KEY (feedback_id) REFERENCES feedback(id)
+    respondent_id UUID,
+	FOREIGN KEY (feedback_id) REFERENCES feedback(id) ON DELETE CASCADE,
+    FOREIGN KEY (respondent_id) REFERENCES app_user(id)
 );
 
 ------------------------------------------------------------

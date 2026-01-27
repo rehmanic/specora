@@ -13,6 +13,7 @@ import projectRoutes from "./src/modules/projects/projectsRoutes.js";
 import specbotRoutes from "./src/modules/specbot/specbotRoutes.js";
 import chatRoutes from "./src/modules/chat/chatRoutes.js";
 import uploadRoutes from "./src/modules/upload/uploadRoutes.js";
+import feedbacksRoutes from "./src/modules/feedbacks/feedbacksRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -56,6 +57,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/specbot", specbotRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/feedbacks", feedbacksRoutes);
 
 // ----- 404 Handler -----
 app.use((req, res) => {

@@ -1,16 +1,14 @@
 "use client";
 
-import FormBuilder from "@/components/feedback/FormBuilder";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import FeedbackBuilder from "@/components/feedback/FeedbackBuilder";
+import { useParams } from "next/navigation";
 
 export default function CreateFeedbackPage() {
+  const { projectId } = useParams();
+
   return (
-    <ProtectedRoute
-      allowedRoles={["manager", "requirements_engineer"]}
-    >
-      <section className="border w-full flex justify-center items-center">
-        <FormBuilder />
-      </section>
-    </ProtectedRoute>
+    <div className="bg-white h-full"> {/* Ensure white background for SurveyJS */}
+      <FeedbackBuilder projectId={projectId} />
+    </div>
   );
 }

@@ -31,6 +31,19 @@ export function ProjectHeader() {
       );
     }
 
+    // Use project icon if available (or default from DB)
+    if (project?.icon_url) {
+      return (
+        <div className={`flex items-center justify-center shrink-0 overflow-hidden rounded-lg bg-primary/10 p-1 ${className}`}>
+          <img
+            src={project.icon_url}
+            alt={project.name}
+            className="w-full h-full object-contain rounded-sm"
+          />
+        </div>
+      );
+    }
+
     const initials = project.name
       ? project.name
         .split(" ")
