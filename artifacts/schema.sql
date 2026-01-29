@@ -176,3 +176,43 @@ CREATE TABLE requirement (
     project_id UUID NOT NULL,
 	FOREIGN KEY (project_id) REFERENCES project(id)
 );
+
+------------------------------------------------------------
+-- MEETING TABLES
+------------------------------------------------------------
+CREATE TYPE meeting_status_enum AS ENUM ('scheduled', 'live', 'completed', 'cancelled');
+CREATE TYPE meeting_role_enum AS ENUM ('host', 'participant');
+
+CREATE TABLE meeting (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    start_time TIMESTAMPTZ NOT NULL,
+    end_time TIMESTAMPTZ,
+    status meeting_status_enum DEFAULT 'scheduled',
+    recording_url TEXT,
+    project_id UUID NOT NULL,
+    created_by UUID NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES app_user(id)
+);
+
+CREATE TABLE meeting_attendee (
+    meeting_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    role meeting_role_enum DEFAULT 'participant',
+    joined_at TIMESTAMPTZ,
+    PRIMARY KEY (meeting_id, user_id),
+    FOREIGN KEY (meeting_id) REFERENCES meeting(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES app_user(id) ON DELETE CASCADE
+);
+
+CREATE TABLE meeting_transcript (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    meeting_id UUID NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    FOREIGN KEY (meeting_id) REFERENCES meeting(id) ON DELETE CASCADE
+);

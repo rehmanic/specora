@@ -325,8 +325,8 @@ export const webhookHandler = async (req, res) => {
             // Identify meeting ID (passed in egress metadata or room name?)
             const roomName = event.egressInfo.roomName;
             // Ideally map roomName (meetingId) to meeting
-            // const audioUrl = event.egressInfo.file.location;
-            // await processTranscription(roomName, audioUrl);
+            const audioUrl = event.egressInfo.file.location;
+            await processTranscription(roomName, audioUrl);
         }
 
         res.status(200).send('ok');
