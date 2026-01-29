@@ -10,7 +10,8 @@ export function AppLayout({ children }) {
     const pathname = usePathname();
     const isChat = pathname.includes('/chat');
     const isSpecbot = pathname.includes('/specbot');
-    const isFullWidthObj = isChat || isSpecbot;
+    const isMeetingRoom = pathname.includes('/meetings/room');
+    const isFullWidthObj = isChat || isSpecbot || isMeetingRoom;
 
     return (
         <SidebarProvider>

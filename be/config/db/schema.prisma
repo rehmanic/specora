@@ -23,6 +23,8 @@ model app_user {
   project_member  project_member[]
   group_message   group_message[]
   feedback_response feedback_response[]
+  organized_meetings meeting[]
+  meeting_attendance meeting_attendee[]
 }
 
 model feedback {
@@ -94,6 +96,7 @@ model project {
   project_member  project_member[]
   requirement     requirement[]
   specbot_chat    specbot_chat[]
+  meetings        meeting[]
 }
 
 model project_member {
@@ -189,4 +192,60 @@ enum requirement_status_enum {
 enum sender_type_enum {
   user
   bot
+}
+
+model meeting {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String   @db.VarChar(255)
+  description String?
+  start_time  DateTime @db.Timestamptz(6)
+  end_time    DateTime? @db.Timestamptz(6)
+  status      meeting_status_enum @default(scheduled)
+  recording_url String?
+  
+  project_id  String   @db.Uuid
+  project     project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  
+  created_by  String   @db.Uuid
+  organizer   app_user @relation(fields: [created_by], references: [id], onDelete: NoAction)
+
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+
+  attendees   meeting_attendee[]
+  transcripts meeting_transcript[]
+}
+
+model meeting_attendee {
+  meeting_id String   @db.Uuid
+  meeting    meeting  @relation(fields: [meeting_id], references: [id], onDelete: Cascade)
+  
+  user_id    String   @db.Uuid
+  user       app_user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  role       meeting_role_enum @default(participant)
+  joined_at  DateTime? @db.Timestamptz(6)
+  
+  @@id([meeting_id, user_id])
+}
+
+model meeting_transcript {
+   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+   meeting_id  String   @db.Uuid
+   meeting     meeting  @relation(fields: [meeting_id], references: [id], onDelete: Cascade)
+   
+   content     String   
+   created_at  DateTime @default(now()) @db.Timestamptz(6)
+}
+
+enum meeting_status_enum {
+  scheduled
+  live
+  completed
+  cancelled
+}
+
+enum meeting_role_enum {
+   host
+   participant
 }

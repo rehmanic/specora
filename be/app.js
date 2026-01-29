@@ -14,6 +14,7 @@ import specbotRoutes from "./src/modules/specbot/specbotRoutes.js";
 import chatRoutes from "./src/modules/chat/chatRoutes.js";
 import uploadRoutes from "./src/modules/upload/uploadRoutes.js";
 import feedbacksRoutes from "./src/modules/feedbacks/feedbacksRoutes.js";
+import meetingsRoutes from "./src/modules/meetings/meetingsRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -39,6 +40,7 @@ app.use(express.json());
 
 // ----- Static Files -----
 app.use("/uploads", express.static(path.join(__dirname, "storage", "uploads")));
+app.use("/recordings", express.static(path.join(__dirname, "storage", "recordings")));
 
 // ----- Development Logging -----
 if (process.env.NODE_ENV === "development") {
@@ -58,6 +60,7 @@ app.use("/api/specbot", specbotRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/feedbacks", feedbacksRoutes);
+app.use("/api/meetings", meetingsRoutes);
 
 // ----- 404 Handler -----
 app.use((req, res) => {

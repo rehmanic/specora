@@ -1,258 +1,373 @@
 "use client";
-import { useState, useEffect } from "react";
-import MeetingList from "@/components/meetings/MeetingList";
-import ScheduleMeetingModal from "@/components/meetings/ScheduleMeetingModal";
+
+import { useState } from "react";
+import useSWR from "swr";
+import { useParams, useRouter } from "next/navigation";
+import { getProjectMeetings, createMeeting, updateMeeting, transcribeMeeting, deleteMeeting } from "@/api/meetings";
 import { Button } from "@/components/ui/button";
-import { Calendar, Video, Clock, Users, Plus } from "lucide-react";
-
-// Stats Card Component
-function StatsCard({ icon: Icon, label, value, color = "primary" }) {
-  const colorClasses = {
-    primary: "bg-primary/10 text-primary",
-    accent: "bg-accent/10 text-accent",
-    success: "bg-success/10 text-success",
-    warning: "bg-warning/10 text-warning",
-  };
-
-  return (
-    <div className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border hover-lift cursor-default">
-      <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-        <Icon className="h-5 w-5" />
-      </div>
-      <div>
-        <p className="text-2xl font-bold font-display">{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
-      </div>
-    </div>
-  );
-}
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Video, Trash2, Pencil, Plus, Calendar, Clock, Play, FileText, X } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function MeetingsPage() {
-  const [upcomingMeetings, setUpcomingMeetings] = useState([]);
-  const [completedMeetings, setCompletedMeetings] = useState([]);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { projectId } = useParams();
+  const router = useRouter();
+  const { data: meetings, error, mutate } = useSWR(
+    projectId ? `/meetings/project/${projectId}` : null,
+    () => getProjectMeetings(projectId)
+  );
 
-  // Fetch meetings on mount
-  useEffect(() => {
-    fetchMeetings();
-  }, []);
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingMeeting, setEditingMeeting] = useState(null);
+  const [viewingRecording, setViewingRecording] = useState(null);
+  const [formData, setFormData] = useState({ title: "", description: "" });
+  const [isGeneratingTranscript, setIsGeneratingTranscript] = useState(false);
 
-  const fetchMeetings = async () => {
+  const handleCreate = async () => {
     try {
-      setIsLoading(true);
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      await createMeeting({ ...formData, project_id: projectId, start_time: new Date() });
+      mutate();
+      setIsCreating(false);
+      setFormData({ title: "", description: "" });
+    } catch (err) {
+      alert("Failed to create meeting");
+    }
+  };
 
-      const upcomingResponse = await fetch(`${API_URL}/api/meetings/upcoming`);
-      const completedResponse = await fetch(`${API_URL}/api/meetings/completed`);
+  const handleEdit = (meeting) => {
+    setEditingMeeting(meeting);
+    setFormData({ title: meeting.title, description: meeting.description || "" });
+  };
 
-      if (upcomingResponse.ok && completedResponse.ok) {
-        const upcoming = await upcomingResponse.json();
-        const completed = await completedResponse.json();
-        setUpcomingMeetings(upcoming.meetings || upcoming);
-        setCompletedMeetings(completed.meetings || completed);
-      } else {
-        setUpcomingMeetings(getMockUpcomingMeetings());
-        setCompletedMeetings(getMockCompletedMeetings());
+  const handleUpdate = async () => {
+    try {
+      await updateMeeting(editingMeeting.id, formData);
+      mutate();
+      setEditingMeeting(null);
+      setFormData({ title: "", description: "" });
+    } catch (err) {
+      alert("Failed to update meeting");
+    }
+  };
+
+  const handleJoin = (meetingId) => {
+    router.push(`/projects/${projectId}/meetings/room/${meetingId}`);
+  };
+
+  const handleDelete = async (meetingId) => {
+    if (confirm("Delete meeting?")) {
+      await deleteMeeting(meetingId);
+      mutate();
+    }
+  };
+
+  const handleGenerateTranscript = async (meetingId) => {
+    setIsGeneratingTranscript(true);
+    try {
+      const result = await transcribeMeeting(meetingId);
+      // Update the viewing recording with new transcript
+      if (viewingRecording && viewingRecording.id === meetingId) {
+        setViewingRecording({ ...viewingRecording, transcript: result.transcript });
       }
-    } catch (error) {
-      console.error("Error fetching meetings:", error);
-      setUpcomingMeetings(getMockUpcomingMeetings());
-      setCompletedMeetings(getMockCompletedMeetings());
+      mutate(); // Refresh list
+    } catch (err) {
+      console.error("Failed to generate transcript:", err);
     } finally {
-      setIsLoading(false);
+      setIsGeneratingTranscript(false);
     }
   };
 
-  const handleScheduleMeeting = async (meetingData) => {
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-
-      const response = await fetch(`${API_URL}/api/meetings/schedule`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(meetingData),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        const newMeeting = result.meeting || result;
-
-        setUpcomingMeetings([newMeeting, ...upcomingMeetings]);
-        setIsScheduleModalOpen(false);
-
-        await fetch(`${API_URL}/api/meetings/send-email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ meetingId: newMeeting.id }),
-        });
-
-        alert("Meeting scheduled successfully!");
-      } else {
-        const error = await response.json();
-        alert(`Error: ${error.message || "Failed to schedule meeting"}`);
-      }
-    } catch (error) {
-      console.error("Error scheduling meeting:", error);
-      alert("Failed to schedule meeting. Please try again.");
-    }
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
-  // Calculate total meeting hours (mock)
-  const totalHours = (upcomingMeetings.length + completedMeetings.length) * 0.75;
+  const formatTime = (dateString) => {
+    return new Date(dateString).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // Helper to get transcript content from meeting
+  const getTranscript = (meeting) => {
+    if (meeting?.transcript) return meeting.transcript; // Already set from generate action
+    if (meeting?.transcripts?.length > 0) return meeting.transcripts[0].content;
+    return null;
+  };
+
+  const hasTranscript = (meeting) => {
+    return meeting?.transcript || (meeting?.transcripts?.length > 0);
+  };
+
+  if (error) return <div className="p-6 text-destructive">Failed to load meetings</div>;
+  if (!meetings) return <div className="p-6 text-muted-foreground">Loading...</div>;
 
   return (
-    <section className="flex flex-col w-full p-6 lg:p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto w-full space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 animate-fade-in">
-          <div>
-            <h1 className="text-3xl font-bold font-display">Meetings</h1>
-            <p className="text-muted-foreground mt-1">
-              Schedule and manage meetings with your team and stakeholders
-            </p>
+    <TooltipProvider>
+      <div className="p-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Meetings</h1>
+          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                Schedule Meeting
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>New Meeting</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Input
+                  placeholder="Meeting title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                />
+                <Textarea
+                  placeholder="Description (optional)"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+                <Button onClick={handleCreate} className="w-full">Create Meeting</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={!!editingMeeting} onOpenChange={(open) => !open && setEditingMeeting(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Meeting</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                placeholder="Meeting title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              />
+              <Textarea
+                placeholder="Description (optional)"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+              <Button onClick={handleUpdate} className="w-full">Save Changes</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Recording Playback Dialog */}
+        <Dialog open={!!viewingRecording} onOpenChange={(open) => !open && setViewingRecording(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Play className="w-5 h-5" />
+                {viewingRecording?.title}
+              </DialogTitle>
+            </DialogHeader>
+
+            <Tabs defaultValue="video" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="video">Recording</TabsTrigger>
+                <TabsTrigger value="transcript">Transcript</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="video" className="mt-4">
+                {viewingRecording?.recording_url ? (
+                  <div className="rounded-lg overflow-hidden bg-black aspect-video">
+                    <video
+                      src={viewingRecording.recording_url}
+                      controls
+                      className="w-full h-full"
+                      autoPlay={false}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-muted/20 rounded-lg">
+                    <Video className="w-12 h-12 mb-4 opacity-50" />
+                    <p>No recording available</p>
+                    <p className="text-sm mt-1">Recording becomes available after the meeting ends</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="transcript" className="mt-4">
+                {getTranscript(viewingRecording) ? (
+                  <ScrollArea className="h-[400px] rounded-lg border p-4">
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      {getTranscript(viewingRecording).split('\n').map((line, i) => (
+                        <p key={i} className="mb-2">{line}</p>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-muted/20 rounded-lg">
+                    <FileText className="w-12 h-12 mb-4 opacity-50" />
+                    <p>No transcript available</p>
+                    {viewingRecording?.recording_url && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-4"
+                        onClick={() => handleGenerateTranscript(viewingRecording.id)}
+                        disabled={isGeneratingTranscript}
+                      >
+                        {isGeneratingTranscript ? "Generating..." : "Generate Transcript"}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex items-center justify-between text-sm text-muted-foreground pt-2 border-t">
+              <span>{formatDate(viewingRecording?.start_time)} at {formatTime(viewingRecording?.start_time)}</span>
+              <div className="flex gap-2">
+                {viewingRecording?.recording_url && (
+                  <Badge variant="secondary" className="gap-1">
+                    <Video className="w-3 h-3" />
+                    Recorded
+                  </Badge>
+                )}
+                {hasTranscript(viewingRecording) && (
+                  <Badge variant="secondary" className="gap-1">
+                    <FileText className="w-3 h-3" />
+                    Transcribed
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {meetings.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No meetings scheduled yet.</p>
+            <p className="text-sm mt-1">Click "Schedule Meeting" to create one.</p>
           </div>
-          <Button
-            onClick={() => setIsScheduleModalOpen(true)}
-            className="gap-2 gradient-primary border-0"
-          >
-            <Plus className="w-4 h-4" />
-            Schedule Meeting
-          </Button>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <StatsCard
-            icon={Calendar}
-            label="Upcoming"
-            value={upcomingMeetings.length}
-            color="primary"
-          />
-          <StatsCard
-            icon={Video}
-            label="Completed"
-            value={completedMeetings.length}
-            color="success"
-          />
-          <StatsCard
-            icon={Clock}
-            label="Total Hours"
-            value={totalHours.toFixed(1)}
-            color="accent"
-          />
-          <StatsCard
-            icon={Users}
-            label="Participants"
-            value={upcomingMeetings.reduce((acc, m) => acc + (m.stakeholders?.length || 0), 0)}
-            color="warning"
-          />
-        </div>
-
-        {/* Upcoming Meetings Section */}
-        <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-semibold font-display">
-              Upcoming Meetings
-            </h2>
-            <span className="px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
-              {upcomingMeetings.length}
-            </span>
+        ) : (
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[150px] text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {meetings.map((meeting) => (
+                  <TableRow key={meeting.id}>
+                    <TableCell className="font-medium">{meeting.title}</TableCell>
+                    <TableCell className="text-muted-foreground max-w-[200px] truncate">
+                      {meeting.description || "—"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-sm">
+                        <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                        {formatDate(meeting.start_time)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-sm">
+                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                        {formatTime(meeting.start_time)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {meeting.recording_url && (
+                          <Badge variant="outline" className="text-xs">
+                            <Video className="w-3 h-3 mr-1" />
+                            Recorded
+                          </Badge>
+                        )}
+                        {hasTranscript(meeting) && (
+                          <Badge variant="outline" className="text-xs">
+                            <FileText className="w-3 h-3 mr-1" />
+                            Transcript
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleJoin(meeting.id)}
+                            >
+                              <Video className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Join Meeting</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className={`h-8 w-8 ${meeting.recording_url ? 'text-green-600 hover:text-green-600' : ''}`}
+                              onClick={() => setViewingRecording(meeting)}
+                            >
+                              <Play className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{meeting.recording_url ? 'View Recording' : 'View Details'}</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleEdit(meeting)}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => handleDelete(meeting.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-          <MeetingList
-            meetings={upcomingMeetings}
-            isLoading={isLoading}
-            type="upcoming"
-          />
-        </div>
-
-        {/* Completed Meetings Section */}
-        <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-semibold font-display">
-              Completed Meetings
-            </h2>
-            <span className="px-2.5 py-1 text-xs font-medium bg-muted text-muted-foreground rounded-full">
-              {completedMeetings.length}
-            </span>
-          </div>
-          <MeetingList
-            meetings={completedMeetings}
-            isLoading={isLoading}
-            type="completed"
-          />
-        </div>
-
-        {/* Schedule Meeting Modal */}
-        <ScheduleMeetingModal
-          isOpen={isScheduleModalOpen}
-          onClose={() => setIsScheduleModalOpen(false)}
-          onSchedule={handleScheduleMeeting}
-        />
+        )}
       </div>
-    </section>
+    </TooltipProvider>
   );
-}
-
-// Mock data for development
-function getMockUpcomingMeetings() {
-  return [
-    {
-      id: 1,
-      name: "Sprint Planning - Q1 2025",
-      description:
-        "Discuss requirements gathering strategies for the new e-commerce module",
-      stakeholders: ["alice@specora.com", "bob@specora.com", "charlie@specora.com"],
-      scheduled_by: "John Doe",
-      scheduled_at: new Date(Date.now() + 86400000).toISOString(),
-      is_completed: false,
-    },
-    {
-      id: 2,
-      name: "Client Requirements Review",
-      description: "Review and validate requirements with stakeholders",
-      stakeholders: ["client@company.com", "manager@specora.com"],
-      scheduled_by: "Jane Smith",
-      scheduled_at: new Date(Date.now() + 172800000).toISOString(),
-      is_completed: false,
-    },
-    {
-      id: 3,
-      name: "Technical Feasibility Discussion",
-      description: "Assess technical constraints and architecture decisions",
-      stakeholders: ["tech-lead@specora.com", "architect@specora.com"],
-      scheduled_by: "John Doe",
-      scheduled_at: new Date(Date.now() + 259200000).toISOString(),
-      is_completed: false,
-    },
-  ];
-}
-
-function getMockCompletedMeetings() {
-  return [
-    {
-      id: 4,
-      name: "Initial Requirements Workshop",
-      description: "Kickoff meeting to gather initial requirements from all stakeholders",
-      stakeholders: ["stakeholder1@company.com", "stakeholder2@company.com"],
-      scheduled_by: "John Doe",
-      recording_link: "/recordings/recording_1696123456789.webm",
-      scheduled_at: new Date(Date.now() - 604800000).toISOString(),
-      is_completed: true,
-    },
-    {
-      id: 5,
-      name: "Requirement Prioritization Session",
-      description: "Prioritize features based on business value and technical complexity",
-      stakeholders: ["product-owner@specora.com", "scrum-master@specora.com"],
-      scheduled_by: "Jane Smith",
-      recording_link: "/recordings/recording_1696987654321.webm",
-      scheduled_at: new Date(Date.now() - 1209600000).toISOString(),
-      is_completed: true,
-    },
-  ];
 }

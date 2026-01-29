@@ -35,9 +35,12 @@ export default function MeetingCard({ meeting, type }) {
   };
 
   const handleJoinMeeting = async () => {
+    // Navigate to the project-scoped meeting room
+    const projectId = meeting.project_id;
+
     if (meeting.meeting_link) {
       const roomId = meeting.meeting_link.split('/').pop();
-      router.push(`/meetings/room/${roomId}`);
+      router.push(`/projects/${projectId}/meetings/room/${roomId}`);
       return;
     }
 
@@ -59,7 +62,7 @@ export default function MeetingCard({ meeting, type }) {
 
       if (response.ok) {
         const data = await response.json();
-        router.push(`/meetings/room/${data.roomId}`);
+        router.push(`/projects/${projectId}/meetings/room/${data.roomId}`);
       }
     } catch (error) {
       console.error("Error creating room:", error);

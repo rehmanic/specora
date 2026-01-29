@@ -1,145 +1,221 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { LiveKitRoom, VideoConference, useRoomContext, ControlBar } from "@livekit/components-react";
+import "@livekit/components-styles";
+import { joinMeeting, uploadRecording } from "@/api/meetings";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, Share2 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import { Track } from "livekit-client";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import Logo from "@/components/common/Logo";
+
+// Recording controls component (must be inside the connected LiveKitRoom)
+function RecordingControls({ meetingId }) {
+  const room = useRoomContext();
+  const [isRecording, setIsRecording] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const timerRef = useRef(null);
+
+  const startRecording = useCallback(async () => {
+    if (!room) {
+      toast.error("Room not connected");
+      return;
+    }
+
+    try {
+      const localParticipant = room.localParticipant;
+      const audioTrack = localParticipant.getTrackPublication(Track.Source.Microphone)?.track;
+      const videoTrack = localParticipant.getTrackPublication(Track.Source.Camera)?.track;
+
+      console.log("Audio track:", audioTrack);
+      console.log("Video track:", videoTrack);
+
+      if (!audioTrack && !videoTrack) {
+        toast.error("No media tracks available. Make sure camera/mic is enabled.");
+        return;
+      }
+
+      const stream = new MediaStream();
+      if (audioTrack?.mediaStreamTrack) stream.addTrack(audioTrack.mediaStreamTrack);
+      if (videoTrack?.mediaStreamTrack) stream.addTrack(videoTrack.mediaStreamTrack);
+
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : 'video/webm';
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType,
+        videoBitsPerSecond: 2500000,
+      });
+
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        setIsRecording(false);
+        clearInterval(timerRef.current);
+
+        setIsUploading(true);
+        try {
+          await uploadRecording(meetingId, blob);
+          toast.success("Recording saved successfully!");
+        } catch (error) {
+          console.error("Upload failed:", error);
+          toast.error("Failed to save recording");
+        } finally {
+          setIsUploading(false);
+          setDuration(0);
+        }
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start(1000);
+      setIsRecording(true);
+      setDuration(0);
+      timerRef.current = setInterval(() => setDuration(d => d + 1), 1000);
+      toast.success("Recording started");
+
+    } catch (error) {
+      console.error("Failed to start recording:", error);
+      toast.error("Failed to start recording: " + error.message);
+    }
+  }, [room, meetingId]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      toast.info("Stopping recording...");
+    }
+  }, []);
+
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="flex items-center gap-3">
+      {isRecording && (
+        <>
+          <div className="bg-red-500/20 text-red-400 px-2 py-1 rounded text-xs font-medium flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            Recording
+          </div>
+          <div className="text-sm font-medium">{formatDuration(duration)}</div>
+        </>
+      )}
+      {isUploading && (
+        <div className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs font-medium">
+          Uploading...
+        </div>
+      )}
+      {isRecording ? (
+        <Button onClick={stopRecording} size="sm" variant="secondary" disabled={isUploading}>
+          Stop Recording
+        </Button>
+      ) : (
+        <Button onClick={startRecording} size="sm" variant="destructive" disabled={isUploading}>
+          {isUploading ? "Uploading..." : "Record"}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// Custom layout that includes header with recording controls
+function MeetingLayout({ roomId, projectId, router }) {
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header with recording controls */}
+      <header className="flex items-center justify-between px-4 py-2 bg-black/60 backdrop-blur-sm z-10 shrink-0">
+        <div>
+          <h1 className="font-medium text-white">Meeting Room</h1>
+          <p className="text-xs text-white/50">{roomId}</p>
+        </div>
+        <RecordingControls meetingId={roomId} />
+      </header>
+
+      {/* Video Conference - fits remaining space */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <VideoConference />
+      </div>
+    </div>
+  );
+}
 
 export default function MeetingRoomPage() {
   const params = useParams();
   const router = useRouter();
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isVideoOn, setIsVideoOn] = useState(true);
-  const [participants, setParticipants] = useState([
-    { id: 1, name: "You", isHost: false, isMe: true },
-    { id: 2, name: "Host", isHost: true, isMe: false },
-  ]);
+  const { projectId, roomId } = params;
+  const [token, setToken] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isDisconnected, setIsDisconnected] = useState(false);
 
-  const videoRef = useRef(null);
-
-  // Simulate connecting to camera
   useEffect(() => {
-    if (isVideoOn) {
-      // In a real app, this would use navigator.mediaDevices.getUserMedia
-      // For now, we just simulate the state
-    }
-  }, [isVideoOn]);
+    const fetchToken = async () => {
+      try {
+        setIsLoading(true);
+        const data = await joinMeeting(roomId);
+        setToken(data.token);
+      } catch (err) {
+        console.error("Failed to join meeting:", err);
+        setError(err.message || "Failed to join meeting");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (roomId) fetchToken();
+  }, [roomId]);
 
-  const handleLeave = () => {
-    router.back();
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-neutral-900 text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Joining meeting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-neutral-900 text-white gap-4">
+        <p className="text-red-400">{error}</p>
+        <Button onClick={() => router.back()}>Go Back</Button>
+      </div>
+    );
+  }
 
   return (
     <ProtectedRoute allowedRoles={["manager", "client", "requirements_engineer"]}>
-      <div className="flex flex-col h-screen bg-neutral-900 text-white overflow-hidden">
-        {/* Header */}
-        <header className="flex items-center justify-between px-6 py-4 bg-black/20 backdrop-blur-sm absolute top-0 left-0 right-0 z-10">
-          <div className="flex items-center gap-3">
-            <Logo size="sm" showText={false} />
-            <div>
-              <h1 className="font-semibold text-lg">Requirements Review Meeting</h1>
-              <p className="text-xs text-white/60">ID: {params.roomId}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="bg-red-500/20 text-red-400 px-2 py-1 rounded text-xs font-medium flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              Recording
-            </div>
-            <div className="text-sm font-medium">04:23</div>
-          </div>
-        </header>
-
-        {/* Main Video Grid */}
-        <main className="flex-1 p-4 flex items-center justify-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-6xl aspect-video max-h-[calc(100vh-160px)]">
-            {/* Host Video */}
-            <div className="relative bg-neutral-800 rounded-2xl overflow-hidden flex items-center justify-center">
-              <Avatar className="h-32 w-32">
-                <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Host" />
-                <AvatarFallback>HO</AvatarFallback>
-              </Avatar>
-              <div className="absolute bottom-4 left-4 bg-black/50 px-3 py-1 rounded-lg text-sm font-medium backdrop-blur-md">
-                Host
-              </div>
-            </div>
-
-            {/* My Video */}
-            <div className="relative bg-neutral-800 rounded-2xl overflow-hidden flex items-center justify-center border-2 border-primary/50">
-              {isVideoOn ? (
-                <div className="w-full h-full bg-neutral-700 flex items-center justify-center">
-                  <p className="text-white/50">Camera Preview</p>
-                </div>
-              ) : (
-                <Avatar className="h-32 w-32">
-                  <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=You" />
-                  <AvatarFallback>ME</AvatarFallback>
-                </Avatar>
-              )}
-              <div className="absolute bottom-4 left-4 bg-black/50 px-3 py-1 rounded-lg text-sm font-medium backdrop-blur-md">
-                You {isMicOn ? "" : "(Muted)"}
-              </div>
-            </div>
-          </div>
-        </main>
-
-        {/* Control Bar */}
-        <div className="h-20 bg-neutral-800 border-t border-neutral-700 flex items-center justify-center gap-4 px-6 fixed bottom-0 left-0 right-0 z-20">
-          <div className="flex items-center gap-2 absolute left-6">
-            <Button variant="ghost" className="text-white hover:bg-white/10 flex-col h-auto py-2 gap-1 min-w-[60px]">
-              <Users className="h-5 w-5" />
-              <span className="text-[10px]">Participants</span>
-            </Button>
-            <Button variant="ghost" className="text-white hover:bg-white/10 flex-col h-auto py-2 gap-1 min-w-[60px]">
-              <MessageSquare className="h-5 w-5" />
-              <span className="text-[10px]">Chat</span>
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant={isMicOn ? "secondary" : "destructive"}
-              size="icon"
-              className="h-12 w-12 rounded-full"
-              onClick={() => setIsMicOn(!isMicOn)}
-            >
-              {isMicOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-            </Button>
-
-            <Button
-              variant={isVideoOn ? "secondary" : "destructive"}
-              size="icon"
-              className="h-12 w-12 rounded-full"
-              onClick={() => setIsVideoOn(!isVideoOn)}
-            >
-              {isVideoOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
-            </Button>
-
-            <Button
-              variant="secondary"
-              size="icon"
-              className="h-12 w-12 rounded-full"
-            >
-              <Share2 className="h-5 w-5" />
-            </Button>
-
-            <Button
-              variant="destructive"
-              className="h-12 px-6 rounded-full gap-2 font-semibold ml-2"
-              onClick={handleLeave}
-            >
-              <PhoneOff className="h-5 w-5" />
-              Leave
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2 absolute right-6">
-            {/* Additional controls like settings could go here */}
-          </div>
-        </div>
+      <div className="h-full bg-neutral-900 text-white overflow-hidden pb-2">
+        <LiveKitRoom
+          video={true}
+          audio={true}
+          token={token}
+          serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+          data-lk-theme="default"
+          style={{ height: "100%" }}
+          onDisconnected={() => {
+            setIsDisconnected(true);
+            router.push(`/projects/${projectId}/meetings`);
+          }}
+        >
+          {!isDisconnected && <MeetingLayout roomId={roomId} projectId={projectId} router={router} />}
+        </LiveKitRoom>
       </div>
     </ProtectedRoute>
   );
