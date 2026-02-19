@@ -16,11 +16,20 @@ const useChatStore = create((set, get) => ({
     connectSocket: () => {
         if (socket) return;
 
-        // Clean URL to remove /api or other paths, keeping only origin
-        // e.g. http://localhost:5000/api -> http://localhost:5000
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL
-            ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
-            : "http://localhost:5000";
+        // When NEXT_PUBLIC_API_URL is a full URL (e.g. http://localhost:5000/api),
+        // extract its origin for Socket.IO.
+        // When it's a relative path (e.g. "/api" in Docker), connect directly to
+        // the backend on port 5000 — Next.js rewrites can't proxy WebSockets.
+        const envUrl = process.env.NEXT_PUBLIC_API_URL;
+        const isFullUrl = envUrl && /^https?:\/\//.test(envUrl);
+        let baseUrl;
+        if (isFullUrl) {
+            baseUrl = new URL(envUrl).origin;
+        } else if (typeof window !== "undefined") {
+            baseUrl = `http://${window.location.hostname}:5000`;
+        } else {
+            baseUrl = "http://localhost:5000";
+        }
 
         socket = io(baseUrl, {
             path: "/socket.io/",

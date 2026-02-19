@@ -103,11 +103,14 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Virtual Environments (Prefixed to Norma root)
-Norma/venv/
-Norma/env/
-Norma/ENV/
-Norma/.venv/
+# Virtual Environments
+norma/venv/
+norma/env/
+norma/ENV/
+norma/.venv/
+
+# Data
+norma/data/processed/
 # .env is handled globally
 
 # Jupyter

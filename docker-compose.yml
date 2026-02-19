@@ -1,0 +1,97 @@
+services:
+  # ── PostgreSQL ──────────────────────────────────────────
+  specora-db:
+    image: postgres:16-alpine
+    container_name: specora-db
+    env_file: ./be/.env
+    volumes:
+      - specora-db-data:/var/lib/postgresql/data
+    networks:
+      - specora-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+        tag: "{{.Name}}"
+
+  # ── Backend (Express + Prisma) ──────────────────────────
+  specora-be:
+    build:
+      context: ./be
+      dockerfile: Dockerfile
+    container_name: specora-be
+    ports:
+      - "5000:5000"
+    depends_on:
+      specora-db:
+        condition: service_healthy
+    env_file: ./be/.env
+    volumes:
+      - ./be:/app
+      - /app/node_modules
+      - /app/prisma/generated
+    networks:
+      - specora-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+        tag: "{{.Name}}"
+
+  # ── Frontend (Next.js) ─────────────────────────────────
+  specora-fe:
+    build:
+      context: ./fe
+      dockerfile: Dockerfile
+    container_name: specora-fe
+    depends_on:
+      - specora-be
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: "/api"
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ./fe:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - specora-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+        tag: "{{.Name}}"
+
+  # ── Norma (Python / Streamlit) ─────────────────────────
+  specora-norma:
+    build:
+      context: ./norma
+      dockerfile: Dockerfile
+    container_name: specora-norma
+    env_file: ./norma/.env
+    volumes:
+      - ./norma:/app
+    networks:
+      - specora-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+        tag: "{{.Name}}"
+
+volumes:
+  specora-db-data:
+
+networks:
+  specora-net:
+    driver: bridge

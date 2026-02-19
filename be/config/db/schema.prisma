@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../../prisma/generated/client"
+  provider      = "prisma-client-js"
+  output        = "../../prisma/generated/client"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -155,11 +156,6 @@ model specbot_message {
   specbot_chat    specbot_chat     @relation(fields: [specbot_chat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-enum chat_type_enum {
-  specbot
-  group
-}
-
 enum feedback_status_enum {
   created
   sent
@@ -167,14 +163,6 @@ enum feedback_status_enum {
   submitted
   closed
   edited
-}
-
-enum project_status {
-  draft
-  active
-  on_hold
-  completed
-  archived
 }
 
 enum requirement_priority_enum {

@@ -1,46 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Specora Frontend
 
-## Getting Started
+The frontend dashboard for **Specora**, a modern platform for communication, project management, and AI-driven collaboration. Built with Next.js 15 and powered by real-time technologies.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Real-time Meetings**: Integrated video and audio conferencing powered by LiveKit.
+- **Interactive Chat**: Real-time messaging with Socket.io, featuring emoji support and message history.
+- **AI SpecBot**: Intelligent AI assistant integrated directly into the dashboard for workflow automation.
+- **Project Management**: Tools for tracking projects, tasks, and team feedback.
+- **Responsive Dashboard**: A premium, responsive UI featuring dark mode support and sleek animations.
+- **Dynamic Surveys**: Built-in survey creation and management tools.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router, Turbopack)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **UI Components**: [Radix UI](https://www.radix-ui.com/) & [Lucide React](https://lucide.dev/)
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
+- **Real-time**: [Socket.io Client](https://socket.io/) & [LiveKit Client](https://livekit.io/)
+- **Forms**: React Hook Form
+- **Themes**: Next Themes
+
+## 📁 Project Structure
+
+```text
+fe/
+├── src/
+│   ├── app/            # Next.js App Router (pages and layouts)
+│   ├── components/     # Reusable UI components (shadcn/radix based)
+│   ├── store/          # Zustand store for global state management
+│   ├── hooks/          # Custom React hooks
+│   ├── api/            # API client configurations
+│   ├── utils/          # Helper functions and formatting utilities
+│   └── lib/            # External library configurations
+├── public/             # Static assets (images, icons)
+└── components.json     # Radix/UI configuration
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚥 Getting Started
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- [Node.js](https://nodejs.org/) (v18.17+ recommended for Next.js 15)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. Navigate to the `fe` directory.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Environment Configuration
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Create a `.env` file based on the example:
+```bash
+cp .env.example .env
+```
+Key variables to configure:
+- `NEXT_PUBLIC_API_URL`: The URL of your backend service.
+- `NEXT_PUBLIC_LIVEKIT_URL`: Your LiveKit server WebSocket URL.
 
-## Deploy on Vercel
+## 📜 Available Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `npm run dev`: Start the development server with Turbopack.
+- `npm run build`: Create an optimized production build.
+- `npm run prod`: Start the production server on port 4000.
+- `npm run lint`: Run ESLint to check for code quality issues.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📄 License
 
-## Icons 
-https://cdn-icons-png.flaticon.com/128/4257/4257674.png
-
-https://cdn-icons-png.flaticon.com/128/1659/1659098.png
-
-## Thumbnails
-https://plus.unsplash.com/premium_vector-1711987765737-f8978e4c3cb5?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8c29mdHdhcmV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600
-
-https://plus.unsplash.com/premium_vector-1682309080127-19d3a6214a17?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c29mdHdhcmV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&q=60&w=600
+MIT

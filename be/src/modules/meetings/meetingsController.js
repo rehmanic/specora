@@ -280,10 +280,19 @@ export const transcribeMeeting = async (req, res) => {
             });
         }
 
-        // Process transcription
-        await processTranscription(meetingId, meeting.recording_url);
+        // Process transcription in background
+        processTranscription(meetingId, meeting.recording_url).catch(err => {
+            console.error("Background transcription failed:", err);
+        });
 
-        // Fetch updated transcript
+        res.status(202).json({
+            message: "Transcription started. Please check back later.",
+            status: "processing"
+        });
+        return; // Return early
+
+        // Fetch updated transcript (Legacy sync logic - removed)
+        /*
         const updatedMeeting = await prisma.meeting.findUnique({
             where: { id: meetingId },
             include: { transcripts: true }
@@ -295,6 +304,7 @@ export const transcribeMeeting = async (req, res) => {
             message: "Transcript generated successfully",
             transcript
         });
+        */
     } catch (error) {
         console.error("Transcribe Meeting Error:", error);
         res.status(500).json({ message: "Failed to generate transcript", error: error.message });
