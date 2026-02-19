@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile
     container_name: specora-be
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     depends_on:
       specora-db:
         condition: service_healthy
@@ -54,7 +54,7 @@ services:
     depends_on:
       - specora-be
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: "/api"
       WATCHPACK_POLLING: "true"
