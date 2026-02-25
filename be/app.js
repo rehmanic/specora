@@ -15,6 +15,7 @@ import chatRoutes from "./src/modules/chat/chatRoutes.js";
 import uploadRoutes from "./src/modules/upload/uploadRoutes.js";
 import feedbacksRoutes from "./src/modules/feedbacks/feedbacksRoutes.js";
 import meetingsRoutes from "./src/modules/meetings/meetingsRoutes.js";
+import requirementsRoutes from "./src/modules/requirements/requirementsRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -61,6 +62,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/feedbacks", feedbacksRoutes);
 app.use("/api/meetings", meetingsRoutes);
+app.use("/api/requirements", requirementsRoutes);
 
 // ----- 404 Handler -----
 app.use((req, res) => {

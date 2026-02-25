@@ -1,259 +1,391 @@
 "use client";
 
-import { useState } from "react";
-import { Gavel, Loader2, CheckCircle2, XCircle, Search, AlertTriangle, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { Gavel, Loader2, Play, Eye, CheckCircle2, AlertTriangle, FileText } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import useAuthStore from "@/store/authStore";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+const NORMA_URL = "http://localhost:8000/api/v1/feasibility/legal/single";
 
 export default function Page() {
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [isChecking, setIsChecking] = useState(false);
-    const [result, setResult] = useState(null);
+    const { projectId } = useParams();
+    const { token } = useAuthStore();
 
-    const handleCheck = async (e) => {
-        e.preventDefault();
+    const [requirements, setRequirements] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-        if (!title.trim() || !description.trim()) {
-            toast.error("Please provide both a title and description");
-            return;
+    // Track which requirement is currently being checked (by id)
+    const [runningId, setRunningId] = useState(null);
+    const [runningAll, setRunningAll] = useState(false);
+
+    // Store results keyed by requirement id
+    const [results, setResults] = useState({});
+
+    // Dialog state
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [activeResult, setActiveResult] = useState(null);
+
+    // Fetch requirements from the backend
+    useEffect(() => {
+        async function fetchRequirements() {
+            try {
+                const res = await fetch(`${API_BASE}/requirements/${projectId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) throw new Error("Failed to fetch requirements");
+                const data = await res.json();
+                setRequirements(data.requirements || []);
+            } catch (error) {
+                console.error("Error fetching requirements:", error);
+                toast.error("Could not load requirements.");
+            } finally {
+                setLoading(false);
+            }
         }
+        if (projectId && token) fetchRequirements();
+    }, [projectId, token]);
 
-        setIsChecking(true);
-        setResult(null);
-
+    // Run feasibility check for a single requirement
+    const handleRun = async (req) => {
+        setRunningId(req.id);
         try {
-            // Adjust port to match standard Dev setups or environment variables if needed
-            const API_URL = "http://localhost:8000/api/v1/feasibility/legal/single";
-
-            const response = await fetch(API_URL, {
+            const response = await fetch(NORMA_URL, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    id: "temp-" + Date.now(),
-                    title: title,
-                    description: description
+                    id: req.id,
+                    title: req.title,
+                    description: req.description,
                 }),
             });
 
-            if (!response.ok) {
-                throw new Error("Failed to connect to Norma backend");
-            }
+            if (!response.ok) throw new Error("Norma service error");
 
             const data = await response.json();
-            setResult(data);
+            setResults((prev) => ({ ...prev, [req.id]: data }));
 
             if (data.is_feasible) {
-                toast.success("Legal check completed. Found relevant context.");
+                toast.success(`"${req.title}" — Relevant legal context found.`);
             } else {
-                toast.warning("Legal check completed. No highly relevant context found.");
+                toast.warning(`"${req.title}" — No strong legal match.`);
             }
         } catch (error) {
-            console.error("Error checking feasibility:", error);
-            toast.error("Could not run legal check. Please ensure the Norma service is running.");
+            console.error("Error running feasibility:", error);
+            toast.error("Could not reach Norma. Is the service running?");
         } finally {
-            setIsChecking(false);
+            setRunningId(null);
         }
     };
+
+    // Run all unchecked requirements sequentially
+    const handleRunAll = async () => {
+        const unchecked = requirements.filter((r) => !results[r.id]);
+        if (unchecked.length === 0) {
+            toast.info("All requirements have already been checked.");
+            return;
+        }
+        setRunningAll(true);
+        toast.info(`Running ${unchecked.length} checks...`);
+        for (const req of unchecked) {
+            await handleRun(req);
+        }
+        setRunningAll(false);
+        toast.success("All checks completed!");
+    };
+
+    // Open result dialog
+    const handleViewResult = (req) => {
+        const result = results[req.id];
+        if (!result) {
+            toast.info("Run the check first to see results.");
+            return;
+        }
+        setActiveResult({ ...result, title: req.title });
+        setDialogOpen(true);
+    };
+
+    // Computed stats
+    const checkedCount = Object.keys(results).length;
+    const feasibleCount = Object.values(results).filter((r) => r.is_feasible).length;
+    const avgConfidence =
+        checkedCount > 0
+            ? Math.round(
+                Object.values(results).reduce((sum, r) => {
+                    const topScore = r.retrieved_context?.[0]?.score || 0;
+                    return sum + topScore;
+                }, 0) /
+                checkedCount *
+                100
+            )
+            : 0;
+
+    const stats = [
+        { label: "Total Requirements", value: requirements.length, icon: FileText, color: "text-primary" },
+        { label: "Checked", value: `${checkedCount} / ${requirements.length}`, icon: Play, color: "text-blue-500" },
+        { label: "Feasible", value: feasibleCount, icon: CheckCircle2, color: "text-emerald-500" },
+        { label: "Avg Confidence", value: `${avgConfidence}%`, icon: Gavel, color: "text-amber-500" },
+    ];
 
     return (
         <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer"]}>
             <main className="w-full p-6 lg:p-8 overflow-y-auto">
                 <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-primary/10 rounded-xl">
-                                    <Gavel className="h-6 w-6 text-primary" />
-                                </div>
-                                <h1 className="text-3xl font-bold font-display tracking-tight">Legal Feasibility</h1>
+                    {/* Header */}
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-primary/10 rounded-xl">
+                                <Gavel className="h-6 w-6 text-primary" />
                             </div>
-                            <p className="text-muted-foreground mt-2 text-lg">
-                                Assess project requirements against legal constraints and compliance regulations.
-                            </p>
+                            <h1 className="text-3xl font-bold font-display tracking-tight">Legal Feasibility</h1>
                         </div>
+                        <p className="text-muted-foreground mt-2 text-lg">
+                            Assess project requirements against legal constraints and compliance regulations.
+                        </p>
                     </div>
 
-                    <Tabs defaultValue="single" className="w-full">
-                        <TabsList className="grid w-full max-w-md grid-cols-2">
-                            <TabsTrigger value="single">Single Requirement</TabsTrigger>
-                            <TabsTrigger value="batch" disabled>Batch Analysis (Coming Soon)</TabsTrigger>
-                        </TabsList>
+                    {/* Stats Grid */}
+                    {!loading && requirements.length > 0 && (
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            {stats.map((stat) => (
+                                <Card key={stat.label} className="border-border/50 shadow-sm">
+                                    <CardContent className="p-4 flex items-center gap-4">
+                                        <div className={`p-2 rounded-lg bg-muted/50 ${stat.color}`}>
+                                            <stat.icon className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">{stat.label}</p>
+                                            <p className="text-2xl font-bold font-display">{stat.value}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
 
-                        <TabsContent value="single" className="mt-6">
-                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                                {/* Input Form */}
-                                <div className="lg:col-span-5 space-y-6">
-                                    <Card className="border-border/50 shadow-sm">
-                                        <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
-                                            <CardTitle className="text-xl flex items-center gap-2">
-                                                <FileText className="h-5 w-5 text-primary" />
-                                                Requirement Details
-                                            </CardTitle>
-                                            <CardDescription>
-                                                Enter the details of the requirement you want to analyze.
-                                            </CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="pt-6 space-y-4">
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                                    Requirement Title
-                                                </label>
-                                                <Input
-                                                    placeholder="e.g. User Data Export Feature"
-                                                    value={title}
-                                                    onChange={(e) => setTitle(e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                                    Detailed Description
-                                                </label>
-                                                <Textarea
-                                                    placeholder="Describe the technical implementation and data handled..."
-                                                    className="min-h-[150px] resize-none"
-                                                    value={description}
-                                                    onChange={(e) => setDescription(e.target.value)}
-                                                />
-                                            </div>
-                                        </CardContent>
-                                        <CardFooter className="bg-muted/10 border-t border-border/50 pt-6">
-                                            <Button
-                                                className="w-full gap-2 transition-all duration-200"
-                                                onClick={handleCheck}
-                                                disabled={isChecking || !title || !description}
-                                                size="lg"
-                                            >
-                                                {isChecking ? (
-                                                    <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing...</>
-                                                ) : (
-                                                    <><Search className="h-4 w-4" /> Check Feasibility</>
-                                                )}
-                                            </Button>
-                                        </CardFooter>
-                                    </Card>
+                    {/* Requirements Table */}
+                    <Card className="border-border/50 shadow-sm">
+                        <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle className="text-xl flex items-center gap-2">
+                                        <FileText className="h-5 w-5 text-primary" />
+                                        Project Requirements
+                                    </CardTitle>
+                                    <CardDescription className="mt-1">
+                                        Run legal feasibility checks on individual requirements by clicking the play button.
+                                    </CardDescription>
                                 </div>
-
-                                {/* Results View */}
-                                <div className="lg:col-span-7 space-y-6">
-                                    {!result && !isChecking && (
-                                        <div className="h-full min-h-[400px] rounded-xl border border-dashed border-border/60 bg-muted/20 flex flex-col items-center justify-center text-center p-8">
-                                            <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
-                                                <Gavel className="h-8 w-8 text-muted-foreground/50" />
-                                            </div>
-                                            <h3 className="text-lg font-medium text-muted-foreground mb-1">Awaiting Analysis</h3>
-                                            <p className="text-sm text-muted-foreground/80 max-w-sm">
-                                                Fill in the requirement details and run the check to see matching legal documentation and compliance status.
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {isChecking && (
-                                        <div className="h-full min-h-[400px] rounded-xl border border-border bg-card p-12 flex flex-col items-center justify-center text-center animate-pulse">
-                                            <Loader2 className="h-10 w-10 text-primary animate-spin mb-6" />
-                                            <h3 className="text-xl font-medium mb-2">Analyzing Legal Database</h3>
-                                            <p className="text-muted-foreground">Searching through compliance documents, regulations, and historical rulings...</p>
-                                        </div>
-                                    )}
-
-                                    {result && !isChecking && (
-                                        <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                                            <Card className="border-border/50 overflow-hidden">
-                                                <div className={`h-2 w-full ${result.is_feasible ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                                                <CardHeader className="pb-4">
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <CardTitle className="text-2xl mb-2 flex items-center gap-2">
-                                                                Verdict
-                                                            </CardTitle>
-                                                            <div className="flex items-center gap-2 mt-2">
-                                                                {result.is_feasible ? (
-                                                                    <Badge className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 px-3 py-1 text-sm gap-1.5 border-0">
-                                                                        <CheckCircle2 className="h-4 w-4" /> Supporting Precedent Found
-                                                                    </Badge>
-                                                                ) : (
-                                                                    <Badge className="bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 px-3 py-1 text-sm gap-1.5 border-0">
-                                                                        <AlertTriangle className="h-4 w-4" /> Insufficient Legal Match
-                                                                    </Badge>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <div className="text-sm font-medium text-muted-foreground mb-1">Confidence Target</div>
-                                                            <div className="text-3xl font-bold font-display text-primary">
-                                                                {result.retrieved_context && result.retrieved_context.length > 0 ?
-                                                                    Math.round(result.retrieved_context[0].score * 100) + '%' : '0%'}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </CardHeader>
-                                            </Card>
-
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-lg font-semibold tracking-tight">Retrieved Legal Context</h3>
-                                                <Badge variant="outline" className="text-muted-foreground">
-                                                    {result.retrieved_context?.length || 0} excerpts found
-                                                </Badge>
-                                            </div>
-
-                                            {result.retrieved_context && result.retrieved_context.length > 0 ? (
-                                                <ScrollArea className="h-[450px] pr-4">
-                                                    <div className="space-y-4">
-                                                        {result.retrieved_context.map((ctx, idx) => (
-                                                            <Card key={idx} className="bg-card/50 border-border/40 hover:border-primary/30 transition-colors">
-                                                                <CardHeader className="py-3 px-4 bg-muted/20 border-b border-border/30">
-                                                                    <div className="flex justify-between items-center text-xs">
-                                                                        <div className="font-medium text-muted-foreground flex items-center gap-2">
-                                                                            <span className="bg-background px-2 py-0.5 rounded border border-border/50">
-                                                                                Page {ctx.page || 'N/A'}
-                                                                            </span>
-                                                                            {ctx.section && (
-                                                                                <span className="text-foreground/70 truncate max-w-[200px]">
-                                                                                    {ctx.section}
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
-                                                                        <Badge variant="secondary" className="text-[10px] font-mono">
-                                                                            Score: {ctx.score.toFixed(3)}
-                                                                        </Badge>
-                                                                    </div>
-                                                                </CardHeader>
-                                                                <CardContent className="py-4 px-5">
-                                                                    <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap font-sans">
-                                                                        {ctx.text}
-                                                                    </p>
-                                                                </CardContent>
-                                                            </Card>
-                                                        ))}
-                                                    </div>
-                                                </ScrollArea>
+                                <div className="flex items-center gap-3">
+                                    <Badge variant="outline" className="text-muted-foreground">
+                                        {requirements.length} total
+                                    </Badge>
+                                    {requirements.length > 0 && (
+                                        <Button
+                                            size="sm"
+                                            className="gap-2"
+                                            onClick={handleRunAll}
+                                            disabled={runningAll || runningId !== null}
+                                        >
+                                            {runningAll ? (
+                                                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking...</>
                                             ) : (
-                                                <Alert variant="default" className="bg-muted/30 border-dashed">
-                                                    <AlertTriangle className="h-4 w-4 opacity-70" />
-                                                    <AlertTitle>No specific clauses found</AlertTitle>
-                                                    <AlertDescription className="text-muted-foreground">
-                                                        The legal database does not contain exact matches for these requirements. Consider consulting a legal professional.
-                                                    </AlertDescription>
-                                                </Alert>
+                                                <><Play className="h-3.5 w-3.5" /> Check All</>
                                             )}
-                                        </div>
+                                        </Button>
                                     )}
                                 </div>
                             </div>
-                        </TabsContent>
-                    </Tabs>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            {loading ? (
+                                <div className="p-6 space-y-4">
+                                    {[1, 2, 3].map((i) => (
+                                        <div key={i} className="flex items-center gap-4">
+                                            <Skeleton className="h-4 w-8" />
+                                            <Skeleton className="h-4 flex-1" />
+                                            <Skeleton className="h-8 w-20" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : requirements.length === 0 ? (
+                                <div className="p-12 text-center">
+                                    <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-4">
+                                        <FileText className="h-8 w-8 text-muted-foreground/50" />
+                                    </div>
+                                    <h3 className="text-lg font-medium text-muted-foreground mb-1">No Requirements Found</h3>
+                                    <p className="text-sm text-muted-foreground/80">
+                                        Add requirements to this project to run legal feasibility checks.
+                                    </p>
+                                </div>
+                            ) : (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="hover:bg-transparent">
+                                            <TableHead className="w-[80px]">ID</TableHead>
+                                            <TableHead>Description</TableHead>
+                                            <TableHead className="w-[120px] text-center">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {requirements.map((req, index) => (
+                                            <TableRow key={req.id}>
+                                                <TableCell className="font-mono text-xs text-muted-foreground">
+                                                    {index + 1}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div>
+                                                        <span className="font-medium">{req.title}</span>
+                                                        <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
+                                                            {req.description}
+                                                        </p>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                                                            onClick={() => handleRun(req)}
+                                                            disabled={runningId === req.id}
+                                                            title="Run feasibility check"
+                                                        >
+                                                            {runningId === req.id ? (
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                            ) : (
+                                                                <Play className="h-4 w-4" />
+                                                            )}
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className={`h-8 w-8 ${results[req.id]
+                                                                ? "text-emerald-600 hover:text-emerald-600 hover:bg-emerald-500/10"
+                                                                : "text-muted-foreground hover:text-foreground"
+                                                                }`}
+                                                            onClick={() => handleViewResult(req)}
+                                                            disabled={!results[req.id]}
+                                                            title="View result"
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
             </main>
+
+            {/* Result Dialog */}
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl flex items-center gap-2">
+                            <Gavel className="h-5 w-5 text-primary" />
+                            Feasibility Result
+                        </DialogTitle>
+                        {activeResult && (
+                            <DialogDescription className="text-base">
+                                {activeResult.title}
+                            </DialogDescription>
+                        )}
+                    </DialogHeader>
+
+                    {activeResult && (
+                        <div className="space-y-4 overflow-hidden flex-1">
+                            {/* Verdict */}
+                            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
+                                <div className="flex items-center gap-2">
+                                    {activeResult.is_feasible ? (
+                                        <Badge className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 px-3 py-1 text-sm gap-1.5 border-0">
+                                            <CheckCircle2 className="h-4 w-4" /> Supporting Precedent Found
+                                        </Badge>
+                                    ) : (
+                                        <Badge className="bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 px-3 py-1 text-sm gap-1.5 border-0">
+                                            <AlertTriangle className="h-4 w-4" /> Insufficient Legal Match
+                                        </Badge>
+                                    )}
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-sm text-muted-foreground">Confidence</span>
+                                    <div className="text-2xl font-bold font-display text-primary">
+                                        {activeResult.retrieved_context?.length > 0
+                                            ? Math.round(activeResult.retrieved_context[0].score * 100) + "%"
+                                            : "0%"}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Legal Context */}
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-semibold">Retrieved Legal Context</h4>
+                                <Badge variant="outline" className="text-xs text-muted-foreground">
+                                    {activeResult.retrieved_context?.length || 0} excerpts
+                                </Badge>
+                            </div>
+
+                            <ScrollArea className="h-[350px] pr-4">
+                                <div className="space-y-3">
+                                    {activeResult.retrieved_context?.map((ctx, idx) => (
+                                        <Card key={idx} className="bg-card/50 border-border/40">
+                                            <CardHeader className="py-2 px-4 bg-muted/20 border-b border-border/30">
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <div className="font-medium text-muted-foreground flex items-center gap-2">
+                                                        <span className="bg-background px-2 py-0.5 rounded border border-border/50">
+                                                            Page {ctx.page || "N/A"}
+                                                        </span>
+                                                        {ctx.section && (
+                                                            <span className="text-foreground/70 truncate max-w-[250px]">
+                                                                {ctx.section}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <Badge variant="secondary" className="text-[10px] font-mono">
+                                                        Score: {ctx.score?.toFixed(3)}
+                                                    </Badge>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="py-3 px-4">
+                                                <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap line-clamp-6">
+                                                    {ctx.text}
+                                                </p>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </ProtectedRoute>
     );
 }
