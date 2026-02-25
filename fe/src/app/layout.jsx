@@ -1,6 +1,7 @@
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/common/ThemeProvider";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -36,18 +37,26 @@ export default function RootLayout({ children }) {
         className={`${inter.variable} ${outfit.variable} antialiased`}
         style={{ fontFamily: "var(--font-sans)" }}
       >
-        {children}
-        <Toaster
-          richColors
-          closeButton
-          position="top-right"
-          toastOptions={{
-            style: {
-              fontFamily: "var(--font-sans)",
-            },
-          }}
-        />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster
+            richColors
+            closeButton
+            position="top-right"
+            toastOptions={{
+              style: {
+                fontFamily: "var(--font-sans)",
+              },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );
 }
+

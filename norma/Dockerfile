@@ -6,9 +6,5 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Default command — Streamlit with auto-reload on file save
-CMD ["streamlit", "run", "src/app.py", \
-     "--server.port=8501", \
-     "--server.address=0.0.0.0", \
-     "--server.runOnSave=true", \
-     "--server.headless=true"]
+# Default command — FastAPI
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -1,8 +1,7 @@
-streamlit
-streamlit-chat
-transformers
-sentence-transformers
-torch
+fastapi
+uvicorn
+pydantic
+fastembed
 faiss-cpu
 pdfplumber
 PyPDF2

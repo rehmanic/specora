@@ -71,12 +71,14 @@ services:
         max-file: "3"
         tag: "{{.Name}}"
 
-  # ── Norma (Python / Streamlit) ─────────────────────────
+  # ── Norma (Python / FastAPI) ─────────────────────────
   specora-norma:
     build:
       context: ./norma
       dockerfile: Dockerfile
     container_name: specora-norma
+    ports:
+      - "127.0.0.1:8000:8000"
     env_file: ./norma/.env
     volumes:
       - ./norma:/app

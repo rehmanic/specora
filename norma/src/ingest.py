@@ -6,10 +6,10 @@ from pathlib import Path
 
 import faiss
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 
 
-DEFAULT_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+DEFAULT_MODEL = "BAAI/bge-small-en-v1.5"
 
 
 def load_chunks(path: Path):
@@ -22,8 +22,8 @@ def load_chunks(path: Path):
 
 def build_embeddings(chunks, model, batch_size=32):
     texts = [c.get("text", "") for c in chunks]
-    embeddings = model.encode(texts, batch_size=batch_size, show_progress_bar=True, convert_to_numpy=True)
-    embeddings = embeddings.astype("float32")
+    embeddings = list(model.embed(texts, batch_size=batch_size))
+    embeddings = np.array(embeddings, dtype="float32")
     return embeddings
 
 
@@ -80,7 +80,7 @@ def main():
     chunks = load_chunks(args.chunks)
 
     print("Loading embedding model:", args.model)
-    model = SentenceTransformer(args.model)
+    model = TextEmbedding(model_name=args.model)
 
     print("Building embeddings...")
     embeddings = build_embeddings(chunks, model)

@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
     Bell,
     Search,
     HelpCircle,
-    Menu
+    Menu,
+    Moon,
+    Sun
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,12 +21,16 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Fragment } from "react";
+import { Fragment, useState, useEffect } from "react";
 import useProjectsStore from "@/store/projectsStore";
 
 export function Topbar() {
     const pathname = usePathname();
     const { selectedProject } = useProjectsStore();
+    const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => setMounted(true), []);
 
     // Simple breadcrumb logic
     const paths = pathname.split('/').filter(Boolean);
@@ -62,6 +69,22 @@ export function Topbar() {
             </div>
 
             <div className="flex items-center gap-2">
+
+                {mounted && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    >
+                        {theme === "dark" ? (
+                            <Sun className="h-4 w-4" />
+                        ) : (
+                            <Moon className="h-4 w-4" />
+                        )}
+                        <span className="sr-only">Toggle theme</span>
+                    </Button>
+                )}
 
                 <Button variant="ghost" size="icon" className="h-9 w-9">
                     <Bell className="h-4 w-4" />

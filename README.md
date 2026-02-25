@@ -37,7 +37,27 @@ The easiest way to run the entire Specora stack is using **Docker Compose**.
    ```bash
    docker compose up -d
    ```
-   This will start the PostgreSQL database, Backend, Frontend, and Norma services.
+   This will start the PostgreSQL database, Backend, Frontend, and Norma services in detached mode.
+
+### Common Docker Commands
+
+Here are some of the most useful Docker and Docker Compose commands for working with the Specora stack:
+
+**Building & Running**
+- `docker compose up -d` — Start all services in the background.
+- `docker compose up --build -d` — Rebuild images and start all services (useful when you add new dependencies).
+- `docker compose down` — Stop and remove all containers, networks, and volumes created by `up`.
+
+**Viewing Logs**
+- `docker compose logs -f` — View combined logs from all services in real-time.
+- `docker logs -f specora-be` — View logs for the Backend service only.
+- `docker logs -f specora-fe` — View logs for the Frontend service.
+- `docker logs -f specora-norma` — View logs for the Norma (FastAPI) service.
+
+**Accessing Containers**
+- `docker exec -it specora-be sh` — Open an interactive shell inside the Backend container.
+- `docker exec -it specora-db psql -U <your_postgres_user> -d <your_postgres_db>` — Access the PostgreSQL database CLI.
+
 
 ## 🛠️ Technology Stack
 
