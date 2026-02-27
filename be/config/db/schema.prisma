@@ -116,6 +116,7 @@ model requirement {
   description String
   priority    requirement_priority_enum
   status      requirement_status_enum
+  tags        String[]                  @default([])
   created_at  DateTime?                 @default(now()) @db.Timestamptz(6)
   updated_at  DateTime?                 @default(now()) @db.Timestamptz(6)
   project_id  String                    @db.Uuid
