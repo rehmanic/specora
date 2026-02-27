@@ -11,7 +11,8 @@ export function AppLayout({ children }) {
     const isChat = pathname.includes('/chat');
     const isSpecbot = pathname.includes('/specbot');
     const isMeetingRoom = pathname.includes('/meetings/room');
-    const isFullWidthObj = isChat || isSpecbot || isMeetingRoom;
+    const isPrototypingEditor = /\/prototyping\/[^/]+$/.test(pathname);
+    const isFullWidthObj = isChat || isSpecbot || isMeetingRoom || isPrototypingEditor;
 
     return (
         <SidebarProvider>

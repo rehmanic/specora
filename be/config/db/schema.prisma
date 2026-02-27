@@ -99,6 +99,7 @@ model project {
   specbot_chat    specbot_chat[]
   meetings        meeting[]
   economic_config economic_config?
+  prototypes      prototype[]
 }
 
 model project_member {
@@ -120,6 +121,7 @@ model requirement {
   project_id  String                    @db.Uuid
   project     project                   @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   economic_estimate economic_estimate?
+  screen_links      screen_requirement[]
 }
 
 model role {
@@ -260,4 +262,38 @@ model economic_estimate {
   pessimistic_hours Float
   created_at        DateTime?   @default(now()) @db.Timestamptz(6)
   updated_at        DateTime?   @default(now()) @db.Timestamptz(6)
+}
+
+model prototype {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String             @db.VarChar(255)
+  description String?
+  project_id  String             @db.Uuid
+  project     project            @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  created_at  DateTime?          @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?          @default(now()) @db.Timestamptz(6)
+  screens     prototype_screen[]
+}
+
+model prototype_screen {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String    @db.VarChar(255)
+  order        Int       @default(0)
+  canvas_data  Json?
+  thumbnail    String?
+  prototype_id String    @db.Uuid
+  prototype    prototype @relation(fields: [prototype_id], references: [id], onDelete: Cascade)
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+
+  requirement_links screen_requirement[]
+}
+
+model screen_requirement {
+  screen_id      String           @db.Uuid
+  screen         prototype_screen @relation(fields: [screen_id], references: [id], onDelete: Cascade)
+  requirement_id String           @db.Uuid
+  requirement    requirement      @relation(fields: [requirement_id], references: [id], onDelete: Cascade)
+
+  @@id([screen_id, requirement_id])
 }
