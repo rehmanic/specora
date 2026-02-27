@@ -98,6 +98,7 @@ model project {
   requirement     requirement[]
   specbot_chat    specbot_chat[]
   meetings        meeting[]
+  economic_config economic_config?
 }
 
 model project_member {
@@ -118,6 +119,7 @@ model requirement {
   updated_at  DateTime?                 @default(now()) @db.Timestamptz(6)
   project_id  String                    @db.Uuid
   project     project                   @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  economic_estimate economic_estimate?
 }
 
 model role {
@@ -236,4 +238,26 @@ enum meeting_status_enum {
 enum meeting_role_enum {
    host
    participant
+}
+
+model economic_config {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id     String    @unique @db.Uuid
+  project        project   @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  hourly_rate    Float     @default(50)
+  currency       String    @default("USD") @db.VarChar(3)
+  num_developers Int       @default(1)
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model economic_estimate {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requirement_id    String      @unique @db.Uuid
+  requirement       requirement @relation(fields: [requirement_id], references: [id], onDelete: Cascade)
+  optimistic_hours  Float
+  most_likely_hours Float
+  pessimistic_hours Float
+  created_at        DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?   @default(now()) @db.Timestamptz(6)
 }
