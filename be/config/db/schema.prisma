@@ -101,6 +101,7 @@ model project {
   economic_config economic_config?
   prototypes      prototype[]
   diagrams        diagram[]
+  docs            doc[]
 }
 
 model diagram {
@@ -109,6 +110,17 @@ model diagram {
   project      project   @relation(fields: [project_id], references: [id], onDelete: Cascade)
   title        String?   @db.VarChar(255)
   mermaid_code String    @default("") @db.Text
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model doc {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id   String    @db.Uuid
+  project      project   @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  title        String?   @db.VarChar(255)
+  content      String    @default("") @db.Text
+  type         doc_type_enum @default(general)
   created_at   DateTime? @default(now()) @db.Timestamptz(6)
   updated_at   DateTime? @default(now()) @db.Timestamptz(6)
 }
@@ -196,6 +208,12 @@ enum requirement_status_enum {
 enum sender_type_enum {
   user
   bot
+}
+
+enum doc_type_enum {
+  srs
+  use_case
+  general
 }
 
 model meeting {
