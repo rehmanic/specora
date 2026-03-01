@@ -19,6 +19,7 @@ import requirementsRoutes from "./src/modules/requirements/requirementsRoutes.js
 import economicFeasibilityRoutes from "./src/modules/economicFeasibility/economicFeasibilityRoutes.js";
 import techFeasibilityRoutes from "./src/modules/technicalFeasibility/techFeasibilityRoutes.js";
 import prototypingRoutes from "./src/modules/prototyping/prototypingRoutes.js";
+import verificationRoutes from "./src/modules/verification/verificationRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -69,6 +70,7 @@ app.use("/api/requirements", requirementsRoutes);
 app.use("/api/economic-feasibility", economicFeasibilityRoutes);
 app.use("/api/tech-feasibility", techFeasibilityRoutes);
 app.use("/api/prototyping", prototypingRoutes);
+app.use("/api/verification", verificationRoutes);
 
 // ----- 404 Handler -----
 app.use((req, res) => {
