@@ -1,31 +1,147 @@
 "use client";
 
-import { Workflow } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Workflow, Loader2, Search } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import useAuthStore from "@/store/authStore";
+import NewDiagramDialog from "@/components/diagrams/NewDiagramDialog";
+import DiagramCard from "@/components/diagrams/DiagramCard";
+import {
+    getDiagrams,
+    createDiagram,
+    deleteDiagram as deleteDiagramApi,
+} from "@/api/diagrams";
 
 export default function Page() {
+    const { projectId } = useParams();
+    const router = useRouter();
+    const { token } = useAuthStore();
+
+    const [diagrams, setDiagrams] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    useEffect(() => {
+        if (!projectId || !token) return;
+
+        async function fetchData() {
+            try {
+                const data = await getDiagrams(projectId);
+                setDiagrams(data.diagrams || []);
+            } catch (err) {
+                console.error("Error loading diagrams:", err);
+                toast.error("Failed to load diagrams.");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchData();
+    }, [projectId, token]);
+
+    const handleCreate = async (body) => {
+        try {
+            const diagram = await createDiagram(projectId, body);
+            setDiagrams((prev) => [diagram, ...prev]);
+            toast.success("Diagram created!");
+            router.push(`/projects/${projectId}/specification/diagrams/${diagram.id}`);
+        } catch (err) {
+            toast.error(err.message);
+            throw err;
+        }
+    };
+
+    const handleDelete = async (diagramId) => {
+        try {
+            await deleteDiagramApi(projectId, diagramId);
+            setDiagrams((prev) => prev.filter((d) => d.id !== diagramId));
+            toast.success("Diagram deleted.");
+        } catch (err) {
+            toast.error(err.message);
+        }
+    };
+
+    const handleOpen = (diagram) => {
+        router.push(`/projects/${projectId}/specification/diagrams/${diagram.id}`);
+    };
+
+    const filtered = diagrams.filter((d) =>
+        (d.title || "Untitled diagram").toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer"]}>
             <main className="w-full p-6 lg:p-8 overflow-y-auto">
                 <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold font-display">Specification Diagrams</h1>
-                            <p className="text-muted-foreground mt-1">
-                                Visualize system architecture and workflows
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-primary/10 rounded-xl">
+                                    <Workflow className="h-6 w-6 text-primary" />
+                                </div>
+                                <h1 className="text-3xl font-bold font-display tracking-tight">
+                                    Specification Diagrams
+                                </h1>
+                            </div>
+                            <p className="text-muted-foreground mt-2 text-lg">
+                                Create and manage Mermaid diagrams for system architecture and workflows.
                             </p>
                         </div>
+                        <NewDiagramDialog onSubmit={handleCreate} />
                     </div>
 
-                    <div className="rounded-xl border border-border bg-card p-12 flex flex-col items-center justify-center text-center">
-                        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
-                            <Workflow className="h-10 w-10 text-primary" />
+                    {!loading && diagrams.length > 0 && (
+                        <div className="relative max-w-sm">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search diagrams..."
+                                className="pl-9"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         </div>
-                        <h3 className="text-xl font-semibold font-display mb-2">Coming Soon</h3>
-                        <p className="text-muted-foreground max-w-md">
-                            This section is currently under development. Check back later for updates.
-                        </p>
-                    </div>
+                    )}
+
+                    {loading ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {[1, 2, 3].map((i) => (
+                                <Skeleton key={i} className="h-36 w-full rounded-xl" />
+                            ))}
+                        </div>
+                    ) : filtered.length === 0 ? (
+                        <div className="rounded-xl border border-border bg-card p-12 flex flex-col items-center justify-center text-center">
+                            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                                <Workflow className="h-10 w-10 text-primary" />
+                            </div>
+                            <h3 className="text-xl font-semibold font-display mb-2">
+                                {diagrams.length === 0 ? "No Diagrams Yet" : "No Results"}
+                            </h3>
+                            <p className="text-muted-foreground max-w-md mb-6">
+                                {diagrams.length === 0
+                                    ? "Create your first diagram to start visualizing architecture and flows with Mermaid."
+                                    : "No diagrams match your search query."}
+                            </p>
+                            {diagrams.length === 0 && (
+                                <NewDiagramDialog onSubmit={handleCreate} />
+                            )}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filtered.map((diagram) => (
+                                <DiagramCard
+                                    key={diagram.id}
+                                    diagram={diagram}
+                                    onOpen={handleOpen}
+                                    onDelete={handleDelete}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </main>
         </ProtectedRoute>
