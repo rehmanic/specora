@@ -67,6 +67,35 @@ CREATE TABLE project (
 );
 
 ------------------------------------------------------------
+-- DIAGRAM TABLE
+------------------------------------------------------------
+CREATE TABLE diagram (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL,
+    title VARCHAR(255),
+    mermaid_code TEXT DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE
+);
+
+------------------------------------------------------------
+-- DOC TABLE
+------------------------------------------------------------
+CREATE TYPE doc_type_enum AS ENUM ('srs', 'use_case', 'general');
+
+CREATE TABLE doc (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL,
+    title VARCHAR(255),
+    content TEXT DEFAULT '',
+    type doc_type_enum DEFAULT 'general',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE
+);
+
+------------------------------------------------------------
 -- PROJECT_MEMBER TABLE
 ------------------------------------------------------------
 CREATE TABLE project_member (
@@ -172,6 +201,7 @@ CREATE TABLE requirement (
     description TEXT NOT NULL,
     priority requirement_priority_enum NOT NULL,
     status requirement_status_enum NOT NULL,
+    tags TEXT[] DEFAULT '{}',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     project_id UUID NOT NULL,
@@ -216,4 +246,71 @@ CREATE TABLE meeting_transcript (
     content TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     FOREIGN KEY (meeting_id) REFERENCES meeting(id) ON DELETE CASCADE
+);
+
+------------------------------------------------------------
+-- ECONOMIC_CONFIG TABLE
+------------------------------------------------------------
+CREATE TABLE economic_config (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID UNIQUE NOT NULL,
+    hourly_rate DOUBLE PRECISION DEFAULT 50,
+    currency VARCHAR(3) DEFAULT 'USD',
+    num_developers INTEGER DEFAULT 1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE
+);
+
+------------------------------------------------------------
+-- ECONOMIC_ESTIMATE TABLE
+------------------------------------------------------------
+CREATE TABLE economic_estimate (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    requirement_id UUID UNIQUE NOT NULL,
+    optimistic_hours DOUBLE PRECISION NOT NULL,
+    most_likely_hours DOUBLE PRECISION NOT NULL,
+    pessimistic_hours DOUBLE PRECISION NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    FOREIGN KEY (requirement_id) REFERENCES requirement(id) ON DELETE CASCADE
+);
+
+------------------------------------------------------------
+-- PROTOTYPE TABLE
+------------------------------------------------------------
+CREATE TABLE prototype (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    project_id UUID NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE
+);
+
+------------------------------------------------------------
+-- PROTOTYPE_SCREEN TABLE
+------------------------------------------------------------
+CREATE TABLE prototype_screen (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    "order" INTEGER DEFAULT 0,
+    canvas_data JSONB,
+    thumbnail TEXT,
+    prototype_id UUID NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    FOREIGN KEY (prototype_id) REFERENCES prototype(id) ON DELETE CASCADE
+);
+
+------------------------------------------------------------
+-- SCREEN_REQUIREMENT TABLE
+------------------------------------------------------------
+CREATE TABLE screen_requirement (
+    screen_id UUID NOT NULL,
+    requirement_id UUID NOT NULL,
+    PRIMARY KEY (screen_id, requirement_id),
+    FOREIGN KEY (screen_id) REFERENCES prototype_screen(id) ON DELETE CASCADE,
+    FOREIGN KEY (requirement_id) REFERENCES requirement(id) ON DELETE CASCADE
 );
