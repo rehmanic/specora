@@ -353,6 +353,24 @@
       box-shadow: 0 0 20px oklch(0.55 0.25 285 / 0.5);
     }
   }
+
+  /* Landing page - hero grid pattern */
+  .hero-grid {
+    background-size: 60px 60px;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+
+  /* Landing page - soft card hover shadow */
+  .shadow-soft {
+    box-shadow: 0 8px 30px -6px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Landing page - CTA button glow */
+  .shadow-glow {
+    box-shadow: 0 0 20px oklch(0.55 0.25 285 / 0.25);
+  }
 }
 
 /* ============================================

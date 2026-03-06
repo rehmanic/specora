@@ -1,0 +1,602 @@
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planify - Project Management Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body { font-family: 'Inter', sans-serif; }
+::-webkit-scrollbar { width: 0px; background: transparent; }
+/* Custom grid pattern for the hero section */
+.hero-grid {
+background-size: 60px 60px;
+background-image:
+linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+.hero-mask {
+mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+-webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+</style>
+</head>
+<body class="bg-white text-slate-600 antialiased selection:bg-brand-lime selection:text-brand-dark">
+
+    <!-- Header -->
+    <header class="bg-white w-full sticky top-0 z-50 border-b border-slate-100/50 backdrop-blur-md bg-white/80">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-brand-dark text-white rounded-lg flex items-center justify-center">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+                <span class="text-lg font-bold tracking-tight text-slate-900">Planify</span>
+            </div>
+
+            <!-- Nav -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500">
+                <a href="#" class="hover:text-slate-900 transition-colors flex items-center gap-1">Products <i data-lucide="chevron-down" class="w-3 h-3 opacity-50"></i></a>
+                <a href="#" class="hover:text-slate-900 transition-colors flex items-center gap-1">Solutions <i data-lucide="chevron-down" class="w-3 h-3 opacity-50"></i></a>
+                <a href="#" class="hover:text-slate-900 transition-colors">Pricing</a>
+                <a href="#" class="hover:text-slate-900 transition-colors flex items-center gap-1">Resources <i data-lucide="chevron-down" class="w-3 h-3 opacity-50"></i></a>
+            </nav>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-4">
+                <a href="#" class="text-sm font-medium hover:text-slate-900 text-slate-500 hidden sm:block">Login</a>
+                <a href="#" class="bg-brand-lime text-brand-dark text-xs font-bold px-5 py-3 rounded-full hover:brightness-95 transition-all shadow-sm">
+                    See a demo
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="pt-6 pb-20 px-4 md:px-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Dark Container with Grid -->
+            <div class="bg-brand-dark rounded-[2.5rem] pt-20 pb-48 md:pb-72 px-6 text-center relative overflow-hidden hero-grid">
+                
+                <!-- Badge -->
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-[11px] font-medium text-slate-300 mb-10 backdrop-blur-sm shadow-sm hover:bg-white/10 transition-colors cursor-pointer group">
+                    <span class="opacity-80">Version 2.0 is here</span>
+                    <span class="text-white flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">Read more <i data-lucide="arrow-right" class="w-3 h-3"></i></span>
+                </div>
+
+                <!-- Headline -->
+                <h1 class="text-5xl md:text-6xl lg:text-[4.5rem] font-medium text-white tracking-tight leading-[1.1] mb-6 max-w-5xl mx-auto relative z-10">
+                    Streamline Your Projects, <br class="hidden md:block"> 
+                    <span class="relative inline-block">
+                        Empower Your Team
+                        <!-- Green Scribble Underline -->
+                        <svg class="absolute w-[110%] -bottom-4 -left-2 text-brand-lime opacity-80" viewBox="0 0 200 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 12C30 8 70 5 100 8C130 11 160 15 198 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                        </svg>
+                    </span>
+                </h1>
+
+                <!-- Subtext -->
+                <p class="text-lg text-slate-300/80 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
+                    From task assignments to real-time updates, manage your team's productivity seamlessly and achieve your goals faster.
+                </p>
+
+                <!-- New Input Field Design -->
+                <div class="max-w-md mx-auto mb-20 relative z-20">
+                    <div class="bg-white/5 border border-white/10 rounded-full p-1.5 flex items-center backdrop-blur-md shadow-lg group focus-within:ring-2 focus-within:ring-brand-lime/20 focus-within:border-brand-lime/30 transition-all">
+                        <input type="email" placeholder="What's your work email?" class="bg-transparent border-none text-white placeholder-slate-400/70 text-sm w-full pl-5 pr-4 focus:outline-none focus:ring-0 h-10">
+                        <button class="bg-brand-lime text-brand-dark px-6 py-2.5 rounded-full text-sm font-bold hover:brightness-110 transition-all shadow-glow whitespace-nowrap">
+                            Get started
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dashboard Mockup (Overlapping) -->
+                <div class="absolute left-1/2 transform -translate-x-1/2 -bottom-20 md:-bottom-40 w-full max-w-[70rem] px-4 z-10">
+                    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200/60 overflow-hidden">
+                        <!-- Dashboard UI -->
+                        <div class="flex h-[450px] md:h-[600px] bg-white">
+                            <!-- Sidebar -->
+                            <div class="hidden md:flex flex-col w-56 border-r border-slate-100 p-6 bg-slate-50/50">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Main Menu</div>
+                                <div class="space-y-1 mb-8">
+                                    <div class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-600 bg-white shadow-sm border border-slate-100 rounded-lg">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-brand-lime"></div>
+                                        Dashboard
+                                    </div>
+                                    <div class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                                        E-commerce Dashboard
+                                    </div>
+                                    <div class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                                        App Dashboard
+                                    </div>
+                                    <div class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                                        Banking Dashboard
+                                    </div>
+                                    <div class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                                        Finance Dashboard
+                                    </div>
+                                </div>
+
+                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Apps</div>
+                                <div class="space-y-1">
+                                    <div class="flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800">
+                                        <span>Mail Application</span>
+                                    </div>
+                                    <div class="flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800">
+                                        <span>Chat Application</span>
+                                    </div>
+                                    <div class="flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-800">
+                                        <span>Task Application</span>
+                                        <span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">NEW</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Main Content -->
+                            <div class="flex-1 p-6 md:p-8 bg-slate-50/30 overflow-hidden flex flex-col gap-6">
+                                <!-- Top Row -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-1/2">
+                                    <!-- Chart 1: Growth -->
+                                    <div class="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] p-5 relative overflow-hidden flex flex-col justify-between">
+                                        <div>
+                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bounce Rate</div>
+                                            <div class="text-3xl font-semibold text-slate-800 tracking-tight">32%</div>
+                                        </div>
+                                        <div class="absolute bottom-0 left-0 right-0 h-24">
+                                            <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full text-brand-lime/10 fill-current">
+                                                <path d="M0 40 L0 25 Q 20 10 40 28 T 80 20 T 100 30 L 100 40 Z"></path>
+                                            </svg>
+                                            <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full absolute top-0 left-0 text-brand-lime/40 fill-none stroke-current stroke-2">
+                                                 <path d="M0 25 Q 20 10 40 28 T 80 20 T 100 30"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <!-- Chart 2: Donut -->
+                                    <div class="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] p-5 flex flex-col">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <div>
+                                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Visitor Sessions</div>
+                                                <div class="text-3xl font-semibold text-slate-800 tracking-tight">12,384</div>
+                                            </div>
+                                            <i data-lucide="more-horizontal" class="w-4 h-4 text-slate-300"></i>
+                                        </div>
+                                        <div class="flex-1 flex items-center justify-center gap-6">
+                                            <div class="relative w-28 h-28 rounded-full border-[12px] border-slate-100" style="background: conic-gradient(#3B82F6 0% 30%, #F59E0B 30% 55%, #EF4444 55% 75%, #10B981 75% 100%); mask: radial-gradient(transparent 55%, black 56%); -webkit-mask: radial-gradient(transparent 55%, black 56%);">
+                                            </div>
+                                            <div class="space-y-2 text-[10px] font-medium text-slate-500">
+                                                <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-blue-500"></div> Direct</div>
+                                                <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-amber-500"></div> Organic</div>
+                                                <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-red-500"></div> Paid</div>
+                                                <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-emerald-500"></div> Social</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Chart 3: Stats -->
+                                    <div class="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] p-5 flex flex-col gap-4">
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sales Statistics</div>
+                                        <div class="flex-1 flex flex-col justify-center gap-6">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 rounded-full border-4 border-emerald-400 border-t-slate-100 flex items-center justify-center text-xs font-bold text-emerald-600">45%</div>
+                                                <div>
+                                                    <div class="text-[10px] text-slate-400">Top selling products</div>
+                                                    <div class="text-sm font-semibold">$32,747.00</div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 rounded-full border-4 border-red-400 border-r-slate-100 flex items-center justify-center text-xs font-bold text-red-600">15%</div>
+                                                <div>
+                                                    <div class="text-[10px] text-slate-400">Top lost deals</div>
+                                                    <div class="text-sm font-semibold">$12,747.00</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Bottom Row -->
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-6 h-1/2">
+                                    <!-- Bottom Chart 1 -->
+                                    <div class="md:col-span-2 bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] p-5 flex flex-col justify-between">
+                                        <div class="flex justify-between">
+                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Market Overview</div>
+                                            <i data-lucide="more-horizontal" class="w-4 h-4 text-slate-300"></i>
+                                        </div>
+                                        <div class="text-center my-4">
+                                            <div class="text-xs text-slate-400 mb-1">Total Budget</div>
+                                            <div class="text-3xl font-semibold text-red-500 tracking-tight">$12,321</div>
+                                        </div>
+                                        <div class="flex justify-center">
+                                            <div class="w-32 h-16 border-[12px] border-t-red-400 border-r-red-200 border-l-red-200 border-b-0 rounded-t-full relative">
+                                                <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-8 bg-slate-300 origin-bottom transform -rotate-45"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottom List -->
+                                    <div class="md:col-span-3 bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] p-5">
+                                         <div class="flex justify-between mb-4">
+                                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Audience by Country</div>
+                                            <i data-lucide="more-horizontal" class="w-4 h-4 text-slate-300"></i>
+                                        </div>
+                                        <div class="space-y-4">
+                                            <div class="grid grid-cols-4 items-center text-xs text-slate-600">
+                                                <div class="flex items-center gap-2"><div class="w-5 h-3 bg-green-700 relative overflow-hidden rounded-sm"><div class="absolute inset-0 flex items-center justify-center"><div class="w-1 h-1 bg-yellow-400 rotate-45"></div></div></div> Brazil</div>
+                                                <div class="text-right">22.4K</div>
+                                                <div class="text-right">Desktop</div>
+                                                <div class="flex justify-end"><div class="w-16 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="w-3/4 h-full bg-blue-500"></div></div></div>
+                                            </div>
+                                            <div class="grid grid-cols-4 items-center text-xs text-slate-600">
+                                                <div class="flex items-center gap-2"><div class="w-5 h-3 bg-blue-200 relative overflow-hidden rounded-sm border border-slate-100"><div class="absolute inset-0 flex items-center justify-center"><div class="w-1 h-1 bg-yellow-400 rounded-full"></div></div></div> Argentina</div>
+                                                <div class="text-right">14.8K</div>
+                                                <div class="text-right">Mobile</div>
+                                                <div class="flex justify-end"><div class="w-16 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="w-1/2 h-full bg-blue-500"></div></div></div>
+                                            </div>
+                                            <div class="grid grid-cols-4 items-center text-xs text-slate-600">
+                                                <div class="flex items-center gap-2"><div class="w-5 h-3 bg-green-600 relative overflow-hidden rounded-sm border border-slate-100 flex"><div class="w-1/3 bg-green-600"></div><div class="w-1/3 bg-white"></div><div class="w-1/3 bg-red-600"></div></div> Italy</div>
+                                                <div class="text-right">12.1K</div>
+                                                <div class="text-right">Tablet</div>
+                                                <div class="flex justify-end"><div class="w-16 h-1 bg-slate-100 rounded-full overflow-hidden"><div class="w-2/3 h-full bg-blue-500"></div></div></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="mt-28 md:mt-48 pb-20 px-6">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between gap-8 md:gap-4 text-center">
+            <div class="w-full sm:w-auto">
+                <div class="text-3xl font-semibold text-slate-900 tracking-tight">5M+</div>
+                <div class="text-sm text-slate-500 font-medium mt-1">Tasks Completed</div>
+            </div>
+            <div class="w-full sm:w-auto">
+                <div class="text-3xl font-semibold text-slate-900 tracking-tight">97%</div>
+                <div class="text-sm text-slate-500 font-medium mt-1">Customer Satisfaction</div>
+            </div>
+            <div class="w-full sm:w-auto">
+                <div class="text-3xl font-semibold text-slate-900 tracking-tight">300+</div>
+                <div class="text-sm text-slate-500 font-medium mt-1">Active Teams</div>
+            </div>
+            <div class="w-full sm:w-auto">
+                <div class="text-3xl font-semibold text-slate-900 tracking-tight">200M+</div>
+                <div class="text-sm text-slate-500 font-medium mt-1">Hours of Project</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Bento Grid -->
+    <section class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-semibold text-slate-900 tracking-tight mb-4">Powerful Features to Simplify Your Workflow</h2>
+                <p class="text-lg text-slate-500 max-w-2xl mx-auto">Save time by automating repetitive tasks and focus on what truly matters.</p>
+            </div>
+
+            <div class="flex flex-col gap-6">
+                <!-- Top Row (3 items) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Card 1 -->
+                    <div class="bg-brand-beige border border-slate-100 rounded-2xl p-8 hover:shadow-soft transition-shadow">
+                        <div class="text-sm font-semibold text-slate-900 mb-2">Task Automation</div>
+                        <p class="text-xs text-slate-500 mb-8 leading-relaxed">Save time by automating repetitive tasks and focus on what truly matters.</p>
+                        <div class="flex justify-center">
+                            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 w-full max-w-[200px]">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="h-2 w-8 bg-slate-200 rounded"></div>
+                                    <div class="w-8 h-4 bg-brand-lime rounded-full relative"><div class="w-3 h-3 bg-white rounded-full absolute top-0.5 right-0.5 shadow-sm"></div></div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center"><i data-lucide="zap" class="w-3 h-3 text-brand-dark"></i></div>
+                                    <div class="h-1.5 w-16 bg-slate-100 rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="bg-brand-beige border border-slate-100 rounded-2xl p-8 hover:shadow-soft transition-shadow">
+                        <div class="text-sm font-semibold text-slate-900 mb-2">Real-Time Collaboration</div>
+                        <p class="text-xs text-slate-500 mb-8 leading-relaxed">Enable your team to work together with instant updates and file sharing.</p>
+                        <div class="flex justify-center items-center gap-2">
+                             <div class="w-10 h-8 bg-white border border-slate-200 rounded flex items-center justify-center shadow-sm"><i data-lucide="user" class="w-3 h-3 text-slate-400"></i></div>
+                             <div class="h-px w-6 bg-slate-300"></div>
+                             <div class="w-10 h-8 bg-brand-lime border border-lime-300 rounded flex items-center justify-center shadow-sm"><i data-lucide="check" class="w-3 h-3 text-brand-dark"></i></div>
+                             <div class="h-px w-6 bg-slate-300"></div>
+                             <div class="w-10 h-8 bg-white border border-slate-200 rounded flex items-center justify-center shadow-sm"><i data-lucide="message-square" class="w-3 h-3 text-slate-400"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="bg-brand-beige border border-slate-100 rounded-2xl p-8 hover:shadow-soft transition-shadow">
+                        <div class="text-sm font-semibold text-slate-900 mb-2">Customizable Workflows</div>
+                        <p class="text-xs text-slate-500 mb-8 leading-relaxed">Track project metrics and make data-driven decisions with ease.</p>
+                         <div class="flex justify-center gap-3">
+                            <div class="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center"><i data-lucide="settings-2" class="w-4 h-4 text-slate-400"></i></div>
+                            <div class="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center"><i data-lucide="layout" class="w-4 h-4 text-slate-400"></i></div>
+                            <div class="w-8 h-8 rounded-lg bg-brand-dark flex items-center justify-center text-white shadow-lg transform -translate-y-2"><i data-lucide="sliders" class="w-4 h-4"></i></div>
+                            <div class="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center"><i data-lucide="list" class="w-4 h-4 text-slate-400"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row (2 items) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Card 4 (Large) -->
+                    <div class="bg-brand-beige border border-slate-100 rounded-2xl p-8 hover:shadow-soft transition-shadow relative overflow-hidden group">
+                        <div class="relative z-10">
+                            <div class="text-sm font-semibold text-slate-900 mb-2">Comprehensive Analytics</div>
+                            <p class="text-xs text-slate-500 mb-8 max-w-xs leading-relaxed">Track project metrics and make data-driven decisions with ease.</p>
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-2/3 h-32 md:h-40 bg-white rounded-tl-2xl border-t border-l border-slate-100 shadow-sm p-4">
+                            <div class="flex items-end gap-1 h-full w-full">
+                                <div class="bg-emerald-50 w-full h-[30%] rounded-t-sm"></div>
+                                <div class="bg-emerald-100 w-full h-[50%] rounded-t-sm"></div>
+                                <div class="bg-emerald-200 w-full h-[40%] rounded-t-sm"></div>
+                                <div class="bg-emerald-300 w-full h-[70%] rounded-t-sm"></div>
+                                <div class="bg-emerald-400 w-full h-[55%] rounded-t-sm"></div>
+                                <div class="bg-emerald-500 w-full h-[85%] rounded-t-sm"></div>
+                                <div class="bg-brand-lime w-full h-[60%] rounded-t-sm"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 5 (Large) -->
+                    <div class="bg-brand-beige border border-slate-100 rounded-2xl p-8 hover:shadow-soft transition-shadow relative overflow-hidden">
+                        <div class="relative z-10">
+                            <div class="text-sm font-semibold text-slate-900 mb-2">Seamless Integrations</div>
+                            <p class="text-xs text-slate-500 mb-8 max-w-xs leading-relaxed">Connect with your favorite tools for a streamlined experience.</p>
+                        </div>
+                         <div class="absolute bottom-6 right-6 md:right-12">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-white border border-slate-200 px-3 py-1.5 rounded-md text-[10px] font-medium text-slate-500 shadow-sm">Slack</div>
+                                <div class="w-16 h-px bg-slate-300 relative">
+                                    <div class="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-1 bg-slate-400 rounded-full"></div>
+                                </div>
+                                <div class="bg-brand-dark px-3 py-1.5 rounded-md text-[10px] font-medium text-white shadow-md">Planify</div>
+                            </div>
+                            <div class="flex items-center gap-4 mt-3 ml-8">
+                                <div class="bg-white border border-slate-200 px-3 py-1.5 rounded-md text-[10px] font-medium text-slate-500 shadow-sm">Google Drive</div>
+                                <div class="w-8 h-px bg-slate-300"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dark Metrics Strip -->
+    <section class="bg-brand-dark py-12 px-6">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-white">
+            <div class="border-b md:border-b-0 md:border-r border-white/10 pb-8 md:pb-0 md:pr-8">
+                <div class="text-3xl font-semibold tracking-tight mb-2 text-emerald-300">&lt;1%</div>
+                <div class="text-sm font-medium mb-3">Processing Fees</div>
+                <p class="text-xs text-slate-400 leading-relaxed mb-4">By utilizing cost-effective network solutions, you'll pay a fraction of the usual fees.</p>
+                <a href="#" class="text-xs text-emerald-300 hover:text-white flex items-center gap-1 transition-colors">Learn how we reduce fees <i data-lucide="chevron-right" class="w-3 h-3"></i></a>
+            </div>
+            <div class="border-b md:border-b-0 md:border-r border-white/10 pb-8 md:pb-0 md:pr-8 md:pl-8">
+                <div class="text-3xl font-semibold tracking-tight mb-2 text-emerald-300">+25%</div>
+                <div class="text-sm font-medium mb-3">Customer Lifetime Value</div>
+                <p class="text-xs text-slate-400 leading-relaxed mb-4">Branded payments drive larger transaction amounts and encourage retention.</p>
+                <a href="#" class="text-xs text-emerald-300 hover:text-white flex items-center gap-1 transition-colors">Learn how we increase LTV <i data-lucide="chevron-right" class="w-3 h-3"></i></a>
+            </div>
+            <div class="md:pl-8">
+                <div class="text-3xl font-semibold tracking-tight mb-2 text-emerald-300">$$$</div>
+                <div class="text-sm font-medium mb-3">Revenue Share</div>
+                <p class="text-xs text-slate-400 leading-relaxed mb-4">Enterprise retailers receive quarterly checks from their branded payment partners.</p>
+                <a href="#" class="text-xs text-emerald-300 hover:text-white flex items-center gap-1 transition-colors">Learn how revenue share works <i data-lucide="chevron-right" class="w-3 h-3"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Growth / Process Section -->
+    <section class="bg-brand-beige py-24">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row gap-16 items-center">
+            <!-- Left Side -->
+            <div class="w-full md:w-1/3">
+                <h2 class="text-3xl font-semibold text-slate-900 tracking-tight leading-tight mb-6">Want you to boost your business growth? <br> Solution is here.</h2>
+                <p class="text-sm text-slate-500 leading-relaxed mb-8">Our project management software is designed to enhance productivity, improve communication, and keep your projects on track from start to finish.</p>
+                
+                <div class="w-16 h-16 rounded-full border border-slate-300 flex items-center justify-center relative group cursor-pointer hover:border-slate-900 transition-colors">
+                    <i data-lucide="arrow-up-right" class="w-6 h-6 text-slate-900 group-hover:scale-110 transition-transform"></i>
+                    <!-- Rotating text effect simulated -->
+                    <div class="absolute inset-0 rounded-full border-t-2 border-slate-900 animate-spin opacity-0 group-hover:opacity-100 transition-opacity duration-700" style="animation-duration: 3s;"></div>
+                </div>
+            </div>
+
+            <!-- Right Grid -->
+            <div class="w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- Item 1 -->
+                <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm relative">
+                    <span class="absolute top-6 right-6 text-xs font-bold text-slate-200">01</span>
+                    <h3 class="text-sm font-semibold text-slate-900 mb-2">Task Management</h3>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">Assign tasks to team members, set deadlines, and track progress effortlessly.</p>
+                </div>
+                 <!-- Item 2 -->
+                 <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm relative">
+                    <span class="absolute top-6 right-6 text-xs font-bold text-slate-200">02</span>
+                    <h3 class="text-sm font-semibold text-slate-900 mb-2">Collaboration Tools</h3>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">Communicate with your team in real-time using built-in chat and comments.</p>
+                </div>
+                 <!-- Item 3 -->
+                 <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm relative">
+                    <span class="absolute top-6 right-6 text-xs font-bold text-slate-200">03</span>
+                    <h3 class="text-sm font-semibold text-slate-900 mb-2">Time Tracking</h3>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">Monitor how much time is spent on each task to optimize productivity.</p>
+                </div>
+                 <!-- Item 4 -->
+                 <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm relative">
+                    <span class="absolute top-6 right-6 text-xs font-bold text-slate-200">04</span>
+                    <h3 class="text-sm font-semibold text-slate-900 mb-2">Automated Alerts</h3>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">Receive instant notifications for upcoming deadlines and task updates.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Dark Card -->
+    <section class="bg-white py-12 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="bg-brand-dark rounded-3xl p-12 md:p-16 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i data-lucide="quote" class="w-32 h-32 text-white"></i>
+                </div>
+                
+                <div class="relative z-10 max-w-2xl">
+                    <h4 class="text-emerald-400 font-bold text-sm tracking-widest uppercase mb-8">Testimonials</h4>
+                    <h3 class="text-2xl md:text-3xl font-medium text-white leading-relaxed mb-8">
+                        "This software has transformed the way our team works. The features are a game-changer!"
+                    </h3>
+                    <div>
+                        <div class="text-white font-semibold text-sm">MICHEL COURSE</div>
+                        <div class="text-slate-400 text-xs mt-1">Clutch Client</div>
+                    </div>
+                </div>
+
+                <!-- Navigation Arrows -->
+                <div class="absolute bottom-12 right-12 flex gap-4">
+                    <button class="w-10 h-10 rounded-full border border-slate-600 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-all"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <button class="w-10 h-10 rounded-full border border-slate-600 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-all"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-semibold text-slate-900 tracking-tight mb-4">Choose your plan</h2>
+                <p class="text-slate-500 mb-8 text-sm">14 days unlimited free trial. No contract or credit card required.</p>
+                
+                <div class="inline-flex items-center p-1 bg-slate-100 rounded-full">
+                    <button class="px-6 py-2 bg-white rounded-full shadow-sm text-sm font-semibold text-slate-900">Monthly</button>
+                    <button class="px-6 py-2 rounded-full text-sm font-medium text-slate-500 hover:text-slate-900">Yearly</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto items-end">
+                <!-- Free -->
+                <div class="bg-brand-beige rounded-2xl p-8 border border-slate-100">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Forever Free</div>
+                    <div class="flex items-baseline gap-1 mb-6">
+                        <span class="text-3xl font-semibold text-slate-900 tracking-tight">$0</span>
+                    </div>
+                    <button class="w-full py-2.5 rounded-lg bg-slate-900 text-white font-semibold mb-8 hover:bg-slate-800 text-xs">Create a free account</button>
+                    <ul class="space-y-3 text-xs text-slate-600">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> 1 User</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> 5 Projects</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> Community Support</li>
+                    </ul>
+                </div>
+
+                <!-- Enterprise -->
+                <div class="bg-brand-dark rounded-2xl p-8 shadow-xl text-white transform scale-105 relative z-10">
+                    <div class="absolute top-4 right-4 w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                    <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2">Enterprise</div>
+                    <div class="flex items-baseline gap-1 mb-6">
+                        <span class="text-4xl font-semibold tracking-tight">$15</span>
+                        <span class="text-slate-400 text-xs">/mo</span>
+                    </div>
+                    <button class="w-full py-2.5 rounded-lg bg-white text-brand-dark font-semibold mb-8 hover:bg-slate-100 transition-colors text-xs">Create account</button>
+                    <ul class="space-y-3 text-xs text-slate-300">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-400"></i> Unlimited Users</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-400"></i> Unlimited Projects</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-400"></i> Analytics Dashboard</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-400"></i> Priority Support</li>
+                    </ul>
+                </div>
+
+                <!-- Business -->
+                <div class="bg-brand-beige rounded-2xl p-8 border border-slate-100">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Business Pack</div>
+                    <div class="flex items-baseline gap-1 mb-6">
+                        <span class="text-3xl font-semibold text-slate-900 tracking-tight">$9</span>
+                        <span class="text-slate-500 text-sm">/mo</span>
+                    </div>
+                    <button class="w-full py-2.5 rounded-lg bg-slate-900 text-white font-semibold mb-8 hover:bg-slate-800 text-xs">Create a free account</button>
+                    <ul class="space-y-3 text-xs text-slate-600">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> 5 Users</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> 50 Projects</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> Email Support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Area -->
+    <div class="bg-brand-dark px-4 pb-4 pt-12 md:mx-4 rounded-t-3xl md:rounded-3xl mt-12 mb-4">
+        <!-- CTA -->
+        <div class="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto px-6 mb-16 pb-12 border-b border-white/10">
+            <h2 class="text-2xl md:text-3xl font-medium text-white">Ready to Transform Your <br> Payment Process?</h2>
+            <div class="flex gap-4 mt-6 md:mt-0">
+                <button class="bg-brand-lime text-brand-dark px-6 py-2.5 rounded-full text-sm font-semibold hover:brightness-95 transition-all">Start your trial for free</button>
+                <button class="border border-white/20 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-white/10 transition-all">Get Started</button>
+            </div>
+        </div>
+
+        <!-- Links -->
+        <footer class="text-slate-400 text-sm">
+            <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
+                <div class="col-span-2">
+                    <div class="flex items-center gap-2 mb-4 text-white">
+                        <i data-lucide="layers" class="w-5 h-5"></i>
+                        <span class="text-lg font-semibold tracking-tight">Planify</span>
+                    </div>
+                    <p class="text-xs leading-relaxed max-w-xs mb-4">Streamline your workflow with our all-in-one project management solution.</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-white font-semibold mb-4 text-xs uppercase tracking-wider">About Us</h4>
+                    <ul class="space-y-2 text-xs">
+                        <li><a href="#" class="hover:text-white transition-colors">Our Story</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Team</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-semibold mb-4 text-xs uppercase tracking-wider">Resources</h4>
+                    <ul class="space-y-2 text-xs">
+                        <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">How it works</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-semibold mb-4 text-xs uppercase tracking-wider">Solutions</h4>
+                    <ul class="space-y-2 text-xs">
+                        <li><a href="#" class="hover:text-white transition-colors">Analytics</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Marketing</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Commerce</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="max-w-7xl mx-auto px-6 flex justify-between items-center text-[10px] text-slate-500">
+                <p>© 2024 Planify. All rights reserved.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="hover:text-white">Terms</a>
+                    <a href="#" class="hover:text-white">Privacy</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+
+</body></html>

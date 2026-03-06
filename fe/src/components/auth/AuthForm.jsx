@@ -2,14 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import useAuthStore from "@/store/authStore";
@@ -92,188 +84,187 @@ export default function AuthForm({ className, variant = "login", ...props }) {
 
   const inputWrapperClass = (fieldName) =>
     cn(
-      "relative flex items-center rounded-lg border bg-card transition-all duration-200",
+      "relative flex items-center rounded-lg border transition-all duration-200 bg-slate-50",
       focusedField === fieldName
-        ? "border-primary ring-2 ring-primary/20"
-        : "border-input hover:border-primary/50"
+        ? "border-[oklch(0.15_0.02_285)] ring-2 ring-[oklch(0.15_0.02_285)]/10"
+        : "border-slate-200 hover:border-slate-300"
     );
 
   return (
     <div className={cn("flex flex-col gap-6 animate-fade-in", className)} {...props}>
-      <Card className="border-0 shadow-xl shadow-primary/5 bg-card/80 backdrop-blur-sm">
-        <CardHeader className="space-y-3 pb-6">
-          <CardTitle className="text-2xl font-display font-bold">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-xl p-8">
+        {/* Header */}
+        <div className="space-y-2 mb-8">
+          <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">
             {isLogin ? "Welcome back" : "Create your account"}
-          </CardTitle>
-          <CardDescription className="text-base">
+          </h2>
+          <p className="text-sm text-slate-500">
             {isLogin
               ? "Enter your credentials to access your account"
               : "Get started with Specora in seconds"}
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
 
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-5">
-              {/* Username */}
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium">
-                  Username
-                </Label>
-                <div className={inputWrapperClass("username")}>
-                  <User className="absolute left-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="username"
-                    name="username"
-                    type="text"
-                    value={formData.username}
-                    onChange={handleChange}
-                    onFocus={() => setFocusedField("username")}
-                    onBlur={() => setFocusedField(null)}
-                    required
-                    minLength={5}
-                    maxLength={20}
-                    pattern="(?=.*[A-Za-z]{3,})[A-Za-z\d]+"
-                    placeholder="Enter your username"
-                    className="border-0 pl-10 focus-visible:ring-0 bg-transparent"
-                  />
-                </div>
+        <form onSubmit={handleSubmit}>
+          <div className="flex flex-col gap-5">
+            {/* Username */}
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-sm font-medium text-slate-700">
+                Username
+              </Label>
+              <div className={inputWrapperClass("username")}>
+                <User className="absolute left-3 h-4 w-4 text-slate-400" />
+                <Input
+                  id="username"
+                  name="username"
+                  type="text"
+                  value={formData.username}
+                  onChange={handleChange}
+                  onFocus={() => setFocusedField("username")}
+                  onBlur={() => setFocusedField(null)}
+                  required
+                  minLength={5}
+                  maxLength={20}
+                  pattern="(?=.*[A-Za-z]{3,})[A-Za-z\d]+"
+                  placeholder="Enter your username"
+                  className="border-0 pl-10 focus-visible:ring-0 bg-transparent text-slate-900 placeholder-slate-400"
+                />
               </div>
-
-              {/* Email only for signup */}
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    Email
-                  </Label>
-                  <div className={inputWrapperClass("email")}>
-                    <Mail className="absolute left-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      onFocus={() => setFocusedField("email")}
-                      onBlur={() => setFocusedField(null)}
-                      required
-                      placeholder="you@example.com"
-                      className="border-0 pl-10 focus-visible:ring-0 bg-transparent"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Password */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Password
-                  </Label>
-                  {isLogin && (
-                    <Link
-                      href="#"
-                      className="text-xs text-primary hover:text-primary/80 transition-colors"
-                    >
-                      Forgot password?
-                    </Link>
-                  )}
-                </div>
-                <div className={inputWrapperClass("password")}>
-                  <Lock className="absolute left-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleChange}
-                    onFocus={() => setFocusedField("password")}
-                    onBlur={() => setFocusedField(null)}
-                    required
-                    minLength={6}
-                    maxLength={32}
-                    placeholder="Enter your password"
-                    className="border-0 pl-10 pr-10 focus-visible:ring-0 bg-transparent"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Error display */}
-              {(localError || error) && (
-                <ErrorBox message={localError || error} />
-              )}
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full h-11 mt-2 font-medium group gradient-primary border-0 hover:opacity-90 transition-opacity"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isLogin ? "Signing in..." : "Creating account..."}
-                  </>
-                ) : (
-                  <>
-                    {isLogin ? "Sign in" : "Create account"}
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </>
-                )}
-              </Button>
-
-              {/* Divider */}
-              <div className="relative my-2">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
-                    or
-                  </span>
-                </div>
-              </div>
-
-              {/* Toggle between login/signup */}
-              <p className="text-center text-sm text-muted-foreground">
-                {isLogin ? (
-                  <>
-                    Don&apos;t have an account?{" "}
-                    <Link
-                      href="/signup"
-                      className="font-medium text-primary hover:text-primary/80 transition-colors"
-                    >
-                      Sign up
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    Already have an account?{" "}
-                    <Link
-                      href="/login"
-                      className="font-medium text-primary hover:text-primary/80 transition-colors"
-                    >
-                      Sign in
-                    </Link>
-                  </>
-                )}
-              </p>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+
+            {/* Email only for signup */}
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium text-slate-700">
+                  Email
+                </Label>
+                <div className={inputWrapperClass("email")}>
+                  <Mail className="absolute left-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedField("email")}
+                    onBlur={() => setFocusedField(null)}
+                    required
+                    placeholder="you@example.com"
+                    className="border-0 pl-10 focus-visible:ring-0 bg-transparent text-slate-900 placeholder-slate-400"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Password */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium text-slate-700">
+                  Password
+                </Label>
+                {isLogin && (
+                  <Link
+                    href="#"
+                    className="text-xs text-slate-500 hover:text-slate-900 transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                )}
+              </div>
+              <div className={inputWrapperClass("password")}>
+                <Lock className="absolute left-3 h-4 w-4 text-slate-400" />
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleChange}
+                  onFocus={() => setFocusedField("password")}
+                  onBlur={() => setFocusedField(null)}
+                  required
+                  minLength={6}
+                  maxLength={32}
+                  placeholder="Enter your password"
+                  className="border-0 pl-10 pr-10 focus-visible:ring-0 bg-transparent text-slate-900 placeholder-slate-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 text-slate-400 hover:text-slate-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Error display */}
+            {(localError || error) && (
+              <ErrorBox message={localError || error} />
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full h-11 mt-2 font-bold text-sm rounded-full bg-[oklch(0.15_0.02_285)] text-white hover:bg-[oklch(0.20_0.02_285)] transition-all group flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {isLogin ? "Signing in..." : "Creating account..."}
+                </>
+              ) : (
+                <>
+                  {isLogin ? "Sign in" : "Create account"}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </>
+              )}
+            </button>
+
+            {/* Divider */}
+            <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-slate-400">
+                  or
+                </span>
+              </div>
+            </div>
+
+            {/* Toggle between login/signup */}
+            <p className="text-center text-sm text-slate-500">
+              {isLogin ? (
+                <>
+                  Don&apos;t have an account?{" "}
+                  <Link
+                    href="/signup"
+                    className="font-semibold text-[oklch(0.15_0.02_285)] hover:text-slate-600 transition-colors"
+                  >
+                    Sign up
+                  </Link>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <Link
+                    href="/login"
+                    className="font-semibold text-[oklch(0.15_0.02_285)] hover:text-slate-600 transition-colors"
+                  >
+                    Sign in
+                  </Link>
+                </>
+              )}
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
