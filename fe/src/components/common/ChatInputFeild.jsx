@@ -94,8 +94,8 @@ export default function ChatInputField({
   return (
     <div
       className={cn(
-        "flex items-end gap-2 p-3 rounded-xl border bg-card transition-all duration-200 relative",
-        isFocused ? "border-primary ring-2 ring-primary/20" : "border-input",
+        "flex items-end gap-2 px-4 py-3 bg-transparent transition-all duration-200 relative",
+        isFocused ? "bg-accent/50" : "",
         disabled && "opacity-60"
       )}
     >

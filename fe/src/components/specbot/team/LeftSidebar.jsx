@@ -37,7 +37,7 @@ export default function LeftSidebar({
   return (
     <div
       className={cn(
-        "flex flex-col h-full bg-card border-r border-border transition-all duration-300",
+        "flex flex-col h-full bg-transparent transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}
     >

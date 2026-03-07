@@ -4,8 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Users,
-  Settings,
+  Users
 } from "lucide-react";
 import { ProjectHeader } from "./ProjectHeader";
 import { UserMenu } from "./UserMenu";
@@ -59,18 +58,6 @@ export function Sidebar({ ...props }) {
                     <Link href="/users">
                       <Users />
                       <span>Users</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-
-              {/* Global Settings */}
-              {isManager && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname === "/settings"} tooltip="Global Settings">
-                    <Link href="/settings">
-                      <Settings />
-                      <span>Global Settings</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

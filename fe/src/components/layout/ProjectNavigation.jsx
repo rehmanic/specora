@@ -17,6 +17,7 @@ import {
     Workflow,
     File,
     ClipboardList,
+    Settings,
     ChevronRight
 } from "lucide-react";
 import useProjectsStore from "@/store/projectsStore";
@@ -80,6 +81,11 @@ export function ProjectNavigation() {
             icon: ClipboardList,
             url: `/projects/${slug}/requirements`,
         },
+        {
+            title: "Settings",
+            icon: Settings,
+            url: `/projects/${slug}/settings`,
+        }
     ];
 
     return (

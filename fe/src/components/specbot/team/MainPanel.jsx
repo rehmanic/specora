@@ -75,8 +75,8 @@ export default function MainPanel({
   ];
 
   return (
-    <div className="flex h-full flex-col bg-background">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+    <div className="flex h-full flex-col bg-transparent relative z-10">
+      <div className="flex items-center justify-between border-b border-border/50 bg-background/60 backdrop-blur-xl px-6 py-4 sticky top-0 z-20 shadow-sm">
         <div>
           <p className="text-lg font-semibold leading-tight">{currentChat?.title}</p>
           <p className="text-xs text-muted-foreground">
@@ -105,7 +105,7 @@ export default function MainPanel({
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto bg-muted/30 px-4 py-3 space-y-3">
+      <div className="flex-1 min-h-0 overflow-y-auto bg-transparent px-6 py-8 space-y-6">
         {loading && messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

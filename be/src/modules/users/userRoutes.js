@@ -35,7 +35,6 @@ router.get("/:username", checkUserExists("by-username"), getUserByUsername);
 // UPDATE
 router.put(
   "/:username",
-  requireField(["username", "email", "role", "display_name"]), // Password is optional for updates
   validateUserDataInput,
   checkUserExists("by-username"),
   updateUser

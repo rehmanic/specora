@@ -33,6 +33,7 @@ import {
   updateUserRequest,
   getSingleUserDataRequest,
 } from "@/api/users";
+import { uploadFileRequest } from "@/api/upload";
 import ErrorBox from "@/components/common/ErrorBox";
 
 export function CreateUserForm({ variant = "create-user", username }) {
@@ -127,7 +128,7 @@ export function CreateUserForm({ variant = "create-user", username }) {
   // -------------------------
   const validateForm = () => {
     const errors = {};
-    
+
     // Username validation: 5-20 chars, at least 3 letters, letters/numbers only
     const usernameRegex = /^(?=.*[A-Za-z]{3,})[A-Za-z\d]{5,20}$/;
     if (!formData.username.trim()) {
@@ -199,13 +200,23 @@ export function CreateUserForm({ variant = "create-user", username }) {
         ([category, perms]) => perms.filter((p) => p.enabled).map((p) => p.id)
       );
 
+      let profileUrl = "https://cdn-icons-png.flaticon.com/128/1077/1077012.png"; // default
+      if (formData.profilePic) {
+        const uploadedUrl = await uploadFileRequest(formData.profilePic);
+        if (uploadedUrl) {
+          profileUrl = uploadedUrl;
+        }
+      } else if (preview !== null) {
+        // Keep existing preview (e.g. during an update where no new pic was selected)
+        profileUrl = preview;
+      }
+
       const userData = {
         username: formData.username.trim(),
         email: formData.email.trim(),
         role: formData.role,
         display_name: formData.fullName.trim(),
-        profile_pic_url:
-          preview || "https://cdn-icons-png.flaticon.com/128/1077/1077012.png",
+        profile_pic_url: profileUrl,
         permissions: enabledPermissions,
       };
 
@@ -224,11 +235,11 @@ export function CreateUserForm({ variant = "create-user", username }) {
     } catch (err) {
       // Provide user-friendly error messages
       let errorMessage = "Failed to submit form";
-      
+
       if (err?.message) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -496,14 +507,14 @@ export function CreateUserForm({ variant = "create-user", username }) {
           Cancel
         </Button>
 
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="gap-2 cursor-pointer"
           disabled={isSubmitting}
         >
           <Save className="h-4 w-4" />
-          {isSubmitting 
-            ? (isCreateUser ? "Creating..." : "Updating...") 
+          {isSubmitting
+            ? (isCreateUser ? "Creating..." : "Updating...")
             : (isCreateUser ? "Create" : "Update")
           }
         </Button>

@@ -86,7 +86,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
     cn(
       "relative flex items-center rounded-lg border transition-all duration-200 bg-slate-50",
       focusedField === fieldName
-        ? "border-[oklch(0.15_0.02_285)] ring-2 ring-[oklch(0.15_0.02_285)]/10"
+        ? "border-primary ring-2 ring-primary/10"
         : "border-slate-200 hover:border-slate-300"
     );
 
@@ -210,7 +210,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full h-11 mt-2 font-bold text-sm rounded-full bg-[oklch(0.15_0.02_285)] text-white hover:bg-[oklch(0.20_0.02_285)] transition-all group flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-11 mt-2 font-bold text-sm rounded-full bg-primary text-primary-foreground hover:brightness-110 transition-all group flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
               {loading ? (
@@ -245,7 +245,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                   Don&apos;t have an account?{" "}
                   <Link
                     href="/signup"
-                    className="font-semibold text-[oklch(0.15_0.02_285)] hover:text-slate-600 transition-colors"
+                    className="font-semibold text-primary hover:text-primary/80 transition-colors"
                   >
                     Sign up
                   </Link>
@@ -255,7 +255,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                   Already have an account?{" "}
                   <Link
                     href="/login"
-                    className="font-semibold text-[oklch(0.15_0.02_285)] hover:text-slate-600 transition-colors"
+                    className="font-semibold text-primary hover:text-primary/80 transition-colors"
                   >
                     Sign in
                   </Link>

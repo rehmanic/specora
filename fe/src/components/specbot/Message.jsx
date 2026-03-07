@@ -29,7 +29,7 @@ export function Message({ text, timestamp, isSender }) {
       )}>
         <AvatarFallback className={cn(
           "text-xs",
-          isSender ? "bg-muted text-foreground" : "bg-transparent text-white"
+          isSender ? "bg-muted text-foreground" : "bg-transparent text-primary-foreground"
         )}>
           {isSender ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
         </AvatarFallback>
@@ -42,26 +42,14 @@ export function Message({ text, timestamp, isSender }) {
           isSender ? "items-end" : "items-start"
         )}
       >
-        {/* Name & timestamp */}
-        <div
-          className={cn(
-            "flex items-center gap-2 mb-1 text-xs text-muted-foreground",
-            isSender && "flex-row-reverse"
-          )}
-        >
-          <span className="font-medium">{isSender ? "You" : "SpecBot"}</span>
-          <span>•</span>
-          <span>{timestamp}</span>
-        </div>
-
         {/* Bubble */}
         <div className="relative group/bubble">
           <div
             className={cn(
-              "px-4 py-3 rounded-2xl text-sm leading-relaxed",
+              "px-5 py-3 rounded-2xl text-sm leading-relaxed transition-all flex flex-col gap-1",
               isSender
-                ? "bg-primary text-primary-foreground rounded-br-md"
-                : "bg-card border border-border rounded-bl-md shadow-sm"
+                ? "bg-primary text-primary-foreground rounded-br-sm shadow-md shadow-primary/10 border border-primary/10"
+                : "bg-card/90 backdrop-blur-md border border-border/30 rounded-bl-sm shadow-sm"
             )}
           >
             {/* Format AI responses with markdown-like styling */}
@@ -71,23 +59,34 @@ export function Message({ text, timestamp, isSender }) {
             )}>
               {text}
             </div>
-          </div>
 
-          {/* Copy button for AI messages */}
-          {!isSender && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleCopy}
-              className="absolute -bottom-2 right-2 h-7 w-7 opacity-0 group-hover/bubble:opacity-100 transition-opacity bg-card border shadow-sm"
-            >
-              {copied ? (
-                <Check className="h-3.5 w-3.5 text-success" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
+            {/* Name & timestamp */}
+            <div
+              className={cn(
+                "flex items-center gap-2 text-[10px] mt-1",
+                isSender ? "text-primary-foreground/80 justify-end" : "text-muted-foreground justify-start"
               )}
-            </Button>
-          )}
+            >
+              <span className="font-semibold">{isSender ? "You" : "SpecBot"}</span>
+              <span className="italic">{timestamp}</span>
+            </div>
+
+            {/* Copy button for AI messages */}
+            {!isSender && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleCopy}
+                className="absolute -bottom-2 right-2 h-7 w-7 opacity-0 group-hover/bubble:opacity-100 transition-opacity bg-card border shadow-sm"
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-success" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

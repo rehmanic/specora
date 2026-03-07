@@ -58,11 +58,30 @@ export default function ChatPage() {
 
     return (
         <ProtectedRoute allowedRoles={["manager", "client", "requirements_engineer"]}>
-            <div className="flex flex-col h-full bg-background">
+            <div className="flex flex-col h-full bg-background relative z-0">
+                {/* Dynamic Background Pattern */}
+                <div className="absolute inset-0 hero-grid opacity-40 pointer-events-none -z-10 dark:opacity-20 transition-opacity"></div>
+                <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
+                    <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-accent opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" style={{ clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)' }}></div>
+                </div>
+
+                {/* Static Glassmorphic Header */}
+                <div className="flex items-center justify-between border-b border-border/50 bg-background/60 backdrop-blur-xl px-6 py-4 sticky top-0 z-20 shadow-sm">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <p className="text-lg font-semibold leading-tight">Team Chat</p>
+                            <span className="flex h-2 w-2 rounded-full bg-primary pulse-glow"></span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            Live discussion for this project
+                        </p>
+                    </div>
+                </div>
+
                 {/* Messages Area */}
-                <div className="flex-1 min-h-0 overflow-hidden">
+                <div className="flex-1 min-h-0 overflow-hidden bg-transparent">
                     <ScrollArea className="h-full w-full">
-                        <div className="p-4 space-y-4">
+                        <div className="p-6 space-y-6">
                             {loading && messages.length === 0 ? (
                                 <div className="flex items-center justify-center h-full pt-10">
                                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -99,8 +118,10 @@ export default function ChatPage() {
                 </div>
 
                 {/* Input Area */}
-                <div className="p-4 bg-background border-t">
-                    <ChatInputField onSend={handleSendMessage} />
+                <div className="p-4 sm:p-6 pb-6 bg-transparent">
+                    <div className="max-w-4xl mx-auto rounded-2xl shadow-2xl shadow-primary/5 dark:shadow-primary/10 border border-primary/10 bg-card/80 backdrop-blur-xl overflow-hidden ring-1 ring-white/10 dark:ring-white/5 transition-all">
+                        <ChatInputField onSend={handleSendMessage} />
+                    </div>
                 </div>
             </div>
         </ProtectedRoute>

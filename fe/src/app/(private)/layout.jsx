@@ -1,11 +1,14 @@
 "use client";
 
 import { AppLayout } from "@/components/layout/AppLayout";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function Layout({ children }) {
     return (
-        <AppLayout>
-            {children}
-        </AppLayout>
+        <ProtectedRoute>
+            <AppLayout>
+                {children}
+            </AppLayout>
+        </ProtectedRoute>
     );
 }

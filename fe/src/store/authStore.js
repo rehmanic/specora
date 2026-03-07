@@ -10,6 +10,8 @@ const useAuthStore = create(
       loading: false,
       error: null,
 
+      updateUser: (newUserData) => set({ user: newUserData }),
+
       login: async (credentials) => {
         set({ loading: true, error: null });
         try {

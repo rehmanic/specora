@@ -161,8 +161,14 @@ export default function ChatLayout() {
   const noProjectSelected = !selectedProject?.id;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] w-full overflow-hidden bg-background">
-      <div className={`${leftSidebarCollapsed ? "w-16" : "w-64"} shrink-0 border-r`}>
+    <div className="flex h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] w-full overflow-hidden bg-background relative z-0">
+      {/* Dynamic Background Pattern */}
+      <div className="absolute inset-0 hero-grid opacity-40 pointer-events-none -z-10 dark:opacity-20 transition-opacity"></div>
+      <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
+        <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-accent opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" style={{ clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)' }}></div>
+      </div>
+
+      <div className={`${leftSidebarCollapsed ? "w-16" : "w-64"} shrink-0 border-r border-border/50 bg-background/60 backdrop-blur-xl z-20 transition-all duration-300 shadow-sm`}>
         <LeftSidebar
           collapsed={leftSidebarCollapsed}
           onToggleCollapse={() =>

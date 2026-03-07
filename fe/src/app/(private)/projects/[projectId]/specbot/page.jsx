@@ -142,9 +142,15 @@ export default function SpecbotPage() {
   };
 
   return isClient ? (
-    <div className="flex flex-1 w-full h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] overflow-hidden bg-background">
+    <div className="flex flex-1 w-full h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] overflow-hidden bg-background relative z-0">
+      {/* Dynamic Background Pattern */}
+      <div className="absolute inset-0 hero-grid opacity-40 pointer-events-none -z-10 dark:opacity-20 transition-opacity"></div>
+      <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
+        <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-accent opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" style={{ clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)' }}></div>
+      </div>
+
       {/* Left Sidebar */}
-      <div className={`${leftSidebarCollapsed ? "w-16" : "w-64"} shrink-0`}>
+      <div className={`${leftSidebarCollapsed ? "w-16" : "w-64"} shrink-0 border-r border-border/50 bg-background/60 backdrop-blur-xl z-20 transition-all duration-300 shadow-sm`}>
         <LeftSidebar
           collapsed={leftSidebarCollapsed}
           onToggleCollapse={() =>
@@ -164,7 +170,7 @@ export default function SpecbotPage() {
       <div className="flex flex-col flex-1 min-h-0 max-h-full overflow-hidden">
         {!currentChat ? (
           // Empty state - no chat selected
-          <div className="flex flex-1 items-center justify-center p-8">
+          <div className="flex flex-1 items-center justify-center p-8 bg-transparent">
             <div className="text-center space-y-4">
               <h2 className="text-2xl font-semibold text-foreground">
                 Welcome to Specbot
@@ -178,7 +184,7 @@ export default function SpecbotPage() {
         ) : (
           <>
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+            <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6 bg-transparent">
               {loading && messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -227,13 +233,13 @@ export default function SpecbotPage() {
             )}
 
             {/* Starter + Input */}
-            <div className="border-t bg-background">
+            <div className="p-4 sm:p-6 pb-6 bg-transparent">
               {messages.length === 0 && (
-                <div className="px-4 pt-3">
+                <div className="px-4 pb-4">
                   <Starter onSelect={setInputValue} />
                 </div>
               )}
-              <div className="sticky bottom-0 bg-background/95 backdrop-blur">
+              <div className="max-w-4xl mx-auto rounded-2xl shadow-2xl shadow-primary/5 dark:shadow-primary/10 border border-primary/10 bg-card/80 backdrop-blur-xl overflow-hidden ring-1 ring-white/10 dark:ring-white/5 transition-all">
                 <ChatInputFeild
                   value={inputValue}
                   onChange={setInputValue}

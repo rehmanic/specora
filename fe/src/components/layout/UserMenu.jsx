@@ -1,8 +1,8 @@
 "use client";
 
-import { LogOut, Settings, User, ChevronUp } from "lucide-react";
+import { LogOut, User, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
-
+import Link from 'next/link';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 import useAuthStore from "@/store/authStore";
@@ -64,28 +64,20 @@ export function UserMenu() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="h-14 hover:bg-sidebar-accent transition-colors"
+              className="h-14 flex items-center justify-evenly hover:bg-sidebar-accent"
             >
               <Avatar className="h-8 w-8 shrink-0">
                 <AvatarImage
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`}
-                  alt={user.username}
+                  src={user.profile_pic_url}
+                  alt={user.display_name || user.username}
                 />
-                <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                  {user.username?.charAt(0).toUpperCase()}
-                </AvatarFallback>
               </Avatar>
 
               {!isCollapsed && (
                 <>
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-sm font-medium truncate">
-                      {user.username}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {user.email}
-                    </p>
-                  </div>
+                  <p className="mt-1 text-sm font-medium truncate">
+                    {user.display_name || user.username}
+                  </p>
                   <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
                 </>
               )}
@@ -94,7 +86,7 @@ export function UserMenu() {
 
           <DropdownMenuContent
             side="top"
-            align="start"
+            align="center"
             className="w-56"
             sideOffset={8}
           >
@@ -115,15 +107,12 @@ export function UserMenu() {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem className="cursor-pointer">
-              <User className="mr-2 h-4 w-4" />
-              Profile
-            </DropdownMenuItem>
-
-            <DropdownMenuItem className="cursor-pointer">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </DropdownMenuItem>
+            <Link href="/profile">
+              <DropdownMenuItem className="focus:text-ring focus:bg-sidebar-accent cursor-pointer">
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </DropdownMenuItem>
+            </Link>
 
             <DropdownMenuSeparator />
 
