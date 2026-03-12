@@ -98,7 +98,7 @@ export default function ProfilePage() {
 
             {/* Hero Profile Banner */}
             <div className="relative rounded-xl overflow-hidden bg-card border shadow-sm">
-                <div className="absolute inset-x-0 top-0 h-20 bg-primary/10 hero-grid"></div>
+                <div className="absolute inset-x-0 top-0 h-full bg-primary/10 hero-grid"></div>
 
                 <div className="relative z-10 px-6 pt-8 pb-4 flex flex-col sm:flex-row items-center sm:items-end gap-6 text-center sm:text-left">
                     <div className="relative group cursor-pointer inline-block" onClick={() => fileInputRef.current?.click()}>

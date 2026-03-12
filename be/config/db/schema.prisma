@@ -26,6 +26,8 @@ model app_user {
   feedback_response feedback_response[]
   organized_meetings meeting[]
   meeting_attendance meeting_attendee[]
+  owned_requirements requirement[]
+  requirement_comments requirement_comment[]
 }
 
 model feedback {
@@ -134,18 +136,35 @@ model project_member {
 }
 
 model requirement {
-  id          String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title       String                    @db.VarChar(255)
-  description String
-  priority    requirement_priority_enum
-  status      requirement_status_enum
-  tags        String[]                  @default([])
-  created_at  DateTime?                 @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime?                 @default(now()) @db.Timestamptz(6)
-  project_id  String                    @db.Uuid
-  project     project                   @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  readable_id       String?                   @unique @db.VarChar(50)
+  title             String                    @db.VarChar(255)
+  description       String
+  priority          requirement_priority_enum
+  status            requirement_status_enum
+  tags              String[]                  @default([])
+  category          String?                   @db.VarChar(100)
+  attributes        Json?
+  created_at        DateTime?                 @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?                 @default(now()) @db.Timestamptz(6)
+  
+  project_id        String                    @db.Uuid
+  project           project                   @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  parent_id         String?                   @db.Uuid
+  parent            requirement?              @relation("RequirementHierarchy", fields: [parent_id], references: [id], onDelete: Cascade)
+  children          requirement[]             @relation("RequirementHierarchy")
+  
+  owner_id          String?                   @db.Uuid
+  owner             app_user?                 @relation(fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
   economic_estimate economic_estimate?
   screen_links      screen_requirement[]
+  history           requirement_history[]
+  comments          requirement_comment[]
+  
+  source_links      traceability_link[]       @relation("SourceRequirement")
+  target_links      traceability_link[]       @relation("TargetRequirement")
 }
 
 model role {
@@ -200,6 +219,7 @@ enum requirement_priority_enum {
 }
 
 enum requirement_status_enum {
+  draft
   approved
   pending
   rejected
@@ -326,4 +346,54 @@ model screen_requirement {
   requirement    requirement      @relation(fields: [requirement_id], references: [id], onDelete: Cascade)
 
   @@id([screen_id, requirement_id])
+}
+
+model requirement_history {
+  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requirement_id String      @db.Uuid
+  requirement    requirement @relation(fields: [requirement_id], references: [id], onDelete: Cascade)
+  
+  version        Int
+  title          String?
+  description    String?
+  priority       String?
+  status         String?
+  tags           String[]
+  attributes     Json?
+  
+  changed_by     String?     @db.Uuid
+  change_reason  String?
+  created_at     DateTime?   @default(now()) @db.Timestamptz(6)
+}
+
+model requirement_comment {
+  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requirement_id String      @db.Uuid
+  requirement    requirement @relation(fields: [requirement_id], references: [id], onDelete: Cascade)
+  
+  author_id      String      @db.Uuid
+  author         app_user    @relation(fields: [author_id], references: [id], onDelete: NoAction)
+  
+  content        String
+  parent_id      String?     @db.Uuid
+  parent         requirement_comment? @relation("CommentThread", fields: [parent_id], references: [id])
+  replies        requirement_comment[] @relation("CommentThread")
+  
+  created_at     DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?   @default(now()) @db.Timestamptz(6)
+}
+
+model traceability_link {
+  id                    String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  source_requirement_id String      @db.Uuid
+  source_requirement    requirement @relation("SourceRequirement", fields: [source_requirement_id], references: [id], onDelete: Cascade)
+  
+  target_type           String      @db.VarChar(50) // e.g., 'requirement', 'prototype_screen', 'test_case', 'doc'
+  target_id             String      @db.Uuid
+  
+  target_requirement_id String?     @db.Uuid
+  target_requirement    requirement? @relation("TargetRequirement", fields: [target_requirement_id], references: [id], onDelete: Cascade)
+  
+  link_type             String      @db.VarChar(50) // e.g., 'satisfies', 'depends_on', 'relates_to'
+  created_at            DateTime?   @default(now()) @db.Timestamptz(6)
 }

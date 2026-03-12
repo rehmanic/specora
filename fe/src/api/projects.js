@@ -26,7 +26,7 @@ export async function getAllProjects(token) {
     if (!res.ok) {
       throw new Error(
         data?.message ||
-          `Failed to fetch projects${res.status ? ` (${res.status})` : ""}`
+        `Failed to fetch projects${res.status ? ` (${res.status})` : ""}`
       );
     }
 
@@ -65,7 +65,7 @@ export async function getUserProjects(userId) {
     if (!res.ok) {
       throw new Error(
         responseData?.message ||
-          `Fetching user projects failed${res.status ? ` (${res.status})` : ""}`
+        `Fetching user projects failed${res.status ? ` (${res.status})` : ""}`
       );
     }
 
@@ -108,7 +108,7 @@ export async function createProject(projectData) {
     if (!res.ok) {
       throw new Error(
         data?.message ||
-          `Failed to create project${res.status ? ` (${res.status})` : ""}`
+        `Failed to create project${res.status ? ` (${res.status})` : ""}`
       );
     }
 
@@ -151,7 +151,7 @@ export async function updateProject(projectId, updateData) {
     if (!res.ok) {
       throw new Error(
         data?.message ||
-          `Failed to update project${res.status ? ` (${res.status})` : ""}`
+        `Failed to update project${res.status ? ` (${res.status})` : ""}`
       );
     }
 
@@ -190,7 +190,7 @@ export async function deleteProject(projectId) {
     if (!res.ok) {
       throw new Error(
         data?.message ||
-          `Failed to delete project${res.status ? ` (${res.status})` : ""}`
+        `Failed to delete project${res.status ? ` (${res.status})` : ""}`
       );
     }
 

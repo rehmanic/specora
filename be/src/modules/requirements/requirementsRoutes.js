@@ -3,7 +3,16 @@ import {
     getProjectRequirements,
     createRequirement,
     updateRequirement,
-    deleteRequirement
+    deleteRequirement,
+    getRequirementHistory,
+    rollbackRequirement,
+    getComments,
+    addComment,
+    getTraceabilityLinks,
+    createTraceabilityLink,
+    deleteTraceabilityLink,
+    getProjectTraceabilityGraph,
+    importRequirements
 } from "./requirementsController.js";
 import { verifyToken } from "../../middlewares/common/verifyToken.js";
 
@@ -11,16 +20,25 @@ const router = express.Router();
 
 router.use(verifyToken);
 
-// GET requirements for a project
+// Core CRUD
 router.get("/:projectId", getProjectRequirements);
-
-// POST create requirement for a project
 router.post("/:projectId", createRequirement);
-
-// PUT update requirement
+router.post("/:projectId/import", importRequirements);
 router.put("/:projectId/:requirementId", updateRequirement);
-
-// DELETE requirement
 router.delete("/:projectId/:requirementId", deleteRequirement);
+
+// History & Rollback
+router.get("/:projectId/:requirementId/history", getRequirementHistory);
+router.post("/:projectId/:requirementId/rollback/:historyId", rollbackRequirement);
+
+// Comments
+router.get("/:projectId/:requirementId/comments", getComments);
+router.post("/:projectId/:requirementId/comments", addComment);
+
+// Traceability
+router.get("/:projectId/:requirementId/traceability", getTraceabilityLinks);
+router.post("/:projectId/:requirementId/traceability", createTraceabilityLink);
+router.delete("/:projectId/traceability/:linkId", deleteTraceabilityLink);
+router.get("/:projectId/traceability/graph", getProjectTraceabilityGraph);
 
 export default router;
