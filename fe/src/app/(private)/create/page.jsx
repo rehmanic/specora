@@ -1,10 +1,10 @@
-import ProjectInfo from "@/components/project/ProjectInfo";
+import UserInfo from "@/components/users/UserInfo";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
-export default function CreateProjectPage() {
+export default function CreateUserPage() {
   return (
     <ProtectedRoute>
-          <ProjectInfo variant="create-project" />
+          <UserInfo variant="create-user" />
     </ProtectedRoute>
   );
 }

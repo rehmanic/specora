@@ -31,7 +31,7 @@ export async function createUserRequest(userData) {
     if (!res.ok) {
       throw new Error(
         responseData?.message ||
-          `User creation failed${res.status ? ` (${res.status})` : ""}`
+        `User creation failed${res.status ? ` (${res.status})` : ""}`
       );
     }
 
@@ -67,7 +67,7 @@ export async function getAllUsersRequest() {
     if (!res.ok) {
       throw new Error(
         responseData?.message ||
-          `Fetching all users failed${res.status ? ` (${res.status})` : ""}`
+        `Fetching all users failed${res.status ? ` (${res.status})` : ""}`
       );
     }
 
@@ -103,7 +103,7 @@ export async function deleteUserRequest(username) {
     if (!res.ok) {
       throw new Error(
         responseData?.message ||
-          `User deletion failed${res.status ? ` (${res.status})` : ""}`
+        `User deletion failed${res.status ? ` (${res.status})` : ""}`
       );
     }
 
@@ -143,7 +143,7 @@ export async function updateUserRequest(userData) {
     if (!res.ok) {
       throw new Error(
         responseData?.message ||
-          `User updation failed${res.status ? ` (${res.status})` : ""}`
+        `User updation failed${res.status ? ` (${res.status})` : ""}`
       );
     }
 
@@ -179,7 +179,7 @@ export async function getSingleUserDataRequest(username) {
     if (!res.ok) {
       throw new Error(
         responseData?.message ||
-          `Fetching user details failed${res.status ? ` (${res.status})` : ""}`
+        `Fetching user details failed${res.status ? ` (${res.status})` : ""}`
       );
     }
 
