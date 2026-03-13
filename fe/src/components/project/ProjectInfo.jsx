@@ -33,6 +33,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { 
+  Settings, 
+  Users, 
+  Tags, 
+  Trash2, 
+  Plus, 
+  X, 
+  Calendar,
+  Layers,
+  ShieldAlert,
+  Globe,
+  Layout,
+  UserPlus
+} from "lucide-react";
 import useProjectsStore from "@/store/projectsStore";
 import useAuthStore from "@/store/authStore";
 import { deleteProject, updateProject, createProject } from "@/api/projects";
@@ -40,6 +60,7 @@ import { getSingleUserDataRequest, getUsersByIds } from "@/api/users";
 import { useRouter } from "next/navigation";
 import ErrorBox from "@/components/common/ErrorBox";
 import SuccessBox from "@/components/common/SuccessBox";
+import { cn } from "@/lib/utils";
 
 // ✅ Safe avatar URL generator using DiceBear (trusted, open source)
 const getAvatarUrl = (name) =>
@@ -214,19 +235,19 @@ export default function ProjectInfo({ variant }) {
 
   const addTag = () => {
     const trimmedTag = newTag.trim();
-    
+
     // Validate tag length (3-30 characters)
     if (trimmedTag.length < 3 || trimmedTag.length > 30) {
       setSaveError("Each tag must be between 3 and 30 characters");
       return;
     }
-    
+
     // Check max tags (10)
     if (project.tags.length >= 10) {
       setSaveError("A maximum of 10 tags is allowed");
       return;
     }
-    
+
     if (trimmedTag && !project.tags.includes(trimmedTag)) {
       setProject((prev) => ({ ...prev, tags: [...prev.tags, trimmedTag] }));
       setNewTag("");
@@ -290,19 +311,19 @@ export default function ProjectInfo({ variant }) {
     } catch (err) {
       // Provide user-friendly error messages
       let errorMessage = "Failed to add member.";
-      
+
       if (err?.message) {
         // Check for specific error messages and provide clearer feedback
         const errorMsgLower = err.message.toLowerCase();
-        if (errorMsgLower.includes("user not found") || 
-            errorMsgLower.includes("fetching user details failed") ||
-            errorMsgLower.includes("404")) {
+        if (errorMsgLower.includes("user not found") ||
+          errorMsgLower.includes("fetching user details failed") ||
+          errorMsgLower.includes("404")) {
           errorMessage = `User "${newMemberEmail.trim()}" not found. Please check the username and try again.`;
         } else {
           errorMessage = err.message;
         }
       }
-      
+
       setMemberError(errorMessage);
       // Suppress console error since we're handling it in the UI
       // The error is already caught and displayed to the user
@@ -479,347 +500,353 @@ export default function ProjectInfo({ variant }) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6 lg:p-8">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {isSettings ? "Project Settings" : "Create New Project"}
-        </h1>
-        <p className="text-muted-foreground">
-          {isSettings
-            ? "Manage your project details, members, and configurations"
-            : "Set up a new project by providing the necessary information"}
-        </p>
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
+      {/* Page Header */}
+      <div className="flex flex-col gap-2 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">
+            {isSettings ? "Project Settings" : "Create New Project"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {isSettings
+              ? "Configure project parameters, team members, and visibility."
+              : "Define the core attributes and goals for your new venture."}
+          </p>
+        </div>
+        {isSettings && (
+          <Badge variant="outline" className="w-fit font-medium">
+            ID: {project.id}
+          </Badge>
+        )}
       </div>
 
-      {/* General Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>General Information</CardTitle>
-          <CardDescription>
-            Update your project's basic details and status
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label htmlFor="project-name">
-                Project Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="project-name"
-                value={project.name}
-                onChange={(e) => handleProjectUpdate("name", e.target.value)}
-                required
-                minLength={3}
-                maxLength={100}
-                pattern="^[A-Za-z0-9 _-]{3,100}$"
-                title="Project name must be 3-100 characters and contain only letters, numbers, spaces, hyphens, and underscores"
-              />
-            </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={project.status}
-                onValueChange={(value) => handleProjectUpdate("status", value)}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="on_hold">On Hold</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={project.description}
-              onChange={(e) =>
-                handleProjectUpdate("description", e.target.value)
-              }
-              rows={4}
-              minLength={5}
-              maxLength={1000}
-              title="Description must be between 5 and 1000 characters (if provided)"
-            />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label htmlFor="start-date">
-                Start Date <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="start-date"
-                type="date"
-                value={project.startDate}
-                onChange={(e) =>
-                  handleProjectUpdate("startDate", e.target.value)
-                }
-                required
-                max={project.endDate || undefined}
-                title="Start date is required and must be before or equal to end date"
-              />
-            </div>
-            <div>
-              <Label htmlFor="end-date">
-                End Date <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="end-date"
-                type="date"
-                value={project.endDate}
-                onChange={(e) => handleProjectUpdate("endDate", e.target.value)}
-                required
-                min={project.startDate || undefined}
-                title="End date is required and must be after or equal to start date"
-              />
-            </div>
-          </div>
-
-          {/* Cover image */}
-          <div className="space-y-2 mt-6">
-            <Label htmlFor="profilePic">Cover Image</Label>
-            <Input
-              id="coverImage"
-              type="file"
-              accept="image/*"
-              onChange={handleCoverImageChange}
-            />
-            {coverPreview && (
-              <img
-                src={coverPreview}
-                alt="Preview"
-                className="mt-2 h-40 w-full rounded-md object-cover border"
-              />
+      <Tabs defaultValue="general" orientation="vertical" className="flex flex-col gap-6 md:flex-row">
+        <div className="flex flex-col gap-4 min-w-[240px] md:sticky md:top-24">
+          <TabsList className="bg-muted/50 h-fit w-full flex-col gap-1 p-1 border rounded-xl">
+            <TabsTrigger value="general" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Settings className="size-4" />
+              General Info
+            </TabsTrigger>
+            <TabsTrigger value="members" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Users className="size-4" />
+              Team Members
+            </TabsTrigger>
+            <TabsTrigger value="tags" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Tags className="size-4" />
+              Tags & Categories
+            </TabsTrigger>
+            {isSettings && (
+              <TabsTrigger value="danger" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg text-destructive data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground">
+                <Trash2 className="size-4" />
+                Danger Zone
+              </TabsTrigger>
             )}
+          </TabsList>
+
+          <div className="px-1 space-y-3">
+             {saveError && <ErrorBox message={saveError} className="text-[10px] p-2" />}
+             {saveSuccess && (
+                <SuccessBox
+                    message={isSettings ? "Saved!" : "Created!"}
+                    className="text-[10px] p-2"
+                />
+             )}
+            <Button 
+                onClick={handleSaveChanges} 
+                disabled={isSaving}
+                className="w-full text-xs font-bold"
+            >
+                {isSaving ? "Processing..." : isSettings ? "Save Changes" : "Create Project"}
+            </Button>
           </div>
+        </div>
 
-          {/* Icon */}
-          <div className="space-y-2 mt-6">
-            <Label htmlFor="profilePic">Icon</Label>
-            <Input
-              id="icon"
-              type="file"
-              accept="image/*"
-              onChange={handleIconChange}
-            />
-            {iconPreview && (
-              <img
-                src={iconPreview}
-                alt="Preview"
-                className="mt-2 h-16 w-16 rounded-full object-cover border"
-              />
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Members - Only visible to managers */}
-      {user?.role === "manager" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Members</CardTitle>
-            <CardDescription>Manage who has access</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {memberError && <ErrorBox message={memberError} />}
-
-            {project.Members.map((member, index) => (
-              <div
-                key={member.id || member.email || index}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border p-3 rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage
-                      src={getAvatarUrl(member.name || member.email || "user")}
-                      alt={member.name || member.email}
+        <div className="flex-1">
+          {/* General Tab */}
+          <TabsContent value="general" className="mt-0 space-y-6 outline-none animate-fade-in">
+            <Card>
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <Layout className="size-4 text-primary" />
+                  <CardTitle className="text-lg">Project Details</CardTitle>
+                </div>
+                <CardDescription>Core identity and operational parameters.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="p-name" className="text-xs font-bold">Project Name</Label>
+                    <Input
+                      id="p-name"
+                      placeholder="e.g. Apollo Mission"
+                      value={project.name}
+                      onChange={(e) => handleProjectUpdate("name", e.target.value)}
+                      className="h-10"
                     />
-                    <AvatarFallback>
-                      {(member.name || member.email || "U")
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">
-                      {member.name || member.email || "Unknown"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {member.email || "N/A"}
-                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="p-status" className="text-xs font-bold">Current Status</Label>
+                    <Select value={project.status} onValueChange={(v) => handleProjectUpdate("status", v)}>
+                      <SelectTrigger id="p-status" className="h-10 capitalize">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["active", "on_hold", "completed", "archived"].map(s => (
+                          <SelectItem key={s} value={s} className="capitalize">{s.replace('_', ' ')}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="p-desc" className="text-xs font-bold">Brief Description</Label>
+                  <Textarea
+                    id="p-desc"
+                    placeholder="What is this project about?"
+                    value={project.description}
+                    onChange={(e) => handleProjectUpdate("description", e.target.value)}
+                    className="min-h-[100px] resize-none"
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="p-start" className="text-xs font-bold">Start Date</Label>
+                    <div className="relative">
+                      <Input
+                        id="p-start"
+                        type="date"
+                        value={project.startDate}
+                        onChange={(e) => handleProjectUpdate("startDate", e.target.value)}
+                        className="h-10 pl-10"
+                      />
+                      <Calendar className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="p-end" className="text-xs font-bold">End Date</Label>
+                    <div className="relative">
+                      <Input
+                        id="p-end"
+                        type="date"
+                        value={project.endDate}
+                        onChange={(e) => handleProjectUpdate("endDate", e.target.value)}
+                        className="h-10 pl-10"
+                      />
+                      <Calendar className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid gap-6 sm:grid-cols-2">
+                   <div className="space-y-3">
+                    <Label className="text-xs font-bold">Branding Icon</Label>
+                    <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/20">
+                      <div className="size-12 rounded-full border bg-background flex items-center justify-center overflow-hidden shrink-0">
+                        {iconPreview ? (
+                          <img src={iconPreview} className="size-full object-cover" alt="Icon" />
+                        ) : (
+                          <Layout className="size-6 text-muted-foreground/50" />
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1.5 overflow-hidden">
+                        <Input type="file" onChange={handleIconChange} className="h-8 text-[11px] px-2 py-1 cursor-pointer w-full" accept="image/*" />
+                        <p className="text-[10px] text-muted-foreground truncate">SVG, PNG up to 2MB</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold">Cover Banner</Label>
+                    <div className="group relative h-24 w-full rounded-lg border bg-muted/20 overflow-hidden border-dashed flex items-center justify-center hover:bg-muted/30 transition-colors">
+                      {coverPreview ? (
+                        <img src={coverPreview} className="size-full object-cover" alt="Cover" />
+                      ) : (
+                        <p className="text-[10px] font-medium text-muted-foreground">Click to upload cover</p>
+                      )}
+                      <Input type="file" onChange={handleCoverImageChange} className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Members Tab */}
+          <TabsContent value="members" className="mt-0 space-y-6 outline-none animate-fade-in">
+            <Card>
+              <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{member.role}</Badge>
-                  {member.role !== "Project Owner" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeMember(member.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      Remove
-                    </Button>
+                  <Users className="size-4 text-primary" />
+                  <CardTitle className="text-lg">Collaborators</CardTitle>
+                </div>
+                <CardDescription>Manage who can access and edit this project.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex gap-2 p-1.5 border rounded-lg bg-muted/20 items-center">
+                  <UserPlus className="ml-2 size-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by username..."
+                    value={newMemberEmail}
+                    onChange={(e) => setNewMemberEmail(e.target.value)}
+                    className="border-none bg-transparent focus-visible:ring-0 shadow-none h-9 text-sm"
+                  />
+                  <Button onClick={handleAddMember} disabled={isAddingMember} size="sm" className="h-8 px-3 text-xs font-bold">
+                    {isAddingMember ? "..." : "Add User"}
+                  </Button>
+                </div>
+
+                {memberError && <ErrorBox message={memberError} className="py-2 px-3 text-xs" />}
+
+                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  {project.Members.length > 0 ? (
+                    project.Members.map((member) => (
+                      <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg bg-background hover:bg-muted/5 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-9 border">
+                            <AvatarImage src={getAvatarUrl(member.name || "user")} />
+                            <AvatarFallback>{(member.name || "U")[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="overflow-hidden">
+                            <p className="text-sm font-semibold truncate leading-none mb-1">{member.name}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">{member.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-bold uppercase tracking-wider">{member.role}</Badge>
+                          {member.role !== "Project Owner" && (
+                            <Button variant="ghost" size="icon" onClick={() => removeMember(member.id)} className="size-7 text-muted-foreground hover:text-destructive">
+                                <X className="size-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center text-muted-foreground/50 italic">
+                      No members assigned to this project.
+                    </div>
                   )}
                 </div>
-              </div>
-            ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Input
-                placeholder="Enter username to add"
-                value={newMemberEmail}
-                onChange={(e) => {
-                  setNewMemberEmail(e.target.value);
-                  setMemberError(null);
-                }}
-                className="flex-1"
-              />
-              <Button onClick={handleAddMember} disabled={isAddingMember}>
-                {isAddingMember ? "Adding..." : "Add Member"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          {/* Tags Tab */}
+          <TabsContent value="tags" className="mt-0 space-y-6 outline-none animate-fade-in">
+            <Card>
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <Tags className="size-4 text-primary" />
+                  <CardTitle className="text-lg">Classification</CardTitle>
+                </div>
+                <CardDescription>Use tags to categorize and organize your project.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex flex-wrap gap-2 min-h-[100px] p-4 border-2 border-dashed rounded-xl bg-muted/5 items-center justify-center">
+                  {project.tags.length > 0 ? (
+                    project.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="pl-3 pr-1 py-1 gap-2 text-xs font-semibold rounded-lg hover-lift">
+                        {tag}
+                        <button onClick={() => removeTag(tag)} className="p-0.5 rounded-full hover:bg-destructive hover:text-white transition-all">
+                          <X className="size-3" />
+                        </button>
+                      </Badge>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 opacity-30 text-muted-foreground">
+                        <Layers className="size-8" />
+                        <p className="text-xs font-bold uppercase tracking-widest">No Tags Defined</p>
+                    </div>
+                  )}
+                </div>
 
-      {/* Tags & Categories - Only visible to managers */}
-      {user?.role === "manager" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Tags & Categories</CardTitle>
-            <CardDescription>Organize your project with tags</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {project.tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="gap-1">
-                  {tag}
-                  <button
-                    onClick={() => removeTag(tag)}
-                    className="ml-1 rounded-full hover:bg-muted"
-                    aria-label={`Remove ${tag}`}
-                  >
-                    ×
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Input
-                placeholder="Add a tag (3-30 characters)"
-                value={newTag}
-                onChange={(e) => {
-                  setNewTag(e.target.value);
-                  setSaveError(null);
-                }}
-                onKeyDown={(e) => e.key === "Enter" && addTag()}
-                className="flex-1"
-                minLength={3}
-                maxLength={30}
-                disabled={project.tags.length >= 10}
-                title={
-                  project.tags.length >= 10
-                    ? "Maximum of 10 tags allowed"
-                    : "Each tag must be between 3 and 30 characters"
-                }
-              />
-              <Button onClick={addTag} disabled={project.tags.length >= 10}>
-                Add Tag
-              </Button>
-            </div>
-            {project.tags.length >= 10 && (
-              <p className="text-sm text-muted-foreground">
-                Maximum of 10 tags reached
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Input
+                    placeholder="Add a new keyword..."
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addTag()}
+                    className="h-10 text-sm"
+                    disabled={project.tags.length >= 10}
+                  />
+                  <Button onClick={addTag} disabled={project.tags.length >= 10} size="sm" className="h-10 px-6 font-bold">
+                    Add Tag
+                  </Button>
+                </div>
+                {project.tags.length >= 10 && (
+                    <p className="text-[11px] text-center text-muted-foreground italic">Limit of 10 tags reached.</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-      {/* Danger Zone */}
-      {isSettings && (
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">Danger Zone</CardTitle>
-            <CardDescription>Irreversible actions</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {deleteError && <ErrorBox message={deleteError} />}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-medium">Delete Project</p>
-                <p className="text-sm text-muted-foreground">
-                  Permanently delete this project and all its data
-                </p>
-              </div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">Delete Project</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete
-                      the project "{selectedProject?.name}" and all its data.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isDeleting}>
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteProject}
-                      disabled={isDeleting}
-                      className="bg-destructive text-white hover:bg-destructive/90"
-                    >
-                      {isDeleting ? "Deleting..." : "Delete"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          {/* Danger Tab */}
+          <TabsContent value="danger" className="mt-0 space-y-6 outline-none animate-fade-in">
+            <Card className="border-destructive/20">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2 text-destructive">
+                  <Trash2 className="size-4" />
+                  <CardTitle className="text-lg">Destructive Actions</CardTitle>
+                </div>
+                <CardDescription>Irreversible operations that destroy project data.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {deleteError && <ErrorBox message={deleteError} className="mb-4" />}
+                
+                <div className="flex flex-col justify-between gap-4 p-4 border rounded-lg border-destructive/10 bg-destructive/5 sm:flex-row sm:items-center">
+                  <div>
+                    <p className="text-sm font-bold text-destructive">Delete Project</p>
+                    <p className="text-xs text-muted-foreground">All data will be permanently wiped from the server.</p>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="font-bold">Erase Project</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="rounded-2xl max-w-md">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm">
+                          Deleting <strong>{project.name}</strong> is final and cannot be undone. 
+                          All requirements, designs, and metadata will be purged.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="mt-4 gap-2">
+                        <AlertDialogCancel disabled={isDeleting} className="rounded-lg h-10 border-2">Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteProject}
+                          disabled={isDeleting}
+                          className="h-10 bg-destructive text-white hover:bg-destructive/90 rounded-lg font-bold"
+                        >
+                          {isDeleting ? "Wiping..." : "Yes, Purge Project"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
 
-      {/* Save Actions */}
-      <div className="space-y-4">
-        {saveError && <ErrorBox message={saveError} />}
-        {saveSuccess && (
-          <SuccessBox
-            message={
-              isSettings
-                ? "Project updated successfully!"
-                : "Project created successfully! Redirecting..."
-            }
-          />
-        )}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
-          {/* {isSettings && <Button variant="outline">Cancel</Button>} */}
-          <Button onClick={handleSaveChanges} disabled={isSaving}>
-            {isSaving
-              ? isSettings
-                ? "Saving..."
-                : "Creating..."
-              : isSettings
-              ? "Save Changes"
-              : "Create"}
-          </Button>
+                <div className="flex flex-col justify-between gap-4 p-4 border rounded-lg opacity-60 bg-muted/20 sm:flex-row sm:items-center">
+                    <div>
+                        <p className="text-sm font-bold opacity-60 flex items-center gap-2">
+                            <Globe className="size-3.5" />
+                            Archive Instance
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Lock project for historical records.</p>
+                    </div>
+                    <Button disabled variant="secondary" size="sm" className="font-bold opacity-50">Coming Soon</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </div>
-      </div>
+      </Tabs>
     </div>
   );
 }
+
+const Separator = ({ className }) => (
+  <div className={cn("h-px w-full bg-border", className)} />
+);
