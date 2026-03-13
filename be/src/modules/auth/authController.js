@@ -29,7 +29,12 @@ export async function signup(req, res) {
     });
 
     const token = jwt.sign(
-      { userId: user.id, username: user.username, role: user.role.name },
+      { 
+        userId: user.id, 
+        username: user.username, 
+        role: user.role.name,
+        permissions: user.role.role_permission.map((rp) => rp.permission.name)
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "30d" }
     );
@@ -65,7 +70,12 @@ export async function login(req, res) {
     }
 
     const token = jwt.sign(
-      { userId: user.id, username: user.username, role: user.role?.name },
+      { 
+        userId: user.id, 
+        username: user.username, 
+        role: user.role?.name,
+        permissions: user.role?.role_permission?.map((rp) => rp.permission.name) || []
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "30d" }
     );

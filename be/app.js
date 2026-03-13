@@ -22,6 +22,7 @@ import prototypingRoutes from "./src/modules/prototyping/prototypingRoutes.js";
 import verificationRoutes from "./src/modules/verification/verificationRoutes.js";
 import diagramRoutes from "./src/modules/diagrams/diagramRoutes.js";
 import docRoutes from "./src/modules/docs/docRoutes.js";
+import rbacRoutes from "./src/modules/rbac/rbacRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -75,6 +76,7 @@ app.use("/api/prototyping", prototypingRoutes);
 app.use("/api/verification", verificationRoutes);
 app.use("/api/diagrams", diagramRoutes);
 app.use("/api/docs/:projectId", docRoutes);
+app.use("/api/rbac", rbacRoutes);
 
 // ----- 404 Handler -----
 app.use((req, res) => {
