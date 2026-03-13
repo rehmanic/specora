@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Users
+  Users,
+  ShieldCheck
 } from "lucide-react";
 import { ProjectHeader } from "./ProjectHeader";
 import { UserMenu } from "./UserMenu";
@@ -58,6 +59,17 @@ export function Sidebar({ ...props }) {
                     <Link href="/users">
                       <Users />
                       <span>Users</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {isManager && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname === "/controls/rbac"} tooltip="RBAC">
+                    <Link href="/controls/rbac">
+                      <ShieldCheck />
+                      <span>RBAC</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
