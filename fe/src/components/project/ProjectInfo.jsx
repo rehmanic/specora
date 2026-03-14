@@ -49,7 +49,6 @@ import {
   Calendar,
   Layers,
   ShieldAlert,
-  Globe,
   Layout,
   UserPlus
 } from "lucide-react";
@@ -59,6 +58,7 @@ import { deleteProject, updateProject, createProject } from "@/api/projects";
 import { getSingleUserDataRequest, getUsersByIds } from "@/api/users";
 import { uploadFileRequest } from "@/api/upload";
 import notify from "@/components/common/Notification";
+import PageBanner from "@/components/layout/PageBanner";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -513,18 +513,13 @@ export default function ProjectInfo({ variant }) {
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
       {/* Page Header */}
-      <div className="flex flex-col gap-2 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            {isSettings ? "Project Settings" : "Create New Project"}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {isSettings
+      <PageBanner
+          title={isSettings ? "Project Settings" : "Create New Project"}
+          description={isSettings
               ? "Configure project parameters, team members, and visibility."
               : "Define the core attributes and goals for your new venture."}
-          </p>
-        </div>
-      </div>
+          icon={isSettings ? Settings : Plus}
+      />
 
       <Tabs defaultValue="general" orientation="vertical" className="flex flex-col gap-6 md:flex-row">
         <div className="flex flex-col gap-4 min-w-[240px] md:sticky md:top-24">
@@ -829,16 +824,6 @@ export default function ProjectInfo({ variant }) {
                   </AlertDialog>
                 </div>
 
-                <div className="flex flex-col justify-between gap-4 p-4 border rounded-lg opacity-60 bg-muted/20 sm:flex-row sm:items-center">
-                    <div>
-                        <p className="text-sm font-bold opacity-60 flex items-center gap-2">
-                            <Globe className="size-3.5" />
-                            Archive Instance
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">Lock project for historical records.</p>
-                    </div>
-                    <Button disabled variant="secondary" size="sm" className="font-bold opacity-50">Coming Soon</Button>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>

@@ -86,14 +86,7 @@ export default function DocEditorPage() {
                 {/* Header Navbar */}
                 <header className="flex items-center justify-between border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 z-10 shrink-0">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => router.push(`/projects/${projectId}/specification/docs`)}
-                            className="shrink-0 rounded-full hover:bg-muted"
-                        >
-                            <ArrowLeft className="h-5 w-5" />
-                        </Button>
+
 
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/30 rounded-lg flex-1 max-w-xl group focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                             <FileText className="h-4 w-4 text-muted-foreground shrink-0" />

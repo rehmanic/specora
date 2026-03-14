@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import PageBanner from "@/components/layout/PageBanner";
 import {
     Table,
     TableBody,
@@ -154,17 +155,11 @@ export default function Page() {
             <main className="w-full p-6 lg:p-8 overflow-y-auto">
                 <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
                     {/* Header */}
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-primary/10 rounded-xl">
-                                <Gavel className="h-6 w-6 text-primary" />
-                            </div>
-                            <h1 className="text-3xl font-bold font-display tracking-tight">Legal Feasibility</h1>
-                        </div>
-                        <p className="text-muted-foreground mt-2 text-lg">
-                            Assess project requirements against legal constraints and compliance regulations.
-                        </p>
-                    </div>
+                    <PageBanner
+                        title="Legal Feasibility"
+                        description="Assess project requirements against legal constraints and compliance regulations."
+                        icon={Gavel}
+                    />
 
                     {/* Stats Grid */}
                     {!loading && requirements.length > 0 && (

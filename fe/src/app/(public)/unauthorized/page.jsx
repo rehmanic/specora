@@ -29,12 +29,7 @@ export default function UnauthorizedPage() {
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-          <Button variant="outline" asChild className="gap-2">
-            <Link href="javascript:history.back()">
-              <ArrowLeft className="h-4 w-4" />
-              Go Back
-            </Link>
-          </Button>
+
           <Button asChild className="gap-2 gradient-primary border-0">
             <Link href="/dashboard">
               <Home className="h-4 w-4" />

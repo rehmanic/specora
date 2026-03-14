@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
+import PageBanner from "@/components/layout/PageBanner";
 import {
     Card,
     CardContent,
@@ -550,19 +551,11 @@ export default function Page() {
             <main className="w-full p-6 lg:p-8 overflow-y-auto">
                 <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
                     {/* Header */}
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-primary/10 rounded-xl">
-                                <DollarSign className="h-6 w-6 text-primary" />
-                            </div>
-                            <h1 className="text-3xl font-bold font-display tracking-tight">
-                                Economic Feasibility
-                            </h1>
-                        </div>
-                        <p className="text-muted-foreground mt-2 text-lg">
-                            Monte Carlo simulation for cost and schedule risk analysis.
-                        </p>
-                    </div>
+                    <PageBanner
+                        title="Economic Feasibility"
+                        description="Monte Carlo simulation for cost and schedule risk analysis."
+                        icon={DollarSign}
+                    />
 
                     {loading ? (
                         <div className="space-y-6">
@@ -571,95 +564,98 @@ export default function Page() {
                             ))}
                         </div>
                     ) : (
-                        <Tabs defaultValue="setup" className="space-y-6">
-                            <TabsList className="grid w-full grid-cols-3 max-w-lg">
-                                <TabsTrigger value="setup" className="gap-2">
-                                    <Settings className="h-4 w-4" /> Setup
-                                </TabsTrigger>
-                                <TabsTrigger value="estimates" className="gap-2">
-                                    <Calculator className="h-4 w-4" /> Estimates
-                                </TabsTrigger>
-                                <TabsTrigger value="results" className="gap-2">
-                                    <BarChart3 className="h-4 w-4" /> Results
-                                </TabsTrigger>
-                            </TabsList>
+                        <Tabs defaultValue="setup" orientation="vertical" className="flex flex-col gap-6 md:flex-row">
+                            <div className="flex flex-col gap-4 min-w-[240px] md:sticky md:top-24">
+                                <TabsList className="bg-muted/50 h-fit w-full flex-col gap-1 p-1 border rounded-xl">
+                                    <TabsTrigger value="setup" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                                        <Settings className="h-4 w-4" /> Setup
+                                    </TabsTrigger>
+                                    <TabsTrigger value="estimates" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                                        <Calculator className="h-4 w-4" /> Estimates
+                                    </TabsTrigger>
+                                    <TabsTrigger value="results" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                                        <BarChart3 className="h-4 w-4" /> Results
+                                    </TabsTrigger>
+                                </TabsList>
+                            </div>
 
-                            {/* ─── Setup Tab ────────────────────────── */}
-                            <TabsContent value="setup" className="space-y-6">
-                                <Card className="border-border/50 shadow-sm">
-                                    <CardHeader className="bg-muted/30 border-b border-border/50">
-                                        <CardTitle className="text-xl flex items-center gap-2">
-                                            <Settings className="h-5 w-5 text-primary" />
-                                            Project Configuration
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Set the base economic parameters for this project.
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pt-6 space-y-6">
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                            {/* Hourly Rate */}
-                                            <div className="space-y-2">
-                                                <Label htmlFor="hourlyRate">Hourly Rate</Label>
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                                                        {currencySymbol}
-                                                    </span>
+                            <div className="flex-1">
+                                {/* ─── Setup Tab ────────────────────────── */}
+                                <TabsContent value="setup" className="mt-0 space-y-6 outline-none animate-fade-in">
+                                    <Card className="border-border/50 shadow-sm">
+                                        <CardHeader className="bg-muted/30 border-b border-border/50">
+                                            <CardTitle className="text-xl flex items-center gap-2">
+                                                <Settings className="h-5 w-5 text-primary" />
+                                                Project Configuration
+                                            </CardTitle>
+                                            <CardDescription>
+                                                Set the base economic parameters for this project.
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="pt-6 space-y-6">
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                                {/* Hourly Rate */}
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="hourlyRate">Hourly Rate</Label>
+                                                    <div className="relative">
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                                                            {currencySymbol}
+                                                        </span>
+                                                        <Input
+                                                            id="hourlyRate"
+                                                            type="number"
+                                                            min="1"
+                                                            className="pl-8"
+                                                            value={config.hourly_rate}
+                                                            onChange={(e) =>
+                                                                setConfig((prev) => ({
+                                                                    ...prev,
+                                                                    hourly_rate: parseFloat(e.target.value) || 0,
+                                                                }))
+                                                            }
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Currency */}
+                                                <div className="space-y-2">
+                                                    <Label>Currency</Label>
+                                                    <Select
+                                                        value={config.currency}
+                                                        onValueChange={(val) =>
+                                                            setConfig((prev) => ({ ...prev, currency: val }))
+                                                        }
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {CURRENCIES.map((c) => (
+                                                                <SelectItem key={c.code} value={c.code}>
+                                                                    {c.symbol} {c.code} — {c.name}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                {/* Number of Developers */}
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="numDevs">Number of Developers</Label>
                                                     <Input
-                                                        id="hourlyRate"
+                                                        id="numDevs"
                                                         type="number"
                                                         min="1"
-                                                        className="pl-8"
-                                                        value={config.hourly_rate}
+                                                        value={config.num_developers}
                                                         onChange={(e) =>
                                                             setConfig((prev) => ({
                                                                 ...prev,
-                                                                hourly_rate: parseFloat(e.target.value) || 0,
+                                                                num_developers: parseInt(e.target.value) || 1,
                                                             }))
                                                         }
                                                     />
                                                 </div>
                                             </div>
-
-                                            {/* Currency */}
-                                            <div className="space-y-2">
-                                                <Label>Currency</Label>
-                                                <Select
-                                                    value={config.currency}
-                                                    onValueChange={(val) =>
-                                                        setConfig((prev) => ({ ...prev, currency: val }))
-                                                    }
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {CURRENCIES.map((c) => (
-                                                            <SelectItem key={c.code} value={c.code}>
-                                                                {c.symbol} {c.code} — {c.name}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            {/* Number of Developers */}
-                                            <div className="space-y-2">
-                                                <Label htmlFor="numDevs">Number of Developers</Label>
-                                                <Input
-                                                    id="numDevs"
-                                                    type="number"
-                                                    min="1"
-                                                    value={config.num_developers}
-                                                    onChange={(e) =>
-                                                        setConfig((prev) => ({
-                                                            ...prev,
-                                                            num_developers: parseInt(e.target.value) || 1,
-                                                        }))
-                                                    }
-                                                />
-                                            </div>
-                                        </div>
 
                                         <div className="flex justify-end">
                                             <Button
@@ -680,7 +676,7 @@ export default function Page() {
                             </TabsContent>
 
                             {/* ─── Estimates Tab ────────────────────── */}
-                            <TabsContent value="estimates" className="space-y-6">
+                            <TabsContent value="estimates" className="mt-0 space-y-6 outline-none animate-fade-in">
                                 <Card className="border-border/50 shadow-sm">
                                     <CardHeader className="bg-muted/30 border-b border-border/50">
                                         <div className="flex items-center justify-between">
@@ -822,7 +818,7 @@ export default function Page() {
                             </TabsContent>
 
                             {/* ─── Results Tab ──────────────────────── */}
-                            <TabsContent value="results" className="space-y-6">
+                            <TabsContent value="results" className="mt-0 space-y-6 outline-none animate-fade-in">
                                 {/* Simulate Button */}
                                 <Card className="border-border/50 shadow-sm">
                                     <CardContent className="py-6">
@@ -1024,6 +1020,7 @@ export default function Page() {
                                     </>
                                 )}
                             </TabsContent>
+                            </div>
                         </Tabs>
                     )}
                 </div>

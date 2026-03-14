@@ -42,11 +42,7 @@ export default function FeedbackDetailsPage() {
         <div className="flex-1 space-y-4 p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
                 <div className="flex items-center space-x-2">
-                    <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/projects/${projectId}/feedback`}>
-                            <ArrowLeft className="h-4 w-4" />
-                        </Link>
-                    </Button>
+
                     <h2 className="text-3xl font-bold tracking-tight truncate">{feedback.title}</h2>
                 </div>
                 {isManager && (

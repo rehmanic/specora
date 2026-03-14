@@ -72,9 +72,6 @@ export default function ChatPage() {
                             <p className="text-lg font-semibold leading-tight">Team Chat</p>
                             <span className="flex h-2 w-2 rounded-full bg-primary pulse-glow"></span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            Live discussion for this project
-                        </p>
                     </div>
                 </div>
 

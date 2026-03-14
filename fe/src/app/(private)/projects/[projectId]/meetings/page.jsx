@@ -9,11 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Video, Trash2, Pencil, Plus, Calendar, Clock, Play, FileText, X } from "lucide-react";
+import { Video, Trash2, Pencil, Plus, Calendar, Clock, Play, FileText, X, CalendarDays } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import PageBanner from "@/components/layout/PageBanner";
+import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 
 export default function MeetingsPage() {
   const { projectId } = useParams();
@@ -28,6 +30,7 @@ export default function MeetingsPage() {
   const [viewingRecording, setViewingRecording] = useState(null);
   const [formData, setFormData] = useState({ title: "", description: "" });
   const [isGeneratingTranscript, setIsGeneratingTranscript] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleCreate = async () => {
     try {
@@ -114,36 +117,41 @@ export default function MeetingsPage() {
 
   return (
     <TooltipProvider>
-      <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Meetings</h1>
-          <Dialog open={isCreating} onOpenChange={setIsCreating}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Schedule Meeting
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>New Meeting</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Meeting title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                />
-                <Textarea
-                  placeholder="Description (optional)"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-                <Button onClick={handleCreate} className="w-full">Create Meeting</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
+        <PageBanner
+          title="Meetings"
+          description="Schedule, manage, and review project meetings."
+          icon={CalendarDays}
+        />
+
+        <SearchCreateHeader 
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          searchPlaceholder="Search meetings by title or description..."
+          buttonText="Schedule Meeting"
+          onAction={() => setIsCreating(true)}
+        />
+
+        <Dialog open={isCreating} onOpenChange={setIsCreating}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>New Meeting</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                placeholder="Meeting title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              />
+              <Textarea
+                placeholder="Description (optional)"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+              <Button onClick={handleCreate} className="w-full">Create Meeting</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Dialog */}
         <Dialog open={!!editingMeeting} onOpenChange={(open) => !open && setEditingMeeting(null)}>
@@ -271,7 +279,12 @@ export default function MeetingsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {meetings.map((meeting) => (
+                {meetings
+                  .filter(m => 
+                    m.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                    m.description?.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map((meeting) => (
                   <TableRow key={meeting.id}>
                     <TableCell className="font-medium">{meeting.title}</TableCell>
                     <TableCell className="text-muted-foreground max-w-[200px] truncate">

@@ -58,6 +58,9 @@ import {
 import RequirementDialog from "@/components/requirements/RequirementDialog";
 import DependencyGraph from "@/components/requirements/TraceabilityGraph";
 import StatsCard from "@/components/requirements/StatsCard";
+import PageBanner from "@/components/layout/PageBanner";
+import { ClipboardList } from "lucide-react";
+import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 
 const PAGE_SIZE = 5;
 
@@ -399,74 +402,66 @@ export default function Page() {
           />
 
           {/* Header */}
-          <div
-            className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 animate-fade-in"
-          >
-            <div>
-              <h1 className="text-3xl font-bold font-display">Requirements</h1>
-              <p className="text-muted-foreground mt-1">
-                Manage hierarchy, history, and dependencies of specifications.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Import */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    disabled={importLoading}
-                  >
-                    {importLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4" />
-                    )}
-                    Import
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleImportClick("json")}>
-                    Import JSON
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleImportClick("csv")}>
-                    Import CSV
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+          <PageBanner
+            title="Requirements"
+            description="Manage hierarchy, history, and dependencies of specifications."
+            icon={ClipboardList}
+            className="animate-fade-in mb-4"
+          />
 
-              {/* Export */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <Download className="h-4 w-4" /> Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleExport("json")}>
-                    As JSON
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport("csv")}>
-                    As CSV
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+          <div className="flex justify-end animate-fade-in">
+              <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
+                {/* Import */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      disabled={importLoading}
+                    >
+                      {importLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      Import
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => handleImportClick("json")}>
+                      Import JSON
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleImportClick("csv")}>
+                      Import CSV
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={() => setGraphOpen(true)}
-              >
-                <GitBranch className="h-4 w-4" /> Graph View
-              </Button>
-              <Button
-                onClick={handleAddClick}
-                className="gap-2 gradient-primary border-0"
-              >
-                <Plus className="h-4 w-4" />
-                Add Requirement
-              </Button>
-            </div>
+                {/* Export */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="gap-2">
+                      <Download className="h-4 w-4" /> Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => handleExport("json")}>
+                      As JSON
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport("csv")}>
+                      As CSV
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => setGraphOpen(true)}
+                >
+                  <GitBranch className="h-4 w-4" /> Graph View
+                </Button>
+              </div>
           </div>
 
           {/* Stats */}
@@ -501,47 +496,42 @@ export default function Page() {
           </div>
 
           {/* Filters Area */}
-          <div
-            className="flex flex-col md:flex-row gap-4 animate-fade-in"
-            style={{ animationDelay: "0.15s" }}
-          >
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search requirements by ID, title, or description..."
-                className="pl-10"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <Filter className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Priorities</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="mid">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <SearchCreateHeader 
+            searchQuery={search}
+            setSearchQuery={setSearch}
+            searchPlaceholder="Search requirements by ID, title, or description..."
+            buttonText="Add Requirement"
+            onAction={handleAddClick}
+            extraButtons={
+              <div className="flex flex-wrap items-center gap-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <Filter className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+  
+                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priorities</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="mid">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            }
+          />
 
           {/* Table Area */}
           <div

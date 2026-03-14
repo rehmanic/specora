@@ -236,13 +236,6 @@ export default function UserInfo({ variant = "create-user", username }) {
             >
               {isSaving ? "Processing..." : isCreate ? "Create User" : "Save Changes"}
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => router.push("/users")}
-              className="w-full text-xs font-bold"
-            >
-              Back to List
-            </Button>
           </div>
         </div>
 

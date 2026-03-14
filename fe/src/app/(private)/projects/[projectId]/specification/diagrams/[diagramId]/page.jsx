@@ -171,13 +171,7 @@ export default function DiagramEditorPage() {
             <div className="flex flex-col h-full min-h-0 p-6 lg:p-8 animate-fade-in">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0">
                     <div className="flex items-center gap-3">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => router.push(`/projects/${projectId}/specification/diagrams`)}
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
+
                         <div>
                             <h1 className="text-2xl font-bold font-display">
                                 {loadLoading ? "…" : diagramTitle || "Untitled diagram"}

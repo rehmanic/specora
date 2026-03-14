@@ -18,6 +18,9 @@ import { deleteFeedback } from "@/api/feedback";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import PageBanner from "@/components/layout/PageBanner";
+import { MessageCircleQuestion } from "lucide-react";
+import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 
 export default function FeedbackList({ projectId }) {
     const router = useRouter();
@@ -25,6 +28,7 @@ export default function FeedbackList({ projectId }) {
     const [feedbacks, setFeedbacks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // Check if user is Manager or Requirements Engineer
     const canCreate = ["manager", "requirements_engineer"].includes(user?.role);
@@ -63,22 +67,19 @@ export default function FeedbackList({ projectId }) {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Feedback Forms</h2>
-                    <p className="text-muted-foreground">
-                        Manage feedback forms and view responses.
-                    </p>
-                </div>
-                {canCreate && (
-                    <Button asChild>
-                        <Link href={`./feedback/create`}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create New
-                        </Link>
-                    </Button>
-                )}
-            </div>
+            <PageBanner
+                title="Feedback Forms"
+                description="Manage feedback forms and view responses."
+                icon={MessageCircleQuestion}
+            />
+
+            <SearchCreateHeader 
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                searchPlaceholder="Search feedback..."
+                linkTo="./feedback/create"
+                showButton={canCreate}
+            />
 
             <div className="rounded-md border">
                 <Table>
@@ -99,7 +100,9 @@ export default function FeedbackList({ projectId }) {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            feedbacks.map((item) => (
+                            feedbacks
+                                .filter(f => f.title?.toLowerCase().includes(searchQuery.toLowerCase()))
+                                .map((item) => (
                                 <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`./feedback/${item.id}`)}>
                                     <TableCell className="font-medium">
                                         <div className="flex items-center">

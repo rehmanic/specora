@@ -85,49 +85,65 @@ export function ProjectCard({ project, onClick }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-6 space-y-4 relative">
-        {/* Floating Icon/Initial */}
-        <div className="absolute -top-10 left-6 z-10">
-          <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${getProjectColor(name)} shadow-xl ring-4 ring-card transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110`}>
-            {icon_url ? (
-              <img
-                src={icon_url}
-                alt={`${name} icon`}
-                className="h-8 w-8 object-contain"
-              />
-            ) : (
-              <span className="text-white text-xl font-bold">
-                {name?.charAt(0).toUpperCase()}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Header */}
-        <div className="pt-6 space-y-1">
-          <h3 className="text-xl font-bold text-card-foreground truncate group-hover:text-primary transition-colors tracking-tight">
-            {name}
-          </h3>
-          {description && (
-            <p className="text-xs text-muted-foreground/80 line-clamp-2 leading-relaxed">
-              {description}
-            </p>
-          )}
-        </div>
-
-        {/* Meta info */}
-        <div className="flex items-center gap-4 pt-4 border-t border-white/5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-          <div className="flex items-center gap-1.5 group/meta">
-            <Calendar className="h-3 w-3 transition-colors group-hover/meta:text-primary" />
-            <span>{formatDate(created_at)}</span>
-          </div>
-
-          {members?.length > 0 && (
-            <div className="flex items-center gap-1.5 group/meta">
-              <Users className="h-3 w-3 transition-colors group-hover/meta:text-primary" />
-              <span>{members.length} {members.length !== 1 ? 'Collaborators' : 'Collaborator'}</span>
+      <div className="flex-1 p-6 flex flex-col justify-between relative bg-gradient-to-b from-transparent to-card/50">
+        <div className="space-y-4">
+          {/* Floating Icon/Initial */}
+          <div className="absolute -top-10 left-6 z-10">
+            <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${getProjectColor(name)} shadow-xl ring-4 ring-card transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110`}>
+              {icon_url ? (
+                <img
+                  src={icon_url}
+                  alt={`${name} icon`}
+                  className="h-8 w-8 object-contain"
+                />
+              ) : (
+                <span className="text-white text-xl font-bold">
+                  {name?.charAt(0).toUpperCase()}
+                </span>
+              )}
             </div>
+          </div>
+
+          {/* Header */}
+          <div className="pt-6 space-y-2">
+            <h3 className="text-xl font-bold text-card-foreground line-clamp-1 group-hover:text-primary transition-colors tracking-tight">
+              {name}
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed h-10">
+              {description || "No description provided."}
+            </p>
+          </div>
+
+          {/* Tags */}
+          {project.tags && project.tags.length > 0 && (
+             <div className="flex flex-wrap gap-1.5 pt-1">
+                {project.tags.slice(0, 3).map((tag, i) => (
+                  <span key={i} className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-secondary/50 text-secondary-foreground border border-border/50">
+                    {tag}
+                  </span>
+                ))}
+                {project.tags.length > 3 && (
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-muted text-muted-foreground border border-border/50">
+                    +{project.tags.length - 3}
+                  </span>
+                )}
+             </div>
           )}
+        </div>
+
+        {/* Footer Meta info */}
+        <div className="flex items-center justify-between pt-5 mt-5 border-t border-border/50 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <div className="flex gap-4">
+            <div className="flex items-center gap-1.5 group/meta">
+              <Calendar className="h-3.5 w-3.5 transition-colors group-hover/meta:text-primary" />
+              <span>{formatDate(created_at)}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-1.5 group/meta">
+            <Users className="h-3.5 w-3.5 transition-colors group-hover/meta:text-primary" />
+            <span>{members?.length || 0}</span>
+          </div>
         </div>
       </div>
 

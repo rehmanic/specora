@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { UsersTable } from "@/components/users/UsersTable";
 import { Button } from "@/components/ui/button";
-import { UserPlus, ArrowLeft, Users, UserCheck, UserX, Shield } from "lucide-react";
+import { UserPlus, Users, UserCheck, UserX, Shield } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { getAllUsersRequest } from "@/api/users";
 import ErrorBox from "@/components/common/ErrorBox";
 import Logo from "@/components/common/Logo";
+import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 
 // Stats Card Component
 function StatsCard({ icon: Icon, label, value, color = "primary" }) {
@@ -53,6 +54,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -90,6 +92,11 @@ export default function UsersPage() {
     return acc;
   }, {});
 
+  const filteredUsers = users.filter((u) => 
+    u.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <ProtectedRoute allowedRoles={["manager"]}>
       <div className="min-h-screen bg-background">
@@ -97,13 +104,6 @@ export default function UsersPage() {
         {/* Main Content */}
         <main className="p-6 lg:p-8">
           <div className="max-w-6xl mx-auto space-y-8">
-            {/* Back button */}
-            <Link href="/dashboard">
-              <Button variant="ghost" className="gap-2 -ml-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
-            </Link>
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 animate-fade-in">
@@ -113,12 +113,6 @@ export default function UsersPage() {
                   Manage system users, permissions, and access controls
                 </p>
               </div>
-              <Link href="/users/create">
-                <Button className="gap-2 gradient-primary border-0">
-                  <UserPlus className="h-4 w-4" />
-                  Create User
-                </Button>
-              </Link>
             </div>
 
             {/* Stats */}
@@ -149,6 +143,14 @@ export default function UsersPage() {
               />
             </div>
 
+            <SearchCreateHeader 
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              searchPlaceholder="Search users by name or email..."
+              buttonText="Create User"
+              linkTo="/users/create"
+            />
+
             {/* Error Message */}
             {error && <ErrorBox message={`Error loading users: ${error}`} dismissible />}
 
@@ -159,7 +161,7 @@ export default function UsersPage() {
                   <LoadingSkeleton />
                 </div>
               ) : (
-                <UsersTable users={users} />
+                <UsersTable users={filteredUsers} />
               )}
             </div>
           </div>

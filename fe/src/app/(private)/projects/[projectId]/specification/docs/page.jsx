@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import useAuthStore from "@/store/authStore";
 import NewDocDialog from "@/components/docs/NewDocDialog";
 import DocCard from "@/components/docs/DocCard";
+import PageBanner from "@/components/layout/PageBanner";
+import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 import {
     getDocs,
     createDoc,
@@ -25,6 +27,7 @@ export default function Page() {
     const [docs, setDocs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isCreating, setIsCreating] = useState(false);
 
     useEffect(() => {
         if (!projectId || !token) return;
@@ -78,34 +81,21 @@ export default function Page() {
         <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer"]}>
             <main className="w-full p-6 lg:p-8 overflow-y-auto">
                 <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-primary/10 rounded-xl">
-                                    <FileText className="h-6 w-6 text-primary" />
-                                </div>
-                                <h1 className="text-3xl font-bold font-display tracking-tight">
-                                    Specification Documents
-                                </h1>
-                            </div>
-                            <p className="text-muted-foreground mt-2 text-lg">
-                                Create and manage textual requirements, SRS, and use cases.
-                            </p>
-                        </div>
-                        <NewDocDialog onSubmit={handleCreate} />
-                    </div>
+                    <PageBanner
+                        title="Specification Documents"
+                        description="Create and manage textual requirements, SRS, and use cases."
+                        icon={FileText}
+                    />
 
-                    {!loading && docs.length > 0 && (
-                        <div className="relative max-w-sm">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search documents..."
-                                className="pl-9"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                    )}
+                    {/* Toolbar */}
+                    <SearchCreateHeader 
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        searchPlaceholder="Search documents..."
+                        buttonText="New Doc"
+                        onAction={() => setIsCreating(true)}
+                    />
+                    <NewDocDialog open={isCreating} onOpenChange={setIsCreating} onSubmit={handleCreate} />
 
                     {loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -126,9 +116,6 @@ export default function Page() {
                                     ? "Create your first document to start drafting out textual requirements."
                                     : "No documents match your search query."}
                             </p>
-                            {docs.length === 0 && (
-                                <NewDocDialog onSubmit={handleCreate} />
-                            )}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

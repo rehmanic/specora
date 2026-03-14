@@ -8,7 +8,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus } from "lucide-react";
 
-export default function NewPrototypeDialog({ onSubmit }) {
-    const [open, setOpen] = useState(false);
+export default function NewPrototypeDialog({ onSubmit, open, onOpenChange }) {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [loading, setLoading] = useState(false);
@@ -30,7 +28,7 @@ export default function NewPrototypeDialog({ onSubmit }) {
             await onSubmit({ name: name.trim(), description: description.trim() || null });
             setName("");
             setDescription("");
-            setOpen(false);
+            onOpenChange(false);
         } catch {
             // error handled by parent
         } finally {
@@ -39,12 +37,7 @@ export default function NewPrototypeDialog({ onSubmit }) {
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button className="gap-2">
-                    <Plus className="h-4 w-4" /> New Prototype
-                </Button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>

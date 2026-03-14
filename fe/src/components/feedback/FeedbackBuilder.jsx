@@ -5,7 +5,7 @@ import { SurveyCreatorComponent, SurveyCreator } from "survey-creator-react";
 import "survey-core/survey-core.min.css";
 import "survey-creator-core/survey-creator-core.min.css";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createFeedback, updateFeedback, getFeedback } from "@/api/feedback";
@@ -100,11 +100,7 @@ export default function FeedbackBuilder({ projectId, feedbackId }) {
         <div className="flex flex-col h-[calc(100vh-100px)]">
             <div className="flex items-center justify-between p-4 border-b bg-background">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/projects/${projectId}/feedback`}>
-                            <ArrowLeft className="h-4 w-4" />
-                        </Link>
-                    </Button>
+
                     <h2 className="text-xl font-semibold">{feedbackId ? "Edit Feedback Form" : "Create Feedback Form"}</h2>
                 </div>
                 <Button onClick={handleSave} disabled={saving}>

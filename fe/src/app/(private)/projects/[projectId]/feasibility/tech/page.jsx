@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import PageBanner from "@/components/layout/PageBanner";
 import { toast } from "sonner";
 import useAuthStore from "@/store/authStore";
 import ReactMarkdown from "react-markdown";
@@ -298,20 +299,11 @@ export default function Page() {
             <main className="w-full p-6 lg:p-8 overflow-y-auto">
                 <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
                     {/* Header */}
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-primary/10 rounded-xl">
-                                <Cpu className="h-6 w-6 text-primary" />
-                            </div>
-                            <h1 className="text-3xl font-bold font-display tracking-tight">
-                                Technical Feasibility
-                            </h1>
-                        </div>
-                        <p className="text-muted-foreground mt-2 text-lg">
-                            Research technical decisions with AI-powered
-                            web search and analysis.
-                        </p>
-                    </div>
+                    <PageBanner
+                        title="Technical Feasibility"
+                        description="Research technical decisions with AI-powered web search and analysis."
+                        icon={Cpu}
+                    />
 
                     {/* Search Input */}
                     <Card className="border-border/50 shadow-sm">

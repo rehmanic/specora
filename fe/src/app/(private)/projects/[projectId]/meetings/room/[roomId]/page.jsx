@@ -194,7 +194,6 @@ export default function MeetingRoomPage() {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-neutral-900 text-white gap-4">
         <p className="text-red-400">{error}</p>
-        <Button onClick={() => router.back()}>Go Back</Button>
       </div>
     );
   }

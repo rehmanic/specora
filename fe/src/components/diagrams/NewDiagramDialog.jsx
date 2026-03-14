@@ -8,15 +8,13 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Plus } from "lucide-react";
 
-export default function NewDiagramDialog({ onSubmit }) {
-    const [open, setOpen] = useState(false);
+export default function NewDiagramDialog({ onSubmit, open, onOpenChange }) {
     const [title, setTitle] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -27,7 +25,7 @@ export default function NewDiagramDialog({ onSubmit }) {
         try {
             await onSubmit({ title: title.trim() });
             setTitle("");
-            setOpen(false);
+            onOpenChange(false);
         } catch {
             // error handled by parent
         } finally {
@@ -36,12 +34,7 @@ export default function NewDiagramDialog({ onSubmit }) {
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button className="gap-2">
-                    <Plus className="h-4 w-4" /> New Diagram
-                </Button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>

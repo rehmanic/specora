@@ -16,8 +16,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export function RoleList({ onEdit }) {
+export function RoleList({ onEdit, searchQuery = "" }) {
   const { roles, fetchRoles, deleteRole, loading } = useRbacStore();
+
+  const filteredRoles = roles.filter((role) =>
+    role.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     fetchRoles();
@@ -46,7 +50,7 @@ export function RoleList({ onEdit }) {
             </tr>
           </thead>
           <tbody>
-            {roles.map((role) => (
+            {filteredRoles.map((role) => (
               <tr 
                 key={role.id}
                 className="border-b border-border/50 hover:bg-muted/20 transition-colors"
@@ -96,7 +100,7 @@ export function RoleList({ onEdit }) {
                 </td>
               </tr>
             ))}
-            {roles.length === 0 && !loading && (
+            {filteredRoles.length === 0 && !loading && (
               <tr>
                 <td colSpan={2} className="text-center py-20 text-muted-foreground">
                   <div className="flex flex-col items-center justify-center opacity-40">

@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import useAuthStore from "@/store/authStore";
 import NewDiagramDialog from "@/components/diagrams/NewDiagramDialog";
 import DiagramCard from "@/components/diagrams/DiagramCard";
+import PageBanner from "@/components/layout/PageBanner";
+import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 import {
     getDiagrams,
     createDiagram,
@@ -25,6 +27,7 @@ export default function Page() {
     const [diagrams, setDiagrams] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isCreating, setIsCreating] = useState(false);
 
     useEffect(() => {
         if (!projectId || !token) return;
@@ -78,34 +81,21 @@ export default function Page() {
         <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer"]}>
             <main className="w-full p-6 lg:p-8 overflow-y-auto">
                 <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-primary/10 rounded-xl">
-                                    <Workflow className="h-6 w-6 text-primary" />
-                                </div>
-                                <h1 className="text-3xl font-bold font-display tracking-tight">
-                                    Specification Diagrams
-                                </h1>
-                            </div>
-                            <p className="text-muted-foreground mt-2 text-lg">
-                                Create and manage Mermaid diagrams for system architecture and workflows.
-                            </p>
-                        </div>
-                        <NewDiagramDialog onSubmit={handleCreate} />
-                    </div>
+                    <PageBanner
+                        title="Specification Diagrams"
+                        description="Create and manage Mermaid diagrams for system architecture and workflows."
+                        icon={Workflow}
+                    />
 
-                    {!loading && diagrams.length > 0 && (
-                        <div className="relative max-w-sm">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search diagrams..."
-                                className="pl-9"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                    )}
+                    {/* Toolbar */}
+                    <SearchCreateHeader 
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        searchPlaceholder="Search diagrams..."
+                        buttonText="New Diagram"
+                        onAction={() => setIsCreating(true)}
+                    />
+                    <NewDiagramDialog open={isCreating} onOpenChange={setIsCreating} onSubmit={handleCreate} />
 
                     {loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -126,9 +116,6 @@ export default function Page() {
                                     ? "Create your first diagram to start visualizing architecture and flows with Mermaid."
                                     : "No diagrams match your search query."}
                             </p>
-                            {diagrams.length === 0 && (
-                                <NewDiagramDialog onSubmit={handleCreate} />
-                            )}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

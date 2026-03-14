@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import useAuthStore from "@/store/authStore";
 import NewPrototypeDialog from "@/components/prototyping/NewPrototypeDialog";
 import PrototypeCard from "@/components/prototyping/PrototypeCard";
+import PageBanner from "@/components/layout/PageBanner";
+import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 import {
     getPrototypes,
     createPrototype,
@@ -25,6 +27,7 @@ export default function Page() {
     const [prototypes, setPrototypes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isCreating, setIsCreating] = useState(false);
 
     // ─── Fetch prototypes ─────────────────────────────
     useEffect(() => {
@@ -84,36 +87,21 @@ export default function Page() {
         <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer", "designer"]}>
             <main className="w-full p-6 lg:p-8 overflow-y-auto">
                 <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
-                    {/* Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-primary/10 rounded-xl">
-                                    <PenTool className="h-6 w-6 text-primary" />
-                                </div>
-                                <h1 className="text-3xl font-bold font-display tracking-tight">
-                                    Prototyping
-                                </h1>
-                            </div>
-                            <p className="text-muted-foreground mt-2 text-lg">
-                                Create and manage wireframe prototypes for your project.
-                            </p>
-                        </div>
-                        <NewPrototypeDialog onSubmit={handleCreate} />
-                    </div>
+                    <PageBanner
+                        title="Prototyping"
+                        description="Create and manage wireframe prototypes for your project."
+                        icon={PenTool}
+                    />
 
-                    {/* Search */}
-                    {!loading && prototypes.length > 0 && (
-                        <div className="relative max-w-sm">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search prototypes..."
-                                className="pl-9"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                    )}
+                    {/* Toolbar */}
+                    <SearchCreateHeader 
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        searchPlaceholder="Search prototypes..."
+                        buttonText="New Prototype"
+                        onAction={() => setIsCreating(true)}
+                    />
+                    <NewPrototypeDialog open={isCreating} onOpenChange={setIsCreating} onSubmit={handleCreate} />
 
                     {/* Content */}
                     {loading ? (
@@ -135,9 +123,6 @@ export default function Page() {
                                     ? "Create your first prototype to start designing wireframes for this project."
                                     : "No prototypes match your search query."}
                             </p>
-                            {prototypes.length === 0 && (
-                                <NewPrototypeDialog onSubmit={handleCreate} />
-                            )}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
