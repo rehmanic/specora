@@ -21,6 +21,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PageBanner from "@/components/layout/PageBanner";
 import { MessageCircleQuestion } from "lucide-react";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
+import TablePagination from "@/components/common/TablePagination";
+import StatsCard from "@/components/requirements/StatsCard";
 
 export default function FeedbackList({ projectId }) {
     const router = useRouter();
@@ -29,6 +31,22 @@ export default function FeedbackList({ projectId }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 5;
+
+    // Filtered list
+    const filtered = feedbacks.filter(f => f.title?.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const totalPages = Math.ceil(filtered.length / pageSize);
+    const paginated = filtered.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    );
+
+    // Reset to first page when search query changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
 
     // Check if user is Manager or Requirements Engineer
     const canCreate = ["manager", "requirements_engineer"].includes(user?.role);
@@ -50,6 +68,13 @@ export default function FeedbackList({ projectId }) {
             fetchFeedbacks();
         }
     }, [projectId]);
+
+    const stats = {
+        total: feedbacks.length,
+        active: feedbacks.filter(f => f.status === 'active').length,
+        closed: feedbacks.filter(f => f.status === 'closed').length,
+        responses: feedbacks.reduce((acc, curr) => acc + (curr._count?.feedback_response || 0), 0)
+    };
 
     if (loading) {
         return (
@@ -73,7 +98,34 @@ export default function FeedbackList({ projectId }) {
                 icon={MessageCircleQuestion}
             />
 
-            <SearchCreateHeader 
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+                <StatsCard
+                    icon={MessageSquare}
+                    label="Total Forms"
+                    value={stats.total}
+                    color="primary"
+                />
+                <StatsCard
+                    icon={Plus}
+                    label="Active"
+                    value={stats.active}
+                    color="success"
+                />
+                <StatsCard
+                    icon={Eye}
+                    label="Responses"
+                    value={stats.responses}
+                    color="info"
+                />
+                <StatsCard
+                    icon={MessageCircleQuestion}
+                    label="Closed"
+                    value={stats.closed}
+                    color="warning"
+                />
+            </div>
+
+            <SearchCreateHeader
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 searchPlaceholder="Search feedback..."
@@ -93,16 +145,14 @@ export default function FeedbackList({ projectId }) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {feedbacks.length === 0 ? (
+                        {paginated.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center">
                                     No feedback forms found.
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            feedbacks
-                                .filter(f => f.title?.toLowerCase().includes(searchQuery.toLowerCase()))
-                                .map((item) => (
+                            paginated.map((item) => (
                                 <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`./feedback/${item.id}`)}>
                                     <TableCell className="font-medium">
                                         <div className="flex items-center">
@@ -157,6 +207,13 @@ export default function FeedbackList({ projectId }) {
                         )}
                     </TableBody>
                 </Table>
+                <TablePagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    totalItems={filtered.length}
+                    pageSize={pageSize}
+                />
             </div>
         </div>
     );

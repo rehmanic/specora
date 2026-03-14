@@ -8,11 +8,22 @@ import { Button } from "@/components/ui/button";
 import { ShieldCheck } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
+import PageBanner from "@/components/layout/PageBanner";
+import useRbacStore from "@/store/rbacStore";
+import StatsCard from "@/components/requirements/StatsCard";
+import { useEffect } from "react";
+import { Shield, Key } from "lucide-react";
 
 export default function RbacPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { roles, permissions, fetchRoles, fetchPermissions } = useRbacStore();
   const [selectedRole, setSelectedRole] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    fetchRoles();
+    fetchPermissions();
+  }, [fetchRoles, fetchPermissions]);
 
   const handleCreate = () => {
     setSelectedRole(null);
@@ -29,19 +40,29 @@ export default function RbacPage() {
       <div className="h-full bg-background overflow-auto p-6 lg:p-8">
         <div className="max-w-6xl mx-auto space-y-8 transition-all duration-500 animate-in fade-in">
 
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary/10 rounded-xl text-primary shadow-sm">
-                <ShieldCheck className="h-8 w-8" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold font-display tracking-tight">RBAC Management</h1>
-              </div>
-            </div>
+          <PageBanner
+            title="RBAC Management"
+            description="Manage system roles, permissions, and access control policies."
+            icon={ShieldCheck}
+          />
+
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <StatsCard
+              icon={Shield}
+              label="Total Roles"
+              value={roles.length}
+              color="primary"
+            />
+            <StatsCard
+              icon={Key}
+              label="Total Permissions"
+              value={permissions.length}
+              color="accent"
+            />
           </div>
 
-          <SearchCreateHeader 
+          <SearchCreateHeader
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             searchPlaceholder="Search roles..."

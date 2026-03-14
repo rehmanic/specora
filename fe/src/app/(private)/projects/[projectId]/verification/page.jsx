@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { ShieldCheck, Play, Loader2, AlertTriangle, CheckCircle2, Info, Eye, FileText } from "lucide-react";
+import { ShieldCheck, Play, Loader2, AlertTriangle, CheckCircle2, Info, Eye, FileText, Gavel, List, Table as LucideTable, Shuffle, AlertCircle } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -27,25 +27,15 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { runARMVerification, runAIVerification, runARMVerificationForRequirement, runAIVerificationForRequirement } from "@/api/verification";
+import { getRequirements } from "@/api/requirements";
 import useAuthStore from "@/store/authStore";
+import PageBanner from "@/components/layout/PageBanner";
+import StatsCard from "@/components/requirements/StatsCard";
+import TablePagination from "@/components/common/TablePagination";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
-function StatsCard({ icon: Icon, label, value, color = "text-primary" }) {
-    return (
-        <Card className="border-border/50 shadow-sm">
-            <CardContent className="p-4 flex items-center gap-4">
-                <div className={`p-2 rounded-lg bg-muted/50 ${color}`}>
-                    <Icon className="h-5 w-5" />
-                </div>
-                <div>
-                    <p className="text-sm text-muted-foreground">{label}</p>
-                    <p className="text-2xl font-bold font-display">{value}</p>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
+
 
 export default function Page() {
     const { projectId } = useParams();
@@ -70,19 +60,21 @@ export default function Page() {
     const [activeAiResult, setActiveAiResult] = useState(null);
     const [runningAiReqs, setRunningAiReqs] = useState({});
 
+    // Pagination
+    const [armPage, setArmPage] = useState(1);
+    const [aiPage, setAiPage] = useState(1);
+    const PAGE_SIZE = 5;
+
     // Dialog state for ARM
     const [armDialogOpen, setArmDialogOpen] = useState(false);
     const [activeArmResult, setActiveArmResult] = useState(null);
 
     useEffect(() => {
         async function fetchRequirements() {
+            setReqLoading(true);
             try {
-                const res = await fetch(`${API_BASE}/requirements/${projectId}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (!res.ok) throw new Error("Failed to fetch requirements");
-                const data = await res.json();
-                setRequirements(data.requirements || []);
+                const res = await getRequirements(projectId, { flat: true });
+                setRequirements(res.requirements || []);
             } catch (error) {
                 console.error("Error fetching requirements:", error);
                 toast.error("Could not load requirements.");
@@ -90,8 +82,8 @@ export default function Page() {
                 setReqLoading(false);
             }
         }
-        if (projectId && token) fetchRequirements();
-    }, [projectId, token]);
+        if (projectId) fetchRequirements();
+    }, [projectId]);
 
     const handleRunARM = async () => {
         if (requirements.length === 0) {
@@ -214,302 +206,324 @@ export default function Page() {
 
     const armCheckedCount = Object.keys(armResults).length;
 
+    const paginatedArmReqs = requirements.slice((armPage - 1) * PAGE_SIZE, armPage * PAGE_SIZE);
+    const totalArmPages = Math.ceil(requirements.length / PAGE_SIZE);
+
+    const paginatedAiReqs = requirements.slice((aiPage - 1) * PAGE_SIZE, aiPage * PAGE_SIZE);
+    const totalAiPages = Math.ceil(requirements.length / PAGE_SIZE);
+
     return (
         <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer", "qa"]}>
             <main className="w-full p-6 lg:p-8 overflow-y-auto">
                 <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
-                    {/* Header to match Legal Feasibility */}
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-primary/10 rounded-xl">
-                                <ShieldCheck className="h-6 w-6 text-primary" />
-                            </div>
-                            <h1 className="text-3xl font-bold font-display tracking-tight">Verification</h1>
+                    <PageBanner
+                        title="Verification"
+                        description="Evaluate project requirements against writing guidelines and IEEE standards."
+                        icon={ShieldCheck}
+                    />
+
+                    <Tabs defaultValue="arm" orientation="vertical" className="flex flex-col gap-6 md:flex-row">
+                        <div className="flex flex-col gap-4 min-w-[240px] md:sticky md:top-24">
+                            <TabsList className="bg-muted/50 h-fit w-full flex-col gap-1 p-1 border rounded-xl">
+                                <TabsTrigger value="arm" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                                    <FileText className="h-4 w-4" />
+                                    Specora ARM
+                                </TabsTrigger>
+                                <TabsTrigger value="ai" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                                    <ShieldCheck className="h-4 w-4" />
+                                    IEEE AI Analysis
+                                </TabsTrigger>
+                            </TabsList>
                         </div>
-                        <p className="text-muted-foreground mt-2 text-lg">
-                            Evaluate project requirements against writing guidelines and IEEE standards.
-                        </p>
-                    </div>
 
-                    <Tabs defaultValue="arm" className="space-y-6">
-                        <TabsList className="grid w-full grid-cols-2 max-w-md">
-                            <TabsTrigger value="arm" className="gap-2">
-                                <FileText className="h-4 w-4" /> Specora ARM
-                            </TabsTrigger>
-                            <TabsTrigger value="ai" className="gap-2">
-                                <ShieldCheck className="h-4 w-4" /> IEEE AI Analysis
-                            </TabsTrigger>
-                        </TabsList>
+                        <div className="flex-1">
 
-                        {/* SPECora ARM TAB */}
-                        <TabsContent value="arm" className="space-y-6">
-                            {!reqLoading && requirements.length > 0 && (
-                                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                                    <StatsCard icon={Info} label="Imperatives" value={armMetrics.imperatives} color="text-primary" />
-                                    <StatsCard icon={Info} label="Continuances" value={armMetrics.continuances} color="text-blue-500" />
-                                    <StatsCard icon={Info} label="Directives" value={armMetrics.directives} color="text-indigo-500" />
-                                    <StatsCard icon={Info} label="Options" value={armMetrics.options} color="text-amber-500" />
-                                    <StatsCard icon={AlertTriangle} label="Weak Phrases" value={armMetrics.weakPhrases} color="text-destructive" />
-                                </div>
-                            )}
-
-                            <Card className="border-border/50 shadow-sm">
-                                <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <CardTitle className="text-xl flex items-center gap-2">
-                                                <FileText className="h-5 w-5 text-primary" />
-                                                Automated Requirements Measurement
-                                            </CardTitle>
-                                            <CardDescription className="mt-1">
-                                                Analyze requirements text for standard classical metric indicators.
-                                            </CardDescription>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <Badge variant="outline" className="text-muted-foreground">
-                                                {requirements.length} total
-                                            </Badge>
-                                            {requirements.length > 0 && (
-                                                <Button
-                                                    size="sm"
-                                                    className="gap-2"
-                                                    onClick={handleRunARM}
-                                                    disabled={armLoading || reqLoading}
-                                                >
-                                                    {armLoading ? (
-                                                        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Analyzing...</>
-                                                    ) : (
-                                                        <><Play className="h-3.5 w-3.5" /> Analyze All</>
-                                                    )}
-                                                </Button>
-                                            )}
-                                        </div>
+                            {/* SPECora ARM TAB */}
+                            <TabsContent value="arm" className="space-y-6">
+                                {!reqLoading && requirements.length > 0 && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+                                        <StatsCard icon={Gavel} label="Imperatives" value={armMetrics.imperatives} color="primary" />
+                                        <StatsCard icon={List} label="Continuances" value={armMetrics.continuances} color="info" />
+                                        <StatsCard icon={LucideTable} label="Directives" value={armMetrics.directives} color="primary" />
+                                        <StatsCard icon={Shuffle} label="Options" value={armMetrics.options} color="warning" />
+                                        <StatsCard icon={AlertCircle} label="Weak Phrases" value={armMetrics.weakPhrases} color="error" />
                                     </div>
-                                </CardHeader>
-                                <CardContent className="p-0">
-                                    {reqLoading ? (
-                                        <div className="p-6 space-y-4">
-                                            {[1, 2, 3].map((i) => (
-                                                <div key={i} className="flex items-center gap-4">
-                                                    <Skeleton className="h-4 w-8" />
-                                                    <Skeleton className="h-4 flex-1" />
-                                                    <Skeleton className="h-8 w-20" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : requirements.length === 0 ? (
-                                        <div className="p-12 text-center">
-                                            <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-4">
-                                                <FileText className="h-8 w-8 text-muted-foreground/50" />
-                                            </div>
-                                            <h3 className="text-lg font-medium text-muted-foreground mb-1">No Requirements Found</h3>
-                                            <p className="text-sm text-muted-foreground/80">
-                                                Add requirements to this project to run ARM checks.
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow className="hover:bg-transparent">
-                                                    <TableHead className="w-[80px]">ID</TableHead>
-                                                    <TableHead>Requirement</TableHead>
-                                                    <TableHead className="w-[120px] text-center">Actions</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {requirements.map((req, index) => (
-                                                    <TableRow key={req.id}>
-                                                        <TableCell className="font-mono text-xs text-muted-foreground">
-                                                            {index + 1}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div>
-                                                                <span className="font-medium">{req.title}</span>
-                                                                <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
-                                                                    {req.description}
-                                                                </p>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="flex items-center justify-center gap-1">
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className={`h-8 w-8 text-primary hover:text-primary hover:bg-primary/10`}
-                                                                    onClick={() => handleRunSingleARM(req)}
-                                                                    disabled={runningArmReqs[req.id]}
-                                                                    title="Run ARM for this requirement"
-                                                                >
-                                                                    {runningArmReqs[req.id] ? (
-                                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                                    ) : (
-                                                                        <Play className="h-4 w-4" />
-                                                                    )}
-                                                                </Button>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className={`h-8 w-8 ${armResults[req.id]
-                                                                        ? "text-primary hover:text-primary hover:bg-primary/10"
-                                                                        : "text-muted-foreground hover:text-foreground"
-                                                                        }`}
-                                                                    onClick={() => handleViewARMResult(req)}
-                                                                    disabled={!armResults[req.id]}
-                                                                    title="View analysis result"
-                                                                >
-                                                                    <Eye className="h-4 w-4" />
-                                                                </Button>
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
+                                )}
+
+                                <div className="flex items-center justify-between bg-muted/30 border border-border/50 rounded-xl px-5 py-4">
+                                    <div>
+                                        <CardTitle className="text-xl flex items-center gap-2">
+                                            <FileText className="h-5 w-5 text-primary" />
+                                            Automated Requirements Measurement
+                                        </CardTitle>
+                                        <CardDescription className="mt-1">
+                                            Analyze requirements text for standard classical metric indicators.
+                                        </CardDescription>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Badge variant="outline" className="text-muted-foreground">
+                                            {requirements.length} total
+                                        </Badge>
+                                        {requirements.length > 0 && (
+                                            <Button
+                                                size="sm"
+                                                className="gap-2"
+                                                onClick={handleRunARM}
+                                                disabled={armLoading || reqLoading}
+                                            >
+                                                {armLoading ? (
+                                                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Analyzing...</>
+                                                ) : (
+                                                    <><Play className="h-3.5 w-3.5" /> Analyze All</>
+                                                )}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <Card className="border-border/50 shadow-sm">
+                                    <CardContent className="p-0">
+                                        {reqLoading ? (
+                                            <div className="p-6 space-y-4">
+                                                {[1, 2, 3].map((i) => (
+                                                    <div key={i} className="flex items-center gap-4">
+                                                        <Skeleton className="h-4 w-8" />
+                                                        <Skeleton className="h-4 flex-1" />
+                                                        <Skeleton className="h-8 w-20" />
+                                                    </div>
                                                 ))}
-                                            </TableBody>
-                                        </Table>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        {/* AI Analysis TAB */}
-                        <TabsContent value="ai" className="space-y-6">
-                            {!reqLoading && requirements.length > 0 && (
-                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <StatsCard icon={FileText} label="Total Requirements" value={requirements.length} color="text-primary" />
-                                    <StatsCard icon={Play} label="Checked" value={`${aiCheckedCount} / ${requirements.length}`} color="text-blue-500" />
-                                    <StatsCard icon={ShieldCheck} label="Avg IEEE Compliance" value={`${aiAvgScore}%`} color={aiAvgScore > 80 ? "text-emerald-500" : "text-amber-500"} />
-                                </div>
-                            )}
-
-                            <Card className="border-border/50 shadow-sm">
-                                <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <CardTitle className="text-xl flex items-center gap-2">
-                                                <ShieldCheck className="h-5 w-5 text-primary" />
-                                                IEEE Quality Analysis
-                                            </CardTitle>
-                                            <CardDescription className="mt-1">
-                                                SpecBot analyzes requirement completeness, consistency, and verifiability.
-                                            </CardDescription>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <Badge variant="outline" className="text-muted-foreground">
-                                                {requirements.length} total
-                                            </Badge>
-                                            {requirements.length > 0 && (
-                                                <Button
-                                                    size="sm"
-                                                    className="gap-2 gradient-primary border-0"
-                                                    onClick={handleRunAI}
-                                                    disabled={aiLoading || reqLoading}
-                                                >
-                                                    {aiLoading ? (
-                                                        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Verifying...</>
-                                                    ) : (
-                                                        <><Play className="h-3.5 w-3.5" /> Verify All</>
-                                                    )}
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="p-0">
-                                    {reqLoading ? (
-                                        <div className="p-6 space-y-4">
-                                            {[1, 2, 3].map((i) => (
-                                                <div key={i} className="flex items-center gap-4">
-                                                    <Skeleton className="h-4 w-8" />
-                                                    <Skeleton className="h-4 flex-1" />
-                                                    <Skeleton className="h-8 w-20" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : requirements.length === 0 ? (
-                                        <div className="p-12 text-center">
-                                            <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-4">
-                                                <ShieldCheck className="h-8 w-8 text-muted-foreground/50" />
                                             </div>
-                                            <h3 className="text-lg font-medium text-muted-foreground mb-1">No Requirements Found</h3>
-                                            <p className="text-sm text-muted-foreground/80">
-                                                Add requirements to this project to perform AI analysis.
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow className="hover:bg-transparent">
-                                                    <TableHead className="w-[80px]">ID</TableHead>
-                                                    <TableHead>Requirement</TableHead>
-                                                    <TableHead className="w-[120px] text-center">Score</TableHead>
-                                                    <TableHead className="w-[120px] text-center">Actions</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {requirements.map((req, index) => {
-                                                    const res = aiResults[req.id];
-                                                    const score = getAiScore(res);
-                                                    return (
-                                                        <TableRow key={req.id}>
-                                                            <TableCell className="font-mono text-xs text-muted-foreground">
-                                                                {index + 1}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <div>
-                                                                    <span className="font-medium">{req.title}</span>
-                                                                    <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
-                                                                        {req.description}
-                                                                    </p>
-                                                                </div>
-                                                            </TableCell>
-                                                            <TableCell className="text-center">
-                                                                {res ? (
-                                                                    <span className={score === 100 ? "text-emerald-500 font-medium" : "text-amber-500 font-medium"}>
-                                                                        {score}%
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="text-muted-foreground">-</span>
-                                                                )}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <div className="flex items-center justify-center gap-1">
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className={`h-8 w-8 text-primary hover:text-primary hover:bg-primary/10`}
-                                                                        onClick={() => handleRunSingleAI(req)}
-                                                                        disabled={runningAiReqs[req.id]}
-                                                                        title="Run AI specifically for this requirement"
-                                                                    >
-                                                                        {runningAiReqs[req.id] ? (
-                                                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                                                        ) : (
-                                                                            <Play className="h-4 w-4" />
-                                                                        )}
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className={`h-8 w-8 ${res
-                                                                            ? "text-primary hover:text-primary hover:bg-primary/10"
-                                                                            : "text-muted-foreground hover:text-foreground"
-                                                                            }`}
-                                                                        onClick={() => handleViewAIResult(req)}
-                                                                        disabled={!res}
-                                                                        title="View AI detailed feedback"
-                                                                    >
-                                                                        <Eye className="h-4 w-4" />
-                                                                    </Button>
-                                                                </div>
-                                                            </TableCell>
+                                        ) : requirements.length === 0 ? (
+                                            <div className="p-12 text-center">
+                                                <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-4">
+                                                    <FileText className="h-8 w-8 text-muted-foreground/50" />
+                                                </div>
+                                                <h3 className="text-lg font-medium text-muted-foreground mb-1">No Requirements Found</h3>
+                                                <p className="text-sm text-muted-foreground/80">
+                                                    Add requirements to this project to run ARM checks.
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow className="hover:bg-transparent">
+                                                            <TableHead className="w-[80px]">ID</TableHead>
+                                                            <TableHead>Requirement</TableHead>
+                                                            <TableHead className="w-[120px] text-center">Actions</TableHead>
                                                         </TableRow>
-                                                    )
-                                                })}
-                                            </TableBody>
-                                        </Table>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {paginatedArmReqs.map((req, index) => (
+                                                            <TableRow key={req.id}>
+                                                                <TableCell className="font-mono text-xs text-muted-foreground">
+                                                                    {(armPage - 1) * PAGE_SIZE + index + 1}
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <div>
+                                                                        <span className="font-medium">{req.title}</span>
+                                                                        <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
+                                                                            {req.description}
+                                                                        </p>
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <div className="flex items-center justify-center gap-1">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className={`h-8 w-8 text-primary hover:text-primary hover:bg-primary/10`}
+                                                                            onClick={() => handleRunSingleARM(req)}
+                                                                            disabled={runningArmReqs[req.id]}
+                                                                            title="Run ARM for this requirement"
+                                                                        >
+                                                                            {runningArmReqs[req.id] ? (
+                                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                                            ) : (
+                                                                                <Play className="h-4 w-4" />
+                                                                            )}
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className={`h-8 w-8 ${armResults[req.id]
+                                                                                ? "text-primary hover:text-primary hover:bg-primary/10"
+                                                                                : "text-muted-foreground hover:text-foreground"
+                                                                                }`}
+                                                                            onClick={() => handleViewARMResult(req)}
+                                                                            disabled={!armResults[req.id]}
+                                                                            title="View analysis result"
+                                                                        >
+                                                                            <Eye className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                                <TablePagination
+                                                    currentPage={armPage}
+                                                    totalPages={totalArmPages}
+                                                    onPageChange={setArmPage}
+                                                    totalItems={requirements.length}
+                                                    pageSize={PAGE_SIZE}
+                                                />
+                                            </>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            {/* AI Analysis TAB */}
+                            <TabsContent value="ai" className="space-y-6">
+                                {!reqLoading && requirements.length > 0 && (
+                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <StatsCard icon={FileText} label="Total Requirements" value={requirements.length} color="primary" />
+                                        <StatsCard icon={Play} label="Checked" value={`${aiCheckedCount} / ${requirements.length}`} color="info" />
+                                        <StatsCard icon={ShieldCheck} label="Avg IEEE Compliance" value={`${aiAvgScore}%`} color={aiAvgScore > 80 ? "success" : "warning"} />
+                                    </div>
+                                )}
+
+                                <div className="flex items-center justify-between bg-muted/30 border border-border/50 rounded-xl px-5 py-4">
+                                    <div>
+                                        <CardTitle className="text-xl flex items-center gap-2">
+                                            <ShieldCheck className="h-5 w-5 text-primary" />
+                                            IEEE Quality Analysis
+                                        </CardTitle>
+                                        <CardDescription className="mt-1">
+                                            SpecBot analyzes requirement completeness, consistency, and verifiability.
+                                        </CardDescription>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Badge variant="outline" className="text-muted-foreground">
+                                            {requirements.length} total
+                                        </Badge>
+                                        {requirements.length > 0 && (
+                                            <Button
+                                                size="sm"
+                                                className="gap-2 gradient-primary border-0"
+                                                onClick={handleRunAI}
+                                                disabled={aiLoading || reqLoading}
+                                            >
+                                                {aiLoading ? (
+                                                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Verifying...</>
+                                                ) : (
+                                                    <><Play className="h-3.5 w-3.5" /> Verify All</>
+                                                )}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <Card className="border-border/50 shadow-sm">
+                                    <CardContent className="p-0">
+                                        {reqLoading ? (
+                                            <div className="p-6 space-y-4">
+                                                {[1, 2, 3].map((i) => (
+                                                    <div key={i} className="flex items-center gap-4">
+                                                        <Skeleton className="h-4 w-8" />
+                                                        <Skeleton className="h-4 flex-1" />
+                                                        <Skeleton className="h-8 w-20" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : requirements.length === 0 ? (
+                                            <div className="p-12 text-center">
+                                                <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-4">
+                                                    <ShieldCheck className="h-8 w-8 text-muted-foreground/50" />
+                                                </div>
+                                                <h3 className="text-lg font-medium text-muted-foreground mb-1">No Requirements Found</h3>
+                                                <p className="text-sm text-muted-foreground/80">
+                                                    Add requirements to this project to perform AI analysis.
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow className="hover:bg-transparent">
+                                                            <TableHead className="w-[80px]">ID</TableHead>
+                                                            <TableHead>Requirement</TableHead>
+                                                            <TableHead className="w-[120px] text-center">Score</TableHead>
+                                                            <TableHead className="w-[120px] text-center">Actions</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {paginatedAiReqs.map((req, index) => {
+                                                            const res = aiResults[req.id];
+                                                            const score = getAiScore(res);
+                                                            return (
+                                                                <TableRow key={req.id}>
+                                                                    <TableCell className="font-mono text-xs text-muted-foreground">
+                                                                        {(aiPage - 1) * PAGE_SIZE + index + 1}
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        <div>
+                                                                            <span className="font-medium">{req.title}</span>
+                                                                            <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
+                                                                                {req.description}
+                                                                            </p>
+                                                                        </div>
+                                                                    </TableCell>
+                                                                    <TableCell className="text-center">
+                                                                        {res ? (
+                                                                            <span className={score === 100 ? "text-emerald-500 font-medium" : "text-amber-500 font-medium"}>
+                                                                                {score}%
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="text-muted-foreground">-</span>
+                                                                        )}
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        <div className="flex items-center justify-center gap-1">
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className={`h-8 w-8 text-primary hover:text-primary hover:bg-primary/10`}
+                                                                                onClick={() => handleRunSingleAI(req)}
+                                                                                disabled={runningAiReqs[req.id]}
+                                                                                title="Run AI specifically for this requirement"
+                                                                            >
+                                                                                {runningAiReqs[req.id] ? (
+                                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                                ) : (
+                                                                                    <Play className="h-4 w-4" />
+                                                                                )}
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className={`h-8 w-8 ${res
+                                                                                    ? "text-primary hover:text-primary hover:bg-primary/10"
+                                                                                    : "text-muted-foreground hover:text-foreground"
+                                                                                    }`}
+                                                                                onClick={() => handleViewAIResult(req)}
+                                                                                disabled={!res}
+                                                                                title="View AI detailed feedback"
+                                                                            >
+                                                                                <Eye className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </div>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            );
+                                                        })}
+                                                    </TableBody>
+                                                </Table>
+                                                <TablePagination
+                                                    currentPage={aiPage}
+                                                    totalPages={totalAiPages}
+                                                    onPageChange={setAiPage}
+                                                    totalItems={requirements.length}
+                                                    pageSize={PAGE_SIZE}
+                                                />
+                                            </>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                        </div>
                     </Tabs>
                 </div>
             </main>

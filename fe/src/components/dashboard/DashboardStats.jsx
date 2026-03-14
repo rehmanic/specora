@@ -11,13 +11,13 @@ function StatCard({ icon: Icon, label, value, color = "primary" }) {
   };
 
   return (
-    <div className="flex items-center gap-4 p-5 rounded-2xl bg-card/60 backdrop-blur-xl border border-white/10 dark:border-white/5 hover-lift cursor-default card-interactive shadow-lg transition-all group">
-      <div className={`p-3 rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 ${colorClasses[color]} border shadow-inner`}>
-        <Icon className="h-6 w-6" />
+    <div className="flex items-center gap-3 p-3 rounded-2xl bg-card/60 backdrop-blur-xl border border-white/10 dark:border-white/5 hover-lift cursor-default card-interactive transition-all group shadow-sm hover:shadow-md">
+      <div className={`p-2 rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 ${colorClasses[color]} border shadow-inner`}>
+        <Icon className="h-5 w-5" />
       </div>
       <div>
-        <p className="text-3xl font-bold font-display tracking-tight">{value}</p>
-        <p className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider">{label}</p>
+        <p className="text-2xl font-bold font-display tracking-tight">{value}</p>
+        <p className="text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider">{label}</p>
       </div>
     </div>
   );
@@ -27,14 +27,14 @@ export default function DashboardStats({ projects }) {
   // Aggregate stats from projects array
   const totalProjects = projects.length;
   const activeProjects = projects.filter(p => p.status === 'active' || !p.status).length;
-  
+
   // Calculate total unique members across all projects
   const uniqueMembers = new Set();
   projects.forEach(p => {
     p.members?.forEach(m => uniqueMembers.add(m.user_id || m.id));
   });
   const totalCollaborators = uniqueMembers.size;
-  
+
   // Calculate projects started this month
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
@@ -45,7 +45,7 @@ export default function DashboardStats({ projects }) {
   }).length;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
       <StatCard
         icon={FolderOpen}
         label="Total Projects"

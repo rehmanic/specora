@@ -10,6 +10,7 @@ import { getAllUsersRequest } from "@/api/users";
 import ErrorBox from "@/components/common/ErrorBox";
 import Logo from "@/components/common/Logo";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
+import PageBanner from "@/components/layout/PageBanner";
 
 // Stats Card Component
 function StatsCard({ icon: Icon, label, value, color = "primary" }) {
@@ -92,8 +93,8 @@ export default function UsersPage() {
     return acc;
   }, {});
 
-  const filteredUsers = users.filter((u) => 
-    u.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredUsers = users.filter((u) =>
+    u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -106,14 +107,11 @@ export default function UsersPage() {
           <div className="max-w-6xl mx-auto space-y-8">
 
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 animate-fade-in">
-              <div>
-                <h1 className="text-3xl font-bold font-display">User Management</h1>
-                <p className="text-muted-foreground mt-1">
-                  Manage system users, permissions, and access controls
-                </p>
-              </div>
-            </div>
+            <PageBanner
+              title="User Management"
+              description="Manage system users, permissions, and access controls"
+              icon={Users}
+            />
 
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
@@ -143,7 +141,7 @@ export default function UsersPage() {
               />
             </div>
 
-            <SearchCreateHeader 
+            <SearchCreateHeader
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               searchPlaceholder="Search users by name or email..."

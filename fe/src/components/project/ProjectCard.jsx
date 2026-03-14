@@ -14,6 +14,10 @@ export function ProjectCard({ project, onClick }) {
     status,
     members,
     created_at,
+    updated_at,
+    start_date,
+    end_date,
+    tags,
   } = project;
 
   const formatDate = (date) => {
@@ -28,10 +32,10 @@ export function ProjectCard({ project, onClick }) {
 
   // Status badge variants
   const statusConfig = {
-    active: { label: "Active", className: "bg-success/15 text-success border-success/30" },
-    draft: { label: "Draft", className: "bg-muted text-muted-foreground border-border" },
-    completed: { label: "Completed", className: "bg-primary/15 text-primary border-primary/30" },
-    archived: { label: "Archived", className: "bg-muted text-muted-foreground border-border" },
+    active: { label: "Active", className: "bg-emerald-500 text-white border-emerald-400 shadow-md" },
+    draft: { label: "Draft", className: "bg-slate-500 text-white border-slate-400 shadow-sm" },
+    completed: { label: "Completed", className: "bg-blue-600 text-white border-blue-500 shadow-sm" },
+    archived: { label: "Archived", className: "bg-zinc-600 text-white border-zinc-500 shadow-sm" },
   };
 
   const currentStatus = statusConfig[status?.toLowerCase()] || statusConfig.active;
@@ -50,9 +54,23 @@ export function ProjectCard({ project, onClick }) {
     return colors[index];
   };
 
+  // Tag color generator
+  const getTagStyle = (tag) => {
+    const styles = [
+      "bg-primary/20 text-primary border-primary/30",
+      "bg-violet-500/20 text-violet-400 border-violet-500/30",
+      "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+      "bg-amber-500/20 text-amber-400 border-amber-500/30",
+      "bg-rose-500/20 text-rose-400 border-rose-500/30",
+      "bg-sky-500/20 text-sky-400 border-sky-500/30",
+    ];
+    const index = tag?.charCodeAt(0) % styles.length || 0;
+    return styles[index];
+  };
+
   return (
     <div
-      className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-white/10 dark:border-white/5 bg-card/40 backdrop-blur-xl transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 cursor-pointer ring-1 ring-inset ring-white/5 active:scale-[0.98]"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 dark:border-white/5 bg-card/60 backdrop-blur-xl transition-all duration-500 hover:shadow-md cursor-pointer active:scale-[0.98] shadow-sm"
       onClick={onClick}
     >
       {/* Thumbnail */}
@@ -61,7 +79,7 @@ export function ProjectCard({ project, onClick }) {
           <img
             src={cover_image_url}
             alt={name}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
           <div className={`h-full w-full bg-gradient-to-br ${getProjectColor(name)} flex items-center justify-center relative overflow-hidden`}>
@@ -85,11 +103,11 @@ export function ProjectCard({ project, onClick }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-6 flex flex-col justify-between relative bg-gradient-to-b from-transparent to-card/50">
+      <div className="flex-1 p-4 flex flex-col justify-between relative bg-gradient-to-b from-transparent to-card/50">
         <div className="space-y-4">
           {/* Floating Icon/Initial */}
-          <div className="absolute -top-10 left-6 z-10">
-            <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${getProjectColor(name)} shadow-xl ring-4 ring-card transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110`}>
+          <div className="absolute -top-8 left-4 z-10">
+            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${getProjectColor(name)} shadow-xl ring-4 ring-card transition-transform duration-500 group-hover:rotate-6 group-hover:scale-105`}>
               {icon_url ? (
                 <img
                   src={icon_url}
@@ -105,44 +123,59 @@ export function ProjectCard({ project, onClick }) {
           </div>
 
           {/* Header */}
-          <div className="pt-6 space-y-2">
-            <h3 className="text-xl font-bold text-card-foreground line-clamp-1 group-hover:text-primary transition-colors tracking-tight">
+          <div className="pt-4 space-y-1">
+            <h3 className="text-lg font-bold text-card-foreground line-clamp-1 group-hover:text-primary transition-colors tracking-tight">
               {name}
             </h3>
-            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed h-10">
+            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed h-8">
               {description || "No description provided."}
             </p>
           </div>
 
           {/* Tags */}
-          {project.tags && project.tags.length > 0 && (
-             <div className="flex flex-wrap gap-1.5 pt-1">
-                {project.tags.slice(0, 3).map((tag, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-secondary/50 text-secondary-foreground border border-border/50">
-                    {tag}
-                  </span>
-                ))}
-                {project.tags.length > 3 && (
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-muted text-muted-foreground border border-border/50">
-                    +{project.tags.length - 3}
-                  </span>
-                )}
-             </div>
+          {tags && tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {tags.slice(0, 5).map((tag, i) => (
+                <span
+                  key={i}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border backdrop-blur-md transition-all duration-300 group-hover:scale-110 ${getTagStyle(tag)}`}
+                >
+                  {tag}
+                </span>
+              ))}
+              {tags.length > 5 && (
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-muted/50 text-muted-foreground border border-border/50">
+                  +{tags.length - 5}
+                </span>
+              )}
+            </div>
           )}
         </div>
 
         {/* Footer Meta info */}
-        <div className="flex items-center justify-between pt-5 mt-5 border-t border-border/50 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          <div className="flex gap-4">
-            <div className="flex items-center gap-1.5 group/meta">
-              <Calendar className="h-3.5 w-3.5 transition-colors group-hover/meta:text-primary" />
-              <span>{formatDate(created_at)}</span>
+        <div className="flex flex-col gap-3 pt-3 mt-3 border-t border-white/10 dark:border-white/5">
+          {/* Duration Section */}
+          <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-3 w-3 text-primary/70" />
+              <span>{formatDate(start_date)} — {formatDate(end_date)}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Users className="h-3 w-3 text-primary/70" />
+              <span>{members?.length || 0}</span>
             </div>
           </div>
-          
-          <div className="flex items-center gap-1.5 group/meta">
-            <Users className="h-3.5 w-3.5 transition-colors group-hover/meta:text-primary" />
-            <span>{members?.length || 0}</span>
+
+          {/* timestamps */}
+          <div className="flex flex-col gap-0.5 text-[9px] font-medium text-muted-foreground/50 uppercase tracking-tight">
+            <div className="flex items-center gap-1">
+              <span>Created: {formatDate(created_at)}</span>
+            </div>
+            {updated_at && (
+              <div className="flex items-center gap-1">
+                <span>Updated: {formatDate(updated_at)}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

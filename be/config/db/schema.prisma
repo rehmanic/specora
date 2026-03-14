@@ -39,7 +39,7 @@ model feedback {
   created_at        DateTime?            @default(now()) @db.Timestamptz(6)
   updated_at        DateTime?            @default(now()) @db.Timestamptz(6)
   project_id        String               @db.Uuid
-  project           project              @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project           project              @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   feedback_response feedback_response[]
 }
 
@@ -57,7 +57,7 @@ model feedback_response {
 model group_chat {
   id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   project_id    String          @db.Uuid
-  project       project         @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project       project         @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   attachments   Json?
   group_message group_message[]
 }
@@ -68,7 +68,7 @@ model group_message {
   metadata      Json?
   created_at    DateTime?  @default(now()) @db.Timestamptz(6)
   group_chat_id String     @db.Uuid
-  group_chat    group_chat @relation(fields: [group_chat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  group_chat    group_chat @relation(fields: [group_chat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   sender_id     String     @db.Uuid
   sender        app_user   @relation(fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -135,7 +135,7 @@ model project_member {
   project_id String   @db.Uuid
   member_id  String   @db.Uuid
   app_user   app_user @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  project    project  @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project    project  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model requirement {
@@ -152,7 +152,7 @@ model requirement {
   updated_at        DateTime?                 @default(now()) @db.Timestamptz(6)
   
   project_id        String                    @db.Uuid
-  project           project                   @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project           project                   @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   
   parent_id         String?                   @db.Uuid
   parent            requirement?              @relation("RequirementHierarchy", fields: [parent_id], references: [id], onDelete: Cascade)
@@ -191,7 +191,7 @@ model specbot_chat {
   created_at      DateTime?         @default(now()) @db.Timestamptz(6)
   updated_at      DateTime?         @default(now()) @db.Timestamptz(6)
   project_id      String            @db.Uuid
-  project         project           @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project         project           @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   specbot_message specbot_message[]
 }
 
@@ -203,7 +203,7 @@ model specbot_message {
   created_at      DateTime?        @default(now()) @db.Timestamptz(6)
   updated_at      DateTime?        @default(now()) @db.Timestamptz(6)
   specbot_chat_id String           @db.Uuid
-  specbot_chat    specbot_chat     @relation(fields: [specbot_chat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  specbot_chat    specbot_chat     @relation(fields: [specbot_chat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 enum feedback_status_enum {

@@ -401,6 +401,60 @@ export default function Page() {
             className="hidden"
           />
 
+          <div className="flex justify-end animate-fade-in">
+            <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
+              {/* Import */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    disabled={importLoading}
+                  >
+                    {importLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
+                    Import
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => handleImportClick("json")}>
+                    Import JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleImportClick("csv")}>
+                    Import CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Export */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Download className="h-4 w-4" /> Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => handleExport("json")}>
+                    As JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport("csv")}>
+                    As CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => setGraphOpen(true)}
+              >
+                <GitBranch className="h-4 w-4" /> Graph View
+              </Button>
+            </div>
+          </div>
           {/* Header */}
           <PageBanner
             title="Requirements"
@@ -408,61 +462,6 @@ export default function Page() {
             icon={ClipboardList}
             className="animate-fade-in mb-4"
           />
-
-          <div className="flex justify-end animate-fade-in">
-              <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
-                {/* Import */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="gap-2"
-                      disabled={importLoading}
-                    >
-                      {importLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Upload className="h-4 w-4" />
-                      )}
-                      Import
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => handleImportClick("json")}>
-                      Import JSON
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleImportClick("csv")}>
-                      Import CSV
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Export */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2">
-                      <Download className="h-4 w-4" /> Export
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => handleExport("json")}>
-                      As JSON
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExport("csv")}>
-                      As CSV
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => setGraphOpen(true)}
-                >
-                  <GitBranch className="h-4 w-4" /> Graph View
-                </Button>
-              </div>
-          </div>
 
           {/* Stats */}
           <div
@@ -496,41 +495,12 @@ export default function Page() {
           </div>
 
           {/* Filters Area */}
-          <SearchCreateHeader 
+          <SearchCreateHeader
             searchQuery={search}
             setSearchQuery={setSearch}
             searchPlaceholder="Search requirements by ID, title, or description..."
             buttonText="Add Requirement"
             onAction={handleAddClick}
-            extraButtons={
-              <div className="flex flex-wrap items-center gap-2">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[140px]">
-                    <Filter className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-  
-                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Priorities</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="mid">Medium</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            }
           />
 
           {/* Table Area */}

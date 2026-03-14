@@ -2,17 +2,27 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Workflow, Loader2, Search } from "lucide-react";
+import { Workflow, Loader2, Search, Pencil, Trash2, Eye, Calendar } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import useAuthStore from "@/store/authStore";
 import NewDiagramDialog from "@/components/diagrams/NewDiagramDialog";
-import DiagramCard from "@/components/diagrams/DiagramCard";
 import PageBanner from "@/components/layout/PageBanner";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
+import TablePagination from "@/components/common/TablePagination";
+import StatsCard from "@/components/requirements/StatsCard";
 import {
     getDiagrams,
     createDiagram,
@@ -28,6 +38,30 @@ export default function Page() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [isCreating, setIsCreating] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 6;
+
+    const stats = {
+        total: diagrams.length,
+        designed: diagrams.filter(d => !!d.mermaid_code?.trim()).length,
+        empty: diagrams.filter(d => !d.mermaid_code?.trim()).length,
+    };
+
+    // Filtered list
+    const filtered = diagrams.filter((d) =>
+        (d.title || "Untitled diagram").toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const totalPages = Math.ceil(filtered.length / pageSize);
+    const paginated = filtered.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    );
+
+    // Reset to first page when search query changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
 
     useEffect(() => {
         if (!projectId || !token) return;
@@ -73,9 +107,7 @@ export default function Page() {
         router.push(`/projects/${projectId}/specification/diagrams/${diagram.id}`);
     };
 
-    const filtered = diagrams.filter((d) =>
-        (d.title || "Untitled diagram").toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Handlers removed search filter from here as it's now handled with pagination above
 
     return (
         <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer"]}>
@@ -87,8 +119,29 @@ export default function Page() {
                         icon={Workflow}
                     />
 
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+                        <StatsCard
+                            icon={Workflow}
+                            label="Total Diagrams"
+                            value={stats.total}
+                            color="primary"
+                        />
+                        <StatsCard
+                            icon={Eye}
+                            label="Designed"
+                            value={stats.designed}
+                            color="success"
+                        />
+                        <StatsCard
+                            icon={Pencil}
+                            label="Empty"
+                            value={stats.empty}
+                            color="warning"
+                        />
+                    </div>
+
                     {/* Toolbar */}
-                    <SearchCreateHeader 
+                    <SearchCreateHeader
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
                         searchPlaceholder="Search diagrams..."
@@ -118,15 +171,90 @@ export default function Page() {
                             </p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {filtered.map((diagram) => (
-                                <DiagramCard
-                                    key={diagram.id}
-                                    diagram={diagram}
-                                    onOpen={handleOpen}
-                                    onDelete={handleDelete}
+                        <div className="space-y-6">
+                            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-muted/30">
+                                            <TableHead className="w-[40%]">Diagram Title</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Last Updated</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {paginated.map((diagram) => {
+                                            const updatedAt = diagram.updated_at
+                                                ? new Date(diagram.updated_at).toLocaleDateString("en-US", {
+                                                    month: "short",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                })
+                                                : "—";
+                                            const hasContent = !!diagram.mermaid_code?.trim();
+
+                                            return (
+                                                <TableRow key={diagram.id} className="hover:bg-muted/20 transition-colors">
+                                                    <TableCell className="font-medium">
+                                                        <div className="flex items-center gap-2">
+                                                            <Workflow className="h-4 w-4 text-primary" />
+                                                            <span>{diagram.title || "Untitled Diagram"}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-1.5">
+                                                            {hasContent ? (
+                                                                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px]">
+                                                                    Designed
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge variant="outline" className="text-[10px]">
+                                                                    Empty
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                            <Calendar className="h-3.5 w-3.5" />
+                                                            {updatedAt}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex items-center justify-end gap-1">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                                                onClick={() => handleOpen(diagram)}
+                                                                title="Open Editor"
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                                                onClick={() => handleDelete(diagram.id)}
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                                <TablePagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                    totalItems={filtered.length}
+                                    pageSize={pageSize}
                                 />
-                            ))}
+                            </div>
                         </div>
                     )}
                 </div>

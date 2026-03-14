@@ -54,7 +54,7 @@ const saveHistory = async (requirement, changedBy, reason) => {
 export const getProjectRequirements = async (req, res) => {
     try {
         const { projectId } = req.params;
-        const { search, status, priority, category } = req.query;
+        const { search, status, priority, category, flat } = req.query;
 
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId);
 
@@ -73,8 +73,12 @@ export const getProjectRequirements = async (req, res) => {
         // Build filter
         const where = {
             project_id: resolvedId,
-            parent_id: null // Only fetch root requirements for the main list
         };
+
+        // If flat=true is NOT provided, we only fetch root requirements
+        if (flat !== "true") {
+            where.parent_id = null;
+        }
 
         if (status) where.status = status;
         if (priority) where.priority = priority;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import useSWR from "swr";
 import { useParams, useRouter } from "next/navigation";
 import { getProjectMeetings, createMeeting, updateMeeting, transcribeMeeting, deleteMeeting } from "@/api/meetings";
@@ -16,6 +16,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import PageBanner from "@/components/layout/PageBanner";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
+import TablePagination from "@/components/common/TablePagination";
+import StatsCard from "@/components/requirements/StatsCard";
 
 export default function MeetingsPage() {
   const { projectId } = useParams();
@@ -31,6 +33,31 @@ export default function MeetingsPage() {
   const [formData, setFormData] = useState({ title: "", description: "" });
   const [isGeneratingTranscript, setIsGeneratingTranscript] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+
+  const stats = {
+    total: meetings?.length || 0,
+    recorded: meetings?.filter(m => !!m.recording_url).length || 0,
+    transcribed: meetings?.filter(m => (m.transcript || m.transcripts?.length > 0)).length || 0
+  };
+
+  // Filtered meetings
+  const filteredMeetings = (meetings || []).filter(m => 
+    m.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    m.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredMeetings.length / pageSize);
+  const paginatedMeetings = filteredMeetings.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // Reset to first page when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const handleCreate = async () => {
     try {
@@ -123,6 +150,27 @@ export default function MeetingsPage() {
           description="Schedule, manage, and review project meetings."
           icon={CalendarDays}
         />
+
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+          <StatsCard 
+            icon={Video} 
+            label="Total Meetings" 
+            value={stats.total} 
+            color="primary" 
+          />
+          <StatsCard 
+            icon={Play} 
+            label="Recorded" 
+            value={stats.recorded} 
+            color="success" 
+          />
+          <StatsCard 
+            icon={FileText} 
+            label="Transcribed" 
+            value={stats.transcribed} 
+            color="info" 
+          />
+        </div>
 
         <SearchCreateHeader 
           searchQuery={searchQuery}
@@ -279,12 +327,7 @@ export default function MeetingsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {meetings
-                  .filter(m => 
-                    m.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                    m.description?.toLowerCase().includes(searchQuery.toLowerCase())
-                  )
-                  .map((meeting) => (
+                {paginatedMeetings.map((meeting) => (
                   <TableRow key={meeting.id}>
                     <TableCell className="font-medium">{meeting.title}</TableCell>
                     <TableCell className="text-muted-foreground max-w-[200px] truncate">
@@ -378,6 +421,13 @@ export default function MeetingsPage() {
                 ))}
               </TableBody>
             </Table>
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filteredMeetings.length}
+              pageSize={pageSize}
+            />
           </div>
         )}
       </div>

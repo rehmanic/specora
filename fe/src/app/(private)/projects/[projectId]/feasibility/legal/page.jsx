@@ -27,6 +27,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import useAuthStore from "@/store/authStore";
+import TablePagination from "@/components/common/TablePagination";
+import StatsCard from "@/components/requirements/StatsCard";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 const NORMA_URL = "http://localhost:8000/api/v1/feasibility/legal/single";
@@ -48,6 +50,10 @@ export default function Page() {
     // Dialog state
     const [dialogOpen, setDialogOpen] = useState(false);
     const [activeResult, setActiveResult] = useState(null);
+
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const PAGE_SIZE = 5;
 
     // Fetch requirements from the backend
     useEffect(() => {
@@ -144,11 +150,14 @@ export default function Page() {
             : 0;
 
     const stats = [
-        { label: "Total Requirements", value: requirements.length, icon: FileText, color: "text-primary" },
-        { label: "Checked", value: `${checkedCount} / ${requirements.length}`, icon: Play, color: "text-blue-500" },
-        { label: "Feasible", value: feasibleCount, icon: CheckCircle2, color: "text-emerald-500" },
-        { label: "Avg Confidence", value: `${avgConfidence}%`, icon: Gavel, color: "text-amber-500" },
+        { label: "Total Requirements", value: requirements.length, icon: FileText, color: "primary" },
+        { label: "Checked", value: `${checkedCount} / ${requirements.length}`, icon: Play, color: "info" },
+        { label: "Feasible", value: feasibleCount, icon: CheckCircle2, color: "success" },
+        { label: "Avg Confidence", value: `${avgConfidence}%`, icon: Gavel, color: "warning" },
     ];
+
+    const paginatedRequirements = requirements.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const totalPages = Math.ceil(requirements.length / PAGE_SIZE);
 
     return (
         <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer"]}>
@@ -163,57 +172,53 @@ export default function Page() {
 
                     {/* Stats Grid */}
                     {!loading && requirements.length > 0 && (
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
                             {stats.map((stat) => (
-                                <Card key={stat.label} className="border-border/50 shadow-sm">
-                                    <CardContent className="p-4 flex items-center gap-4">
-                                        <div className={`p-2 rounded-lg bg-muted/50 ${stat.color}`}>
-                                            <stat.icon className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-muted-foreground">{stat.label}</p>
-                                            <p className="text-2xl font-bold font-display">{stat.value}</p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                <StatsCard
+                                    key={stat.label}
+                                    icon={stat.icon}
+                                    label={stat.label}
+                                    value={stat.value}
+                                    color={stat.color}
+                                />
                             ))}
                         </div>
                     )}
 
+                    {/* Requirements Header */}
+                    <div className="flex items-center justify-between bg-muted/30 border border-border/50 rounded-xl px-5 py-4">
+                        <div>
+                            <CardTitle className="text-xl flex items-center gap-2">
+                                <FileText className="h-5 w-5 text-primary" />
+                                Project Requirements
+                            </CardTitle>
+                            <CardDescription className="mt-1">
+                                Run legal feasibility checks on individual requirements by clicking the play button.
+                            </CardDescription>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Badge variant="outline" className="text-muted-foreground">
+                                {requirements.length} total
+                            </Badge>
+                            {requirements.length > 0 && (
+                                <Button
+                                    size="sm"
+                                    className="gap-2"
+                                    onClick={handleRunAll}
+                                    disabled={runningAll || runningId !== null}
+                                >
+                                    {runningAll ? (
+                                        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking...</>
+                                    ) : (
+                                        <><Play className="h-3.5 w-3.5" /> Check All</>
+                                    )}
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Requirements Table */}
                     <Card className="border-border/50 shadow-sm">
-                        <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <CardTitle className="text-xl flex items-center gap-2">
-                                        <FileText className="h-5 w-5 text-primary" />
-                                        Project Requirements
-                                    </CardTitle>
-                                    <CardDescription className="mt-1">
-                                        Run legal feasibility checks on individual requirements by clicking the play button.
-                                    </CardDescription>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <Badge variant="outline" className="text-muted-foreground">
-                                        {requirements.length} total
-                                    </Badge>
-                                    {requirements.length > 0 && (
-                                        <Button
-                                            size="sm"
-                                            className="gap-2"
-                                            onClick={handleRunAll}
-                                            disabled={runningAll || runningId !== null}
-                                        >
-                                            {runningAll ? (
-                                                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking...</>
-                                            ) : (
-                                                <><Play className="h-3.5 w-3.5" /> Check All</>
-                                            )}
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                        </CardHeader>
                         <CardContent className="p-0">
                             {loading ? (
                                 <div className="p-6 space-y-4">
@@ -236,63 +241,72 @@ export default function Page() {
                                     </p>
                                 </div>
                             ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="hover:bg-transparent">
-                                            <TableHead className="w-[80px]">ID</TableHead>
-                                            <TableHead>Description</TableHead>
-                                            <TableHead className="w-[120px] text-center">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {requirements.map((req, index) => (
-                                            <TableRow key={req.id}>
-                                                <TableCell className="font-mono text-xs text-muted-foreground">
-                                                    {index + 1}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div>
-                                                        <span className="font-medium">{req.title}</span>
-                                                        <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
-                                                            {req.description}
-                                                        </p>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex items-center justify-center gap-1">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
-                                                            onClick={() => handleRun(req)}
-                                                            disabled={runningId === req.id}
-                                                            title="Run feasibility check"
-                                                        >
-                                                            {runningId === req.id ? (
-                                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                            ) : (
-                                                                <Play className="h-4 w-4" />
-                                                            )}
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className={`h-8 w-8 ${results[req.id]
-                                                                ? "text-emerald-600 hover:text-emerald-600 hover:bg-emerald-500/10"
-                                                                : "text-muted-foreground hover:text-foreground"
-                                                                }`}
-                                                            onClick={() => handleViewResult(req)}
-                                                            disabled={!results[req.id]}
-                                                            title="View result"
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
+                                <>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="hover:bg-transparent">
+                                                <TableHead className="w-[80px]">ID</TableHead>
+                                                <TableHead>Description</TableHead>
+                                                <TableHead className="w-[120px] text-center">Actions</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {paginatedRequirements.map((req, index) => (
+                                                <TableRow key={req.id}>
+                                                    <TableCell className="font-mono text-xs text-muted-foreground">
+                                                        {(currentPage - 1) * PAGE_SIZE + index + 1}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div>
+                                                            <span className="font-medium">{req.title}</span>
+                                                            <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
+                                                                {req.description}
+                                                            </p>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center justify-center gap-1">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                                                                onClick={() => handleRun(req)}
+                                                                disabled={runningId === req.id}
+                                                                title="Run feasibility check"
+                                                            >
+                                                                {runningId === req.id ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <Play className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className={`h-8 w-8 ${results[req.id]
+                                                                    ? "text-emerald-600 hover:text-emerald-600 hover:bg-emerald-500/10"
+                                                                    : "text-muted-foreground hover:text-foreground"
+                                                                    }`}
+                                                                onClick={() => handleViewResult(req)}
+                                                                disabled={!results[req.id]}
+                                                                title="View result"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                    <TablePagination
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        onPageChange={setCurrentPage}
+                                        totalItems={requirements.length}
+                                        pageSize={PAGE_SIZE}
+                                    />
+                                </>
                             )}
                         </CardContent>
                     </Card>

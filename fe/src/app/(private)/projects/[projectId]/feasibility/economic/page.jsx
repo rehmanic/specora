@@ -677,39 +677,38 @@ export default function Page() {
 
                             {/* ─── Estimates Tab ────────────────────── */}
                             <TabsContent value="estimates" className="mt-0 space-y-6 outline-none animate-fade-in">
+                                <div className="flex items-center justify-between bg-muted/30 border border-border/50 rounded-xl px-5 py-4">
+                                    <div>
+                                        <CardTitle className="text-xl flex items-center gap-2">
+                                            <Clock className="h-5 w-5 text-primary" />
+                                            Duration Estimates
+                                        </CardTitle>
+                                        <CardDescription className="mt-1">
+                                            Enter three-point estimates (in hours) for each requirement:
+                                            Optimistic, Most Likely, and Pessimistic.
+                                        </CardDescription>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Badge variant="outline" className="text-muted-foreground">
+                                            {filledEstimatesCount} / {requirements.length} estimated
+                                        </Badge>
+                                        <Button
+                                            onClick={handleSaveEstimates}
+                                            disabled={savingEstimates || filledEstimatesCount === 0}
+                                            className="gap-2"
+                                            size="sm"
+                                        >
+                                            {savingEstimates ? (
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            ) : (
+                                                <Save className="h-3.5 w-3.5" />
+                                            )}
+                                            Save Estimates
+                                        </Button>
+                                    </div>
+                                </div>
+
                                 <Card className="border-border/50 shadow-sm">
-                                    <CardHeader className="bg-muted/30 border-b border-border/50">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <CardTitle className="text-xl flex items-center gap-2">
-                                                    <Clock className="h-5 w-5 text-primary" />
-                                                    Duration Estimates
-                                                </CardTitle>
-                                                <CardDescription className="mt-1">
-                                                    Enter three-point estimates (in hours) for each requirement:
-                                                    Optimistic, Most Likely, and Pessimistic.
-                                                </CardDescription>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <Badge variant="outline" className="text-muted-foreground">
-                                                    {filledEstimatesCount} / {requirements.length} estimated
-                                                </Badge>
-                                                <Button
-                                                    onClick={handleSaveEstimates}
-                                                    disabled={savingEstimates || filledEstimatesCount === 0}
-                                                    className="gap-2"
-                                                    size="sm"
-                                                >
-                                                    {savingEstimates ? (
-                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                    ) : (
-                                                        <Save className="h-3.5 w-3.5" />
-                                                    )}
-                                                    Save Estimates
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </CardHeader>
                                     <CardContent className="p-0">
                                         {requirements.length === 0 ? (
                                             <div className="p-12 text-center">
