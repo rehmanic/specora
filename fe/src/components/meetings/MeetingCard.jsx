@@ -7,11 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, Video, ExternalLink, Play, Copy, Check } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import VideoPlayer from "@/components/video/VideoPlayer";
+import { Loader2, Settings } from "lucide-react";
+import { ExtractedRequirementsModal } from "@/components/requirements/ExtractedRequirementsModal";
+import { extractMeetingRequirements } from "@/api/meetings";
+import { importRequirements } from "@/api/requirements";
 
 export default function MeetingCard({ meeting, type }) {
   const router = useRouter();
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractedModalOpen, setExtractedModalOpen] = useState(false);
+  const [extractedReqs, setExtractedReqs] = useState([]);
+  const [isImporting, setIsImporting] = useState(false);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -74,6 +83,35 @@ export default function MeetingCard({ meeting, type }) {
       await navigator.clipboard.writeText(meeting.meeting_link);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleExtractRequirements = async () => {
+    setIsExtracting(true);
+    try {
+      const response = await extractMeetingRequirements(meeting.id);
+      setExtractedReqs(response.data || []);
+      setExtractedModalOpen(true);
+    } catch (err) {
+      console.error("Failed to extract:", err);
+      alert("Failed to extract requirements. Ensure there is a transcript available.");
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const handleImportRequirements = async (requirementsToImport) => {
+    if (!meeting.project_id) return;
+    setIsImporting(true);
+    try {
+      await importRequirements(meeting.project_id, { requirements: requirementsToImport });
+      setExtractedModalOpen(false);
+      alert(`Successfully imported requirements!`);
+    } catch (err) {
+      console.error("Failed to import requirements:", err);
+      alert("Failed to import requirements: " + (err?.error || err.message || "Unknown error"));
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -197,6 +235,23 @@ export default function MeetingCard({ meeting, type }) {
               {showVideoPlayer ? "Hide Recording" : "View Recording"}
             </Button>
           )}
+
+          {type === "completed" && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex-1 gap-2"
+              onClick={handleExtractRequirements}
+              disabled={isExtracting}
+            >
+              {isExtracting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Settings className="w-4 h-4" />
+              )}
+              {isExtracting ? "Extracting..." : "Extract Requirements"}
+            </Button>
+          )}
         </div>
 
         {showVideoPlayer && meeting.recording_link && (
@@ -207,6 +262,14 @@ export default function MeetingCard({ meeting, type }) {
           </div>
         )}
       </CardContent>
+
+      <ExtractedRequirementsModal
+        isOpen={extractedModalOpen}
+        onClose={() => setExtractedModalOpen(false)}
+        requirements={extractedReqs}
+        onImport={handleImportRequirements}
+        isImporting={isImporting}
+      />
     </Card>
   );
 }

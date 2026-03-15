@@ -64,3 +64,6 @@ export const transcribeMeeting = (meetingId) =>
 
 export const deleteMeeting = (meetingId) =>
     fetchWithAuth(`/meetings/${meetingId}`, { method: "DELETE" });
+
+export const extractMeetingRequirements = (meetingId) =>
+    fetchWithAuth(`/meetings/${meetingId}/extract-requirements`, { method: "POST" });

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import useSWR from "swr";
 import { useParams, useRouter } from "next/navigation";
-import { getProjectMeetings, createMeeting, updateMeeting, transcribeMeeting, deleteMeeting } from "@/api/meetings";
+import { getProjectMeetings, createMeeting, updateMeeting, transcribeMeeting, deleteMeeting, extractMeetingRequirements } from "@/api/meetings";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,9 @@ import PageBanner from "@/components/layout/PageBanner";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 import TablePagination from "@/components/common/TablePagination";
 import StatsCard from "@/components/requirements/StatsCard";
+import { importRequirements } from "@/api/requirements";
+import { ExtractedRequirementsModal } from "@/components/requirements/ExtractedRequirementsModal";
+import { Loader2, Settings } from "lucide-react";
 
 export default function MeetingsPage() {
   const { projectId } = useParams();
@@ -34,6 +37,11 @@ export default function MeetingsPage() {
   const [isGeneratingTranscript, setIsGeneratingTranscript] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractedModalOpen, setExtractedModalOpen] = useState(false);
+  const [extractedReqs, setExtractedReqs] = useState([]);
+  const [isImporting, setIsImporting] = useState(false);
   const pageSize = 5;
 
   const stats = {
@@ -139,6 +147,36 @@ export default function MeetingsPage() {
     return meeting?.transcript || (meeting?.transcripts?.length > 0);
   };
 
+  const handleExtractRequirements = async () => {
+    if (!viewingRecording?.id) return;
+    setIsExtracting(true);
+    try {
+      const response = await extractMeetingRequirements(viewingRecording.id);
+      setExtractedReqs(response.data || []);
+      setExtractedModalOpen(true);
+    } catch (err) {
+      console.error("Failed to extract:", err);
+      alert("Failed to extract requirements. Ensure there is a transcript available.");
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const handleImportRequirements = async (requirementsToImport) => {
+    if (!projectId || !viewingRecording) return;
+    setIsImporting(true);
+    try {
+      await importRequirements(projectId, { requirements: requirementsToImport });
+      setExtractedModalOpen(false);
+      alert(`Successfully imported requirements!`);
+    } catch (err) {
+      console.error("Failed to import requirements:", err);
+      alert("Failed to import requirements: " + (err?.error || err.message || "Unknown error"));
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   if (error) return <div className="p-6 text-destructive">Failed to load meetings</div>;
   if (!meetings) return <div className="p-6 text-muted-foreground">Loading...</div>;
 
@@ -234,9 +272,10 @@ export default function MeetingsPage() {
             </DialogHeader>
 
             <Tabs defaultValue="video" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="video">Recording</TabsTrigger>
                 <TabsTrigger value="transcript">Transcript</TabsTrigger>
+                <TabsTrigger value="requirements">Requirements</TabsTrigger>
               </TabsList>
 
               <TabsContent value="video" className="mt-4">
@@ -285,6 +324,38 @@ export default function MeetingsPage() {
                   </div>
                 )}
               </TabsContent>
+
+              <TabsContent value="requirements" className="mt-4">
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-muted/20 border-dashed border-2 rounded-lg">
+                  <div className="bg-primary/10 p-4 rounded-full mb-4">
+                    <Settings className="w-8 h-8 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Extract Requirements</h3>
+                  <p className="text-sm max-w-sm text-center mb-6">
+                    Use AI to automatically extract product requirements from the meeting transcript. You'll be able to review and edit them before importing.
+                  </p>
+                  <Button 
+                    onClick={handleExtractRequirements} 
+                    disabled={isExtracting || !hasTranscript(viewingRecording)}
+                    className="gap-2"
+                  >
+                    {isExtracting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Extracting...
+                      </>
+                    ) : (
+                      <>
+                        <Settings className="w-4 h-4" />
+                        Extract Requirements
+                      </>
+                    )}
+                  </Button>
+                  {!hasTranscript(viewingRecording) && (
+                    <p className="text-xs text-destructive mt-3">A transcript is required to extract requirements. Please generate it first.</p>
+                  )}
+                </div>
+              </TabsContent>
             </Tabs>
 
             <div className="flex items-center justify-between text-sm text-muted-foreground pt-2 border-t">
@@ -306,6 +377,14 @@ export default function MeetingsPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <ExtractedRequirementsModal
+          isOpen={extractedModalOpen}
+          onClose={() => setExtractedModalOpen(false)}
+          requirements={extractedReqs}
+          onImport={handleImportRequirements}
+          isImporting={isImporting}
+        />
 
         {meetings.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">

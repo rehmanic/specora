@@ -30,5 +30,6 @@ RUN npm install
 COPY config/db/schema.prisma ./config/db/schema.prisma
 RUN npx prisma generate --schema=config/db/schema.prisma
 
-# Default command — dev mode with nodemon hot-reload
-CMD ["npm", "run", "dev"]
+# Default command — generate prisma client then start dev mode
+CMD npx prisma generate --schema=config/db/schema.prisma && npm run dev
+

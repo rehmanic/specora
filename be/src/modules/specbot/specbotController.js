@@ -645,9 +645,21 @@ export const extractRequirementsFromChat = async (req, res) => {
         const instructions = {
             task: "extract_requirements",
             expectations:
-                "Return actionable functional/non-functional requirements only. Ignore chit-chat.",
-            output:
-                "Prefer JSON { requirements: [{title, description, priority, acceptance_criteria}] }",
+                "Analyze the conversation and extract distinct, actionable functional and non-functional requirements. Ignore chit-chat and off-topic discussion. Consolidate similar points into cohesive requirements.",
+            output: 
+                `You MUST return ONLY a valid JSON object matching this exact structure:
+{
+  "requirements": [
+    {
+      "title": "Short, concise summary (string)",
+      "description": "Detailed explanation of the requirement (string)",
+      "priority": "low, mid, or high (string, derive from context or default to mid)",
+      "status": "draft",
+      "tags": ["Array of context tags, e.g., UI, Database, Security, API", "string"]
+    }
+  ]
+}
+Do NOT wrap the output in markdown code blocks. Return ONLY the raw JSON string.`
         };
 
         const requirementsText = await generateStatelessResponse(

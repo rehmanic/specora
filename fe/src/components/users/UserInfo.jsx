@@ -213,7 +213,7 @@ export default function UserInfo({ variant = "create-user", username }) {
         </div>
       </div>
 
-      <Tabs defaultValue="general" orientation="vertical" className="flex flex-col gap-6 md:flex-row">
+      <Tabs defaultValue="general" orientation="vertical" className="w-full flex flex-col gap-6 md:flex-row">
         <div className="flex flex-col gap-4 min-w-[240px] md:sticky md:top-24">
           <TabsList className="bg-muted/50 h-fit w-full flex-col gap-1 p-1 border rounded-xl">
             <TabsTrigger value="general" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
@@ -239,7 +239,7 @@ export default function UserInfo({ variant = "create-user", username }) {
           </div>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 w-full flex flex-col">
           {/* General Tab */}
           <TabsContent value="general" className="mt-0 space-y-6 outline-none animate-fade-in">
             <Card>
@@ -395,7 +395,7 @@ export default function UserInfo({ variant = "create-user", username }) {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription className="text-sm">
-                          Deleting <strong>{userData.fullName} (@{userData.username})</strong> is final. 
+                          Deleting <strong>{userData.fullName} (@{userData.username})</strong> is final.
                           The user will lose access immediately and all associated metadata will be purged.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

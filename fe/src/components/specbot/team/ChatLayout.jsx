@@ -13,6 +13,8 @@ import {
   extractSpecbotRequirements,
   summarizeSpecbotChat,
 } from "@/api/specbot";
+import { importRequirements } from "@/api/requirements";
+import { ExtractedRequirementsModal } from "@/components/requirements/ExtractedRequirementsModal";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +50,9 @@ export default function ChatLayout() {
     error: false,
   });
   const [actionLoading, setActionLoading] = useState(false);
+  const [extractedModalOpen, setExtractedModalOpen] = useState(false);
+  const [extractedReqs, setExtractedReqs] = useState([]);
+  const [isImporting, setIsImporting] = useState(false);
 
   const canAccess = true; // access control is handled by Sidebar and API, but we can double check
   const isClient = user?.role === "client";
@@ -139,11 +144,10 @@ export default function ChatLayout() {
         }));
       } else if (type === "extract") {
         const response = await extractSpecbotRequirements(currentChat.id);
-        setProcessing((prev) => ({
-          ...prev,
-          status: "Requirements ready",
-          result: response?.artifact,
-        }));
+        const reqs = response?.artifact?.data?.requirements || [];
+        setExtractedReqs(reqs);
+        setProcessing((prev) => ({ ...prev, open: false }));
+        setExtractedModalOpen(true);
       }
     } catch (err) {
       const message =
@@ -157,6 +161,22 @@ export default function ChatLayout() {
 
   const closeProcessing = () =>
     setProcessing((prev) => ({ ...prev, open: false }));
+
+  const handleImportRequirements = async (requirementsToImport) => {
+    if (!selectedProject?.id) return;
+    setIsImporting(true);
+    try {
+      await importRequirements(selectedProject.id, { requirements: requirementsToImport });
+      setExtractedModalOpen(false);
+      // Optional: Add toast notification if available, or just alert
+      alert("Requirements successfully imported!");
+    } catch (err) {
+      console.error("Failed to import requirements:", err);
+      alert("Failed to import requirements: " + (err.message || ""));
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   const noProjectSelected = !selectedProject?.id;
 
@@ -261,6 +281,14 @@ export default function ChatLayout() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ExtractedRequirementsModal
+        isOpen={extractedModalOpen}
+        onClose={() => setExtractedModalOpen(false)}
+        requirements={extractedReqs}
+        onImport={handleImportRequirements}
+        isImporting={isImporting}
+      />
     </div>
   );
 }

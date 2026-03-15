@@ -39,13 +39,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { 
-  Settings, 
-  Users, 
-  Tags, 
-  Trash2, 
-  Plus, 
-  X, 
+import {
+  Settings,
+  Users,
+  Tags,
+  Trash2,
+  Plus,
+  X,
   Calendar,
   Layers,
   ShieldAlert,
@@ -70,7 +70,7 @@ const getAvatarUrl = (name) =>
 
 export default function ProjectInfo({ variant }) {
   const isSettings = variant === "project-settings";
-  const { selectedProject, clearSelectedProject, setSelectedProject } = useProjectsStore();
+  const { selectedProject, clearSelectedProject, setSelectedProject, fetchProjects } = useProjectsStore();
   const { user } = useAuthStore();
   const router = useRouter();
 
@@ -448,10 +448,10 @@ export default function ProjectInfo({ variant }) {
       if (isSettings) {
         // Update existing project
         const response = await updateProject(selectedProject.id, projectData);
-        // Update the selected project in store with the latest data
         const updatedProject = response?.project || response;
         if (updatedProject) {
           setSelectedProject(updatedProject);
+          fetchProjects();
         }
         notify.success("Project updated successfully", { id: toastId });
       } else {
@@ -492,6 +492,7 @@ export default function ProjectInfo({ variant }) {
         setCoverFile(null);
 
         // Refresh the projects list and redirect
+        fetchProjects();
 
         // Redirect to dashboard after showing success message
         setTimeout(() => {
@@ -514,14 +515,14 @@ export default function ProjectInfo({ variant }) {
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
       {/* Page Header */}
       <PageBanner
-          title={isSettings ? "Project Settings" : "Create New Project"}
-          description={isSettings
-              ? "Configure project parameters, team members, and visibility."
-              : "Define the core attributes and goals for your new venture."}
-          icon={isSettings ? Settings : Plus}
+        title={isSettings ? "Project Settings" : "Create New Project"}
+        description={isSettings
+          ? "Configure project parameters, team members, and visibility."
+          : "Define the core attributes and goals for your new venture."}
+        icon={isSettings ? Settings : Plus}
       />
 
-      <Tabs defaultValue="general" orientation="vertical" className="flex flex-col gap-6 md:flex-row">
+      <Tabs defaultValue="general" orientation="vertical" className="w-full flex flex-col gap-6 md:flex-row">
         <div className="flex flex-col gap-4 min-w-[240px] md:sticky md:top-24">
           <TabsList className="bg-muted/50 h-fit w-full flex-col gap-1 p-1 border rounded-xl">
             <TabsTrigger value="general" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
@@ -545,17 +546,17 @@ export default function ProjectInfo({ variant }) {
           </TabsList>
 
           <div className="px-1 space-y-3">
-            <Button 
-                onClick={handleSaveChanges} 
-                disabled={isSaving}
-                className="w-full text-xs font-bold"
+            <Button
+              onClick={handleSaveChanges}
+              disabled={isSaving}
+              className="w-full text-xs font-bold"
             >
-                {isSaving ? "Processing..." : isSettings ? "Save Changes" : "Create Project"}
+              {isSaving ? "Processing..." : isSettings ? "Save Changes" : "Create Project"}
             </Button>
           </div>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 w-full flex flex-col">
           {/* General Tab */}
           <TabsContent value="general" className="mt-0 space-y-6 outline-none animate-fade-in">
             <Card>
@@ -642,7 +643,7 @@ export default function ProjectInfo({ variant }) {
                 <Separator />
 
                 <div className="grid gap-6 sm:grid-cols-2">
-                   <div className="space-y-3">
+                  <div className="space-y-3">
                     <Label className="text-xs font-bold">Branding Icon</Label>
                     <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/20">
                       <div className="size-12 rounded-full border bg-background flex items-center justify-center overflow-hidden shrink-0">
@@ -717,7 +718,7 @@ export default function ProjectInfo({ variant }) {
                           <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-bold uppercase tracking-wider">{member.role}</Badge>
                           {member.role !== "Project Owner" && (
                             <Button variant="ghost" size="icon" onClick={() => removeMember(member.id)} className="size-7 text-muted-foreground hover:text-destructive">
-                                <X className="size-3.5" />
+                              <X className="size-3.5" />
                             </Button>
                           )}
                         </div>
@@ -756,8 +757,8 @@ export default function ProjectInfo({ variant }) {
                     ))
                   ) : (
                     <div className="flex flex-col items-center gap-2 opacity-30 text-muted-foreground">
-                        <Layers className="size-8" />
-                        <p className="text-xs font-bold uppercase tracking-widest">No Tags Defined</p>
+                      <Layers className="size-8" />
+                      <p className="text-xs font-bold uppercase tracking-widest">No Tags Defined</p>
                     </div>
                   )}
                 </div>
@@ -776,7 +777,7 @@ export default function ProjectInfo({ variant }) {
                   </Button>
                 </div>
                 {project.tags.length >= 10 && (
-                    <p className="text-[11px] text-center text-muted-foreground italic">Limit of 10 tags reached.</p>
+                  <p className="text-[11px] text-center text-muted-foreground italic">Limit of 10 tags reached.</p>
                 )}
               </CardContent>
             </Card>
@@ -806,7 +807,7 @@ export default function ProjectInfo({ variant }) {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription className="text-sm">
-                          Deleting <strong>{project.name}</strong> is final and cannot be undone. 
+                          Deleting <strong>{project.name}</strong> is final and cannot be undone.
                           All requirements, designs, and metadata will be purged.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

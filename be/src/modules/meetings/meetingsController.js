@@ -1,6 +1,7 @@
 import prisma from "../../../config/db/prismaClient.js";
 import { AccessToken, WebhookReceiver } from "livekit-server-sdk";
 import { processTranscription } from "./transcriptionService.js";
+import { generateStatelessResponse } from "../../utils/gemini.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -345,3 +346,162 @@ export const webhookHandler = async (req, res) => {
         res.status(401).send('invalid signature');
     }
 }
+
+const extractBulletPoints = (text) =>
+    text
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.startsWith("-") || line.startsWith("*"))
+        .map((line) => line.replace(/^[-*]\s*/, ""))
+        .filter(Boolean);
+
+const mapBulletPointsToRequirements = (points) =>
+    points.map((point, idx) => ({
+        id: `req-${idx + 1}`,
+        title: point.slice(0, 80),
+        description: point,
+        priority: "mid",
+    }));
+
+const stripMarkdownCodeBlock = (text) => {
+    if (!text || typeof text !== "string") return text;
+    let cleaned = text.trim();
+    const codeBlockStart = /^```(?:\w+)?\s*\n?/;
+    const codeBlockEnd = /\n?```\s*$/;
+
+    if (codeBlockStart.test(cleaned) && codeBlockEnd.test(cleaned)) {
+        cleaned = cleaned.replace(codeBlockStart, "").replace(codeBlockEnd, "");
+        return cleaned.trim();
+    }
+
+    const jsonBlockMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    if (jsonBlockMatch && jsonBlockMatch[1]) {
+        return jsonBlockMatch[1].trim();
+    }
+
+    const jsonObjectMatch = cleaned.match(/(\{[\s\S]*\})/);
+    if (jsonObjectMatch && jsonObjectMatch[1]) {
+        try {
+            JSON.parse(jsonObjectMatch[1]);
+            return jsonObjectMatch[1];
+        } catch { }
+    }
+    return cleaned.trim();
+};
+
+export const extractMeetingRequirements = async (req, res) => {
+    try {
+        const { meetingId } = req.params;
+        const userId = req.user.userId || req.user.id;
+        const role = req.user.role;
+
+        const meeting = await prisma.meeting.findUnique({
+            where: { id: meetingId },
+            include: {
+                project: {
+                    include: {
+                        project_member: {
+                            where: { member_id: userId },
+                        },
+                    },
+                },
+                transcripts: true
+            },
+        });
+
+        if (!meeting) {
+            return res.status(404).json({ message: "Meeting not found" });
+        }
+
+        const isCreator = meeting.project.created_by === userId;
+        const isMember = meeting.project.project_member.length > 0;
+        if (!isCreator && !isMember && role === "client") {
+            return res.status(403).json({
+                message: "Access denied.",
+            });
+        }
+
+        if (!meeting.transcripts || meeting.transcripts.length === 0) {
+            return res.status(400).json({
+                message: "No transcript available for this meeting to extract requirements from.",
+            });
+        }
+
+        const fullTranscript = meeting.transcripts.map(t => t.content).join("\n\n");
+
+        if (!fullTranscript.trim()) {
+            return res.status(400).json({
+                message: "Transcript is empty.",
+            });
+        }
+
+        const instructions = {
+            task: "extract_requirements",
+            expectations:
+                "Analyze the meeting transcript and extract distinct, actionable functional and non-functional requirements. Ignore chit-chat and off-topic discussion. Consolidate similar points into cohesive requirements.",
+            output: 
+                `You MUST return ONLY a valid JSON object matching this exact structure:
+{
+  "requirements": [
+    {
+      "title": "Short, concise summary (string)",
+      "description": "Detailed explanation of the requirement (string)",
+      "priority": "low, mid, or high (string, derive from context or default to mid)",
+      "status": "draft",
+      "tags": ["Array of context tags, e.g., UI, Database, Security, API", "string"]
+    }
+  ]
+}
+Do NOT wrap the output in markdown code blocks. Return ONLY the raw JSON string.`
+        };
+
+        const requirementsText = await generateStatelessResponse(
+            fullTranscript,
+            instructions
+        );
+
+        const requirementsPayload = {
+            meeting_id: meetingId,
+            project_id: meeting.project_id,
+            generated_at: new Date().toISOString(),
+            requirements: [],
+            raw: requirementsText,
+        };
+
+        try {
+            const cleanedText = stripMarkdownCodeBlock(requirementsText);
+            const parsed = JSON.parse(cleanedText);
+            if (Array.isArray(parsed)) {
+                requirementsPayload.requirements = parsed;
+            } else if (Array.isArray(parsed.requirements)) {
+                requirementsPayload.requirements = parsed.requirements;
+            }
+        } catch (parseError) {
+            console.log("[extractMeetingRequirements] JSON parse failed:", parseError.message);
+            const points = extractBulletPoints(requirementsText);
+            requirementsPayload.requirements = mapBulletPointsToRequirements(points);
+        }
+
+        const artifactPaths = {
+            dir: path.join(process.cwd(), "storage", "recordings", "requirements"),
+            file: path.join(process.cwd(), "storage", "recordings", "requirements", `${meetingId}-requirements.json`)
+        }
+        await fs.promises.mkdir(artifactPaths.dir, { recursive: true });
+
+        await fs.promises.writeFile(
+            artifactPaths.file,
+            JSON.stringify(requirementsPayload, null, 2),
+            "utf8"
+        );
+
+        res.status(200).json({
+            message: "Requirements extracted successfully",
+            data: requirementsPayload.requirements
+        });
+    } catch (error) {
+        console.error("Error extracting requirements from Meeting:", error);
+        res.status(502).json({
+            message: "Unable to extract requirements right now. Please try again in a bit.",
+        });
+    }
+};

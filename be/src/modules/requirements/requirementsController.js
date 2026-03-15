@@ -3,9 +3,6 @@ import prisma from "../../../config/db/prismaClient.js";
 const VALID_PRIORITIES = ['low', 'mid', 'high'];
 const VALID_STATUSES = ['draft', 'pending', 'approved', 'rejected'];
 
-// Helper to generate readable ID
-// Parent: REQ-001, REQ-002, ...
-// Child:  REQ-001.1, REQ-001.2, ...
 const generateReadableId = async (projectId, parentId = null) => {
     if (parentId) {
         // Generate child ID based on parent's readable_id
@@ -15,16 +12,45 @@ const generateReadableId = async (projectId, parentId = null) => {
         });
         if (!parent) throw new Error('Parent requirement not found');
 
-        const siblingCount = await prisma.requirement.count({
-            where: { parent_id: parentId }
+        // Fetch all children to find the max suffix
+        const children = await prisma.requirement.findMany({
+            where: { parent_id: parentId },
+            select: { readable_id: true }
         });
-        return `${parent.readable_id}.${siblingCount + 1}`;
+
+        let maxSuffix = 0;
+        const prefix = `${parent.readable_id}.`;
+        for (const child of children) {
+            if (child.readable_id.startsWith(prefix)) {
+                const suffixStr = child.readable_id.slice(prefix.length);
+                const suffixNum = parseInt(suffixStr, 10);
+                if (!isNaN(suffixNum) && suffixNum > maxSuffix) {
+                    maxSuffix = suffixNum;
+                }
+            }
+        }
+
+        return `${parent.readable_id}.${maxSuffix + 1}`;
     } else {
         // Generate root-level ID
-        const rootCount = await prisma.requirement.count({
-            where: { project_id: projectId, parent_id: null }
+        const roots = await prisma.requirement.findMany({
+            where: { project_id: projectId, parent_id: null },
+            select: { readable_id: true }
         });
-        return `REQ-${String(rootCount + 1).padStart(3, '0')}`;
+        
+        let maxSuffix = 0;
+        for (const root of roots) {
+            // Root IDs are like REQ-001, REQ-010, ...
+            const match = root.readable_id.match(/^REQ-(\d+)$/);
+            if (match) {
+                const suffixNum = parseInt(match[1], 10);
+                if (!isNaN(suffixNum) && suffixNum > maxSuffix) {
+                    maxSuffix = suffixNum;
+                }
+            }
+        }
+
+        return `REQ-${String(maxSuffix + 1).padStart(3, '0')}`;
     }
 };
 
@@ -478,11 +504,11 @@ export const getProjectTraceabilityGraph = async (req, res) => {
 
         const requirements = await prisma.requirement.findMany({
             where: { project_id: resolvedId },
-            select: { 
-                id: true, 
-                title: true, 
-                readable_id: true, 
-                status: true, 
+            select: {
+                id: true,
+                title: true,
+                readable_id: true,
+                status: true,
                 parent_id: true,
                 _count: {
                     select: {

@@ -9,7 +9,8 @@ import {
     deleteMeeting,
     webhookHandler,
     uploadRecording,
-    recordingUpload
+    recordingUpload,
+    extractMeetingRequirements
 } from "./meetingsController.js";
 import { verifyToken } from "../../middlewares/common/verifyToken.js";
 
@@ -26,6 +27,7 @@ router.get("/:meetingId", getMeeting);
 router.post("/:meetingId/join", joinMeeting);
 router.put("/:meetingId", updateMeeting);
 router.post("/:meetingId/transcribe", transcribeMeeting);
+router.post("/:meetingId/extract-requirements", extractMeetingRequirements);
 router.delete("/:meetingId", deleteMeeting);
 router.post("/:meetingId/upload-recording", recordingUpload.single('recording'), uploadRecording);
 
