@@ -74,6 +74,11 @@ export const getAllUsers = async (req, res) => {
             },
           },
         },
+        _count: {
+          select: {
+            project_member: true,
+          },
+        },
       },
     });
 
@@ -89,6 +94,7 @@ export const getAllUsers = async (req, res) => {
       profile_pic_url: user.profile_pic_url,
       role: user.role?.name,
       permissions: user.role?.role_permission?.map((rp) => rp.permission.name) || [],
+      projects_count: user._count?.project_member || 0,
       created_at: user.created_at,
       updated_at: user.updated_at,
     }));

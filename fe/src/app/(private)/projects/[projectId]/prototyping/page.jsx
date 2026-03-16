@@ -23,6 +23,8 @@ import PageBanner from "@/components/layout/PageBanner";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 import TablePagination from "@/components/common/TablePagination";
 import StatsCard from "@/components/requirements/StatsCard";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
     getPrototypes,
     createPrototype,
@@ -39,6 +41,8 @@ export default function Page() {
     const [searchQuery, setSearchQuery] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [itemToDelete, setItemToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const pageSize = 6;
 
     const stats = {
@@ -96,13 +100,18 @@ export default function Page() {
         }
     };
 
-    const handleDelete = async (prototypeId) => {
+    const handleConfirmDelete = async () => {
+        if (!itemToDelete) return;
+        setIsDeleting(true);
         try {
-            await deletePrototypeApi(prototypeId);
-            setPrototypes((prev) => prev.filter((p) => p.id !== prototypeId));
+            await deletePrototypeApi(itemToDelete.id);
+            setPrototypes((prev) => prev.filter((p) => p.id !== itemToDelete.id));
             toast.success("Prototype deleted.");
+            setItemToDelete(null);
         } catch (err) {
             toast.error(err.message);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -188,10 +197,10 @@ export default function Page() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="bg-muted/30">
-                                            <TableHead className="w-[35%]">Prototype Name</TableHead>
-                                            <TableHead className="w-[30%]">Description</TableHead>
-                                            <TableHead>Screens</TableHead>
-                                            <TableHead>Last Updated</TableHead>
+                                            <TableHead className="w-[40%] md:w-[35%]">Prototype Name</TableHead>
+                                            <TableHead className="hidden md:table-cell w-[30%]">Description</TableHead>
+                                            <TableHead className="hidden sm:table-cell">Screens</TableHead>
+                                            <TableHead className="hidden lg:table-cell">Last Updated</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -210,22 +219,29 @@ export default function Page() {
                                                 <TableRow key={proto.id} className="hover:bg-muted/20 transition-colors">
                                                     <TableCell className="font-medium">
                                                         <div className="flex items-center gap-2">
-                                                            <Layers className="h-4 w-4 text-primary" />
-                                                            <span>{proto.name}</span>
+                                                            <Layers className="h-4 w-4 text-primary shrink-0" />
+                                                            <TooltipProvider>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <span className="truncate max-w-[150px] md:max-w-none">{proto.name}</span>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>{proto.name}</TooltipContent>
+                                                                </Tooltip>
+                                                            </TooltipProvider>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className="hidden md:table-cell">
                                                         <p className="text-xs text-muted-foreground line-clamp-1">
                                                             {proto.description || "No description"}
                                                         </p>
                                                     </TableCell>
-                                                    <TableCell>
-                                                        <Badge variant="secondary" className="text-[10px]">
+                                                    <TableCell className="hidden sm:table-cell">
+                                                        <Badge variant="secondary" className="text-[10px] whitespace-nowrap">
                                                             {screenCount} {screenCount === 1 ? "screen" : "screens"}
                                                         </Badge>
                                                     </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                    <TableCell className="hidden lg:table-cell">
+                                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
                                                             <Calendar className="h-3.5 w-3.5" />
                                                             {updatedAt}
                                                         </div>
@@ -245,7 +261,7 @@ export default function Page() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                                                onClick={() => handleDelete(proto.id)}
+                                                                onClick={() => setItemToDelete(proto)}
                                                                 title="Delete"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
@@ -267,6 +283,21 @@ export default function Page() {
                             </div>
                         </div>
                     )}
+            <ConfirmationDialog
+                open={!!itemToDelete}
+                onOpenChange={(open) => !open && setItemToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                title="Delete Prototype"
+                description={
+                    <span>
+                        Are you sure you want to delete the prototype <span className="font-semibold">"{itemToDelete?.name}"</span>? 
+                        This action cannot be undone and will remove all associated screens.
+                    </span>
+                }
+                confirmText={isDeleting ? "Deleting..." : "Delete"}
+                variant="destructive"
+                loading={isDeleting}
+            />
                 </div>
             </main>
         </ProtectedRoute>

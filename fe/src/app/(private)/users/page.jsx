@@ -11,28 +11,7 @@ import ErrorBox from "@/components/common/ErrorBox";
 import Logo from "@/components/common/Logo";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 import PageBanner from "@/components/layout/PageBanner";
-
-// Stats Card Component
-function StatsCard({ icon: Icon, label, value, color = "primary" }) {
-  const colorClasses = {
-    primary: "bg-primary/10 text-primary",
-    accent: "bg-accent/10 text-accent",
-    success: "bg-success/10 text-success",
-    warning: "bg-warning/10 text-warning",
-  };
-
-  return (
-    <div className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border hover-lift cursor-default">
-      <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-        <Icon className="h-5 w-5" />
-      </div>
-      <div>
-        <p className="text-2xl font-bold font-display">{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
-      </div>
-    </div>
-  );
-}
+import { StatsCard } from "@/components/requirements/StatsCard";
 
 // Loading Skeleton
 function LoadingSkeleton() {

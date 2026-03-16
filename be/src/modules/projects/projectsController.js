@@ -18,13 +18,27 @@ export const createProject = async (req, res) => {
     projectData.end_date = endDate;
     projectData.created_by = projectData.created_by || req.user.userId;
 
+    // Ensure creator is in the members list
+    const creatorId = projectData.created_by;
+    const initialMembers = Array.isArray(members) ? members : [];
+    const membersList = initialMembers.includes(creatorId) ? initialMembers : [...initialMembers, creatorId];
+
     // Handle members relation
-    if (members && Array.isArray(members) && members.length > 0) {
+    if (membersList.length > 0) {
       projectData.project_member = {
-        create: members.map((memberId) => ({
+        create: membersList.map((memberId) => ({
           member_id: memberId,
         })),
       };
+    }
+
+    // Check if project with same name already exists
+    const existingProject = await prisma.project.findFirst({
+      where: { name: projectData.name }
+    });
+
+    if (existingProject) {
+      return res.status(400).json({ message: "A project with this name already exists" });
     }
 
     const project = await prisma.project.create({
@@ -46,12 +60,32 @@ export const createProject = async (req, res) => {
 // ======================
 export const getAllProjects = async (req, res) => {
   try {
-    const projects = await prisma.project.findMany();
+    const projects = await prisma.project.findMany({
+      include: {
+        project_member: true,
+        app_user: {
+          select: {
+            id: true,
+            display_name: true,
+            username: true,
+            profile_pic_url: true,
+          },
+        },
+      },
+    });
+
+    const formattedProjects = projects.map(p => ({
+      ...p,
+      members: p.project_member.map(pm => pm.member_id),
+      creator: p.app_user,
+      project_member: undefined,
+      app_user: undefined
+    }));
 
     res.status(200).json({
       message: "Fetching all projects successful",
-      count: projects.length,
-      projects,
+      count: formattedProjects.length,
+      projects: formattedProjects,
     });
   } catch (error) {
     console.error("Error fetching all projects:", error);
@@ -83,6 +117,14 @@ export const getSingleUserProjects = async (req, res) => {
       },
       include: {
         project_member: true, // Include members
+        app_user: {
+          select: {
+            id: true,
+            display_name: true,
+            username: true,
+            profile_pic_url: true,
+          },
+        },
       },
       orderBy: { created_at: "desc" },
     });
@@ -96,6 +138,14 @@ export const getSingleUserProjects = async (req, res) => {
         project: {
           include: {
             project_member: true, // Include members for these projects too
+            app_user: {
+              select: {
+                id: true,
+                display_name: true,
+                username: true,
+                profile_pic_url: true,
+              },
+            },
           },
         },
       },
@@ -112,11 +162,13 @@ export const getSingleUserProjects = async (req, res) => {
       return dateB - dateA;
     });
 
-    // Format projects to include flat 'members' array of IDs
+    // Format projects to include flat 'members' array of IDs and alias app_user -> creator
     const formattedProjects = allProjects.map(p => ({
       ...p,
       members: p.project_member.map(pm => pm.member_id),
+      creator: p.app_user,
       project_member: undefined, // Setup cleaner response
+      app_user: undefined
     }));
 
     if (!formattedProjects || formattedProjects.length === 0) {

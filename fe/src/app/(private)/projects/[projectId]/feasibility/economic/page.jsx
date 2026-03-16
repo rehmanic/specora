@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import useAuthStore from "@/store/authStore";
 
@@ -82,6 +83,11 @@ function HistogramChart({ data, currencySymbol }) {
             if (cancelled || !canvasRef.current) return;
             if (chartRef.current) chartRef.current.destroy();
 
+            const isDark = document.documentElement.classList.contains("dark");
+            const textColor = isDark ? "#a1a1aa" : "#71717a"; // muted-foreground equivalent
+            const gridColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)";
+            const titleColor = isDark ? "#f4f4f5" : "#18181b"; // foreground equivalent
+
             chartRef.current = new Chart(canvasRef.current, {
                 type: "bar",
                 data: {
@@ -106,7 +112,7 @@ function HistogramChart({ data, currencySymbol }) {
                         title: {
                             display: true,
                             text: "Cost Distribution (Histogram)",
-                            color: "hsl(var(--foreground))",
+                            color: titleColor,
                             font: { size: 14, weight: "600" },
                         },
                         tooltip: {
@@ -126,15 +132,15 @@ function HistogramChart({ data, currencySymbol }) {
                             display: true,
                             ticks: {
                                 maxTicksLimit: 8,
-                                color: "hsl(var(--muted-foreground))",
+                                color: textColor,
                                 font: { size: 10 },
                             },
                             grid: { display: false },
                         },
                         y: {
                             display: true,
-                            ticks: { color: "hsl(var(--muted-foreground))" },
-                            grid: { color: "hsl(var(--border) / 0.3)" },
+                            ticks: { color: textColor },
+                            grid: { color: gridColor },
                         },
                     },
                 },
@@ -182,6 +188,11 @@ function SCurveChart({ data, currencySymbol }) {
             if (cancelled || !canvasRef.current) return;
             if (chartRef.current) chartRef.current.destroy();
 
+            const isDark = document.documentElement.classList.contains("dark");
+            const textColor = isDark ? "#a1a1aa" : "#71717a";
+            const gridColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)";
+            const titleColor = isDark ? "#f4f4f5" : "#18181b";
+
             chartRef.current = new Chart(canvasRef.current, {
                 type: "line",
                 data: {
@@ -206,7 +217,7 @@ function SCurveChart({ data, currencySymbol }) {
                         title: {
                             display: true,
                             text: "Cumulative Probability (S-Curve)",
-                            color: "hsl(var(--foreground))",
+                            color: titleColor,
                             font: { size: 14, weight: "600" },
                         },
                         tooltip: {
@@ -219,7 +230,7 @@ function SCurveChart({ data, currencySymbol }) {
                         x: {
                             ticks: {
                                 maxTicksLimit: 8,
-                                color: "hsl(var(--muted-foreground))",
+                                color: textColor,
                                 font: { size: 10 },
                             },
                             grid: { display: false },
@@ -229,9 +240,9 @@ function SCurveChart({ data, currencySymbol }) {
                             max: 100,
                             ticks: {
                                 callback: (v) => `${v}%`,
-                                color: "hsl(var(--muted-foreground))",
+                                color: textColor,
                             },
-                            grid: { color: "hsl(var(--border) / 0.3)" },
+                            grid: { color: gridColor },
                         },
                     },
                 },
@@ -261,6 +272,11 @@ function DurationHistogramChart({ data }) {
             if (cancelled || !canvasRef.current) return;
             if (chartRef.current) chartRef.current.destroy();
 
+            const isDark = document.documentElement.classList.contains("dark");
+            const textColor = isDark ? "#a1a1aa" : "#71717a";
+            const gridColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)";
+            const titleColor = isDark ? "#f4f4f5" : "#18181b";
+
             chartRef.current = new Chart(canvasRef.current, {
                 type: "bar",
                 data: {
@@ -283,7 +299,7 @@ function DurationHistogramChart({ data }) {
                         title: {
                             display: true,
                             text: "Duration Distribution (Hours)",
-                            color: "hsl(var(--foreground))",
+                            color: titleColor,
                             font: { size: 14, weight: "600" },
                         },
                         tooltip: {
@@ -302,14 +318,14 @@ function DurationHistogramChart({ data }) {
                         x: {
                             ticks: {
                                 maxTicksLimit: 8,
-                                color: "hsl(var(--muted-foreground))",
+                                color: textColor,
                                 font: { size: 10 },
                             },
                             grid: { display: false },
                         },
                         y: {
-                            ticks: { color: "hsl(var(--muted-foreground))" },
-                            grid: { color: "hsl(var(--border) / 0.3)" },
+                            ticks: { color: textColor },
+                            grid: { color: gridColor },
                         },
                     },
                 },
@@ -750,9 +766,18 @@ export default function Page() {
                                                                 <TableCell>
                                                                     <div>
                                                                         <span className="font-medium">{req.title}</span>
-                                                                        <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
-                                                                            {req.description}
-                                                                        </p>
+                                                                        <TooltipProvider>
+                                                                            <Tooltip>
+                                                                                <TooltipTrigger asChild>
+                                                                                    <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1 cursor-help">
+                                                                                        {req.description}
+                                                                                    </p>
+                                                                                </TooltipTrigger>
+                                                                                <TooltipContent className="max-w-xs">
+                                                                                    <p className="text-xs">{req.description}</p>
+                                                                                </TooltipContent>
+                                                                            </Tooltip>
+                                                                        </TooltipProvider>
                                                                     </div>
                                                                 </TableCell>
                                                                 <TableCell>

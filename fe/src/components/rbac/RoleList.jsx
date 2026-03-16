@@ -1,27 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Key } from "lucide-react";
+import { Plus, Pencil, Trash2, Key, Loader2, Shield, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useRbacStore from "@/store/rbacStore";
 import TablePagination from "@/components/common/TablePagination";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function RoleList({ onEdit, searchQuery = "" }) {
   const { roles, fetchRoles, deleteRole, loading } = useRbacStore();
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [roleToDelete, setRoleToDelete] = useState(null);
   const pageSize = 5;
 
   const filteredRoles = roles.filter((role) =>
@@ -55,91 +54,89 @@ export function RoleList({ onEdit, searchQuery = "" }) {
     <div className="w-full">
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th className="text-left py-3 px-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="text-right py-3 px-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent bg-muted/30">
+                <TableHead className="w-[300px] text-xs font-bold uppercase">Role Name</TableHead>
+                <TableHead className="text-center text-xs font-bold uppercase">Capabilities</TableHead>
+                <TableHead className="w-[100px] text-right text-xs font-bold uppercase">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {paginatedRoles.map((role) => (
-                <tr
+                <TableRow
                   key={role.id}
-                  className="border-b border-border/50 hover:bg-muted/20 transition-colors"
+                  className="animate-fade-in hover:bg-muted/20 transition-colors"
                 >
-                  <td className="py-3 px-4 font-semibold text-sm text-foreground">
-                    {role.name}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-primary"
-                        onClick={() => onEdit(role)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogHeader>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the role "{role.name}".
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(role.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                       <Shield className="h-4 w-4 text-primary shrink-0" />
+                       <span className="text-sm font-semibold">{role.name}</span>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="text-center font-medium">
+                    <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      {role.permissions?.length || 0} permissions
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors"
+                              onClick={() => onEdit(role)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit Role</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                              onClick={() => setRoleToDelete(role)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete Role</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ))}
               {filteredRoles.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={2} className="text-center py-20 text-muted-foreground">
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-20 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center opacity-40">
                       <Key className="h-12 w-12 mb-4" />
-                      <p className="text-sm font-medium">No roles detected in the system.</p>
+                      <p className="text-sm font-medium">No system roles detected.</p>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
               {loading && (
-                <tr>
-                  <td colSpan={2} className="text-center py-20">
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-20">
                     <div className="flex flex-col items-center justify-center animate-pulse text-muted-foreground">
-                      <p className="text-sm font-medium">Syncing roles...</p>
+                      <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                      <p className="text-sm font-medium">Syncing security roles...</p>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
         <TablePagination
           currentPage={currentPage}
@@ -149,6 +146,25 @@ export function RoleList({ onEdit, searchQuery = "" }) {
           pageSize={pageSize}
         />
       </div>
+
+      <ConfirmationDialog
+        open={!!roleToDelete}
+        onOpenChange={(open) => !open && setRoleToDelete(null)}
+        onConfirm={() => {
+          handleDelete(roleToDelete.id);
+          setRoleToDelete(null);
+        }}
+        title="Delete Role"
+        description={
+          <span>
+            Are you sure you want to delete the role{" "}
+            <span className="font-semibold text-foreground">"{roleToDelete?.name}"</span>? 
+            This action cannot be undone.
+          </span>
+        }
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

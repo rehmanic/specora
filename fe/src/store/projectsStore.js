@@ -11,6 +11,7 @@ const useProjectsStore = create(
       projects: [],
       isLoading: false,
       error: null,
+      entityTitles: {}, // Map of IDs to titles for breadcrumbs
 
       // ✅ Fetch Projects from API
       fetchProjects: async () => {
@@ -41,6 +42,12 @@ const useProjectsStore = create(
 
       // ✅ Clear error
       clearError: () => set({ error: null }),
+
+      // ✅ Entity Titles for Breadcrumbs
+      setEntityTitle: (id, title) => 
+        set((state) => ({ 
+          entityTitles: { ...state.entityTitles, [id]: title } 
+        })),
     }),
     {
       name: "projects-storage", // localStorage key

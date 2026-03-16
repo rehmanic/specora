@@ -26,7 +26,7 @@ import useProjectsStore from "@/store/projectsStore";
 
 export function Topbar() {
     const pathname = usePathname();
-    const { selectedProject } = useProjectsStore();
+    const { selectedProject, entityTitles } = useProjectsStore();
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
@@ -35,30 +35,36 @@ export function Topbar() {
     // Simple breadcrumb logic
     const paths = pathname.split('/').filter(Boolean);
 
+    const isUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
     return (
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6">
             <div className="flex items-center gap-4 flex-1">
-                {/* Mobile Menu Trigger could go here if we were using a Sheet for Sidebar on mobile */}
-
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
-                            Home
+                            <Link href="/dashboard" className="transition-colors hover:text-foreground">Home</Link>
                         </BreadcrumbItem>
                         {paths.map((path, index) => {
-                            // Make last item active/non-clickable
                             const isLast = index === paths.length - 1;
-                            // Format path name (capitalize, replace hyphens)
-                            const name = path.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+                            
+                            // Check for entity title first (for IDs)
+                            let name = entityTitles[path];
+                            if (!name) {
+                                // Default formatting
+                                name = path.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+                                // If it's a UUID and we don't have a title, shorten it or keep it
+                                if (isUUID(path)) name = path.slice(0, 8) + "...";
+                            }
 
                             return (
-                                <Fragment key={path}>
+                                <Fragment key={path + index}>
                                     <BreadcrumbSeparator />
                                     <BreadcrumbItem>
                                         {isLast ? (
-                                            <BreadcrumbPage>{name}</BreadcrumbPage>
+                                            <BreadcrumbPage className="max-w-[200px] truncate">{name}</BreadcrumbPage>
                                         ) : (
-                                            <span>{name}</span>
+                                            <span className="max-w-[150px] truncate">{name}</span>
                                         )}
                                     </BreadcrumbItem>
                                 </Fragment>

@@ -9,6 +9,7 @@ import FeedbackResults from "@/components/feedback/FeedbackResults";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Edit } from "lucide-react";
 import Link from "next/link";
+import useProjectsStore from "@/store/projectsStore";
 
 export default function FeedbackDetailsPage() {
     const { projectId, feedbackId } = useParams();
@@ -23,6 +24,9 @@ export default function FeedbackDetailsPage() {
                 setLoading(true);
                 const data = await getFeedback(feedbackId);
                 setFeedback(data.feedback);
+                if (data.feedback?.title) {
+                    useProjectsStore.getState().setEntityTitle(feedbackId, data.feedback.title);
+                }
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -56,7 +60,7 @@ export default function FeedbackDetailsPage() {
 
             {isManager ? (
                 <div className="space-y-4">
-                    <FeedbackResults feedbackId={feedbackId} />
+                    <FeedbackResults feedbackId={feedbackId} formStructure={feedback.form_structure} />
                 </div>
             ) : (
                 <div className="mt-6">

@@ -5,13 +5,13 @@ import { FolderOpen, Users, Tags, Activity } from "lucide-react";
 function StatCard({ icon: Icon, label, value, color = "primary" }) {
   const colorClasses = {
     primary: "bg-primary/10 text-primary border-primary/20 shadow-primary/5",
-    accent: "bg-accent/10 text-accent border-accent/20 shadow-accent/5",
+    accent: "bg-violet-500/10 text-violet-500 border-violet-500/20 shadow-violet-500/5",
     success: "bg-success/10 text-success border-success/20 shadow-success/5",
     warning: "bg-warning/10 text-warning border-warning/20 shadow-warning/5",
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-2xl bg-card/60 backdrop-blur-xl border border-white/10 dark:border-white/5 hover-lift cursor-default card-interactive transition-all group shadow-sm hover:shadow-md">
+    <div className="flex items-center gap-3 p-3 rounded-2xl bg-card/60 backdrop-blur-xl border border-border/50 hover-lift cursor-default card-interactive transition-all group shadow-sm hover:shadow-md">
       <div className={`p-2 rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 ${colorClasses[color]} border shadow-inner`}>
         <Icon className="h-5 w-5" />
       </div>

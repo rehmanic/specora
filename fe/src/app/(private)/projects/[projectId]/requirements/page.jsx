@@ -61,8 +61,9 @@ import StatsCard from "@/components/requirements/StatsCard";
 import PageBanner from "@/components/layout/PageBanner";
 import { ClipboardList } from "lucide-react";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 4;
 
 // Helper: recursively flatten requirements + children for standard export
 const flattenForExport = (req) => {
@@ -127,6 +128,9 @@ export default function Page() {
   const [childrenParent, setChildrenParent] = useState(null);
   const [importLoading, setImportLoading] = useState(false);
   const [importType, setImportType] = useState(null); // 'json' or 'csv'
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [importConfirmData, setImportConfirmData] = useState(null);
   const fileInputRef = useRef(null);
 
   const loadRequirements = useCallback(async () => {
@@ -306,15 +310,25 @@ export default function Page() {
         return;
       }
 
-      // Confirm import
-      if (!confirm(`You are about to import ${reqData.length} requirement(s). Continue?`)) return;
+      // Instead of confirm(), set state to show ConfirmationDialog
+      setImportConfirmData(reqData);
+    } catch (error) {
+      toast.error(error.message || "Import failed");
+    } finally {
+      setImportLoading(false);
+    }
+  };
 
-      setImportLoading(true);
-      const res = await importRequirements(projectId, { requirements: reqData });
+  const confirmImport = async () => {
+    if (!importConfirmData) return;
+    setImportLoading(true);
+    try {
+      const res = await importRequirements(projectId, { requirements: importConfirmData });
       toast.success(res.message || "Import successful");
       if (res.errors && res.errors.length > 0) {
         res.errors.forEach((err) => toast.warning(err));
       }
+      setImportConfirmData(null);
       loadRequirements();
     } catch (error) {
       toast.error(error.message || "Import failed");
@@ -339,18 +353,19 @@ export default function Page() {
     setDialogOpen(true);
   };
 
-  const handleDeleteClick = async (reqId) => {
-    if (!confirm("Are you sure you want to delete this requirement?")) return;
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
 
-    setActionLoading(true);
+    setIsDeleting(true);
     try {
-      await deleteRequirement(projectId, reqId);
+      await deleteRequirement(projectId, itemToDelete.id);
       loadRequirements();
       toast.success("Requirement deleted");
+      setItemToDelete(null);
     } catch (error) {
       toast.error(error.message || "Failed to delete requirement");
     } finally {
-      setActionLoading(false);
+      setIsDeleting(false);
     }
   };
 
@@ -610,7 +625,7 @@ export default function Page() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                onClick={() => handleDeleteClick(req.id)}
+                                onClick={() => setItemToDelete(req)}
                                 title="Delete"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -787,7 +802,7 @@ export default function Page() {
                             className="h-7 w-7 text-muted-foreground hover:text-destructive"
                             onClick={() => {
                               setChildrenDialogOpen(false);
-                              handleDeleteClick(child.id);
+                              setItemToDelete(child);
                             }}
                             title="Delete"
                           >
@@ -807,6 +822,31 @@ export default function Page() {
             </div>
           </DialogContent>
         </Dialog>
+        <ConfirmationDialog
+            open={!!itemToDelete}
+            onOpenChange={(open) => !open && setItemToDelete(null)}
+            onConfirm={confirmDelete}
+            title="Delete Requirement"
+            description={
+                <span>
+                    Are you sure you want to delete requirement <span className="font-semibold text-foreground">"{itemToDelete?.readable_id}"</span>? 
+                    This action cannot be undone and will remove all associated links and children.
+                </span>
+            }
+            confirmText={isDeleting ? "Deleting..." : "Delete"}
+            variant="destructive"
+            loading={isDeleting}
+        />
+
+        <ConfirmationDialog
+            open={!!importConfirmData}
+            onOpenChange={(open) => !open && setImportConfirmData(null)}
+            onConfirm={confirmImport}
+            title="Import Requirements"
+            description={`You are about to import ${importConfirmData?.length} requirement(s). This will add them to your current project. Continue?`}
+            confirmText={importLoading ? "Importing..." : "Confirm Import"}
+            loading={importLoading}
+        />
       </main>
     </ProtectedRoute>
   );

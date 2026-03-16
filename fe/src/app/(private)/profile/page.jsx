@@ -180,10 +180,13 @@ export default function ProfilePage() {
                                         name="username"
                                         id="username"
                                         defaultValue={user?.username}
-                                        placeholder="johndoe"
-                                        className="pl-10 focus-visible:ring-primary"
+                                        readOnly
+                                        className="pl-10 bg-muted/50 cursor-not-allowed select-none focus-visible:ring-0 focus-visible:ring-offset-0"
                                     />
                                 </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Username cannot be changed.
+                                </p>
                             </div>
                         </div>
 

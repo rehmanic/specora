@@ -56,7 +56,8 @@ import {
   EyeOff,
   Camera,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ThumbsUp
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -68,6 +69,25 @@ import {
 import { uploadFileRequest } from "@/api/upload";
 import notify from "@/components/common/Notification";
 import { cn } from "@/lib/utils";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
+import useRbacStore from "@/store/rbacStore";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 export default function UserInfo({ variant = "create-user", username }) {
   const isCreate = variant === "create-user";
@@ -78,6 +98,12 @@ export default function UserInfo({ variant = "create-user", username }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [successModal, setSuccessModal] = useState({
+    open: false,
+    title: "",
+    message: ""
+  });
 
   const [userData, setUserData] = useState({
     username: "",
@@ -87,6 +113,12 @@ export default function UserInfo({ variant = "create-user", username }) {
     role: "client",
     profilePicUrl: "https://cdn-icons-png.flaticon.com/128/1077/1077012.png",
   });
+
+  const { roles, fetchRoles } = useRbacStore();
+
+  useEffect(() => {
+    fetchRoles();
+  }, [fetchRoles]);
 
   const [profilePicUrl, setProfilePicUrl] = useState("https://cdn-icons-png.flaticon.com/128/1077/1077012.png");
 
@@ -172,10 +204,19 @@ export default function UserInfo({ variant = "create-user", username }) {
       if (isCreate) {
         await createUserRequest(payload);
         notify.success("User created successfully", { id: toastId });
-        router.push("/users");
+        setSuccessModal({
+          open: true,
+          title: "User Created",
+          message: `The user ${userData.fullName} has been created successfully.`
+        });
       } else {
         await updateUserRequest(payload);
         notify.success("User updated successfully", { id: toastId });
+        setSuccessModal({
+          open: true,
+          title: "User Updated",
+          message: "User profile information has been saved."
+        });
       }
     } catch (err) {
       notify.error(err.message || "Failed to save user", { id: toastId });
@@ -219,6 +260,10 @@ export default function UserInfo({ variant = "create-user", username }) {
             <TabsTrigger value="general" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <User className="size-4" />
               General Info
+            </TabsTrigger>
+            <TabsTrigger value="permissions" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Shield className="size-4" />
+              Permissions
             </TabsTrigger>
             {!isCreate && (
               <TabsTrigger value="danger" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg text-destructive data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground">
@@ -265,14 +310,14 @@ export default function UserInfo({ variant = "create-user", username }) {
                   </div>
                   <div className="flex-1 space-y-1 text-center sm:text-left">
                     <div className="space-y-0.5">
-                      <h3 className="text-lg font-bold tracking-tight">{userData.fullName || "New User"}</h3>
+                      <h3 className="text-xl font-bold tracking-tight">{userData.fullName || "New User"}</h3>
                       <p className="text-xs text-muted-foreground font-medium flex items-center gap-1 justify-center sm:justify-start">
                         @{userData.username ? userData.username.toLowerCase() : "username"}
                       </p>
                     </div>
                     <div className="flex flex-wrap justify-center sm:justify-start gap-2 pt-3">
                       <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 capitalize font-bold text-[10px]">
-                        {userData.role}
+                        {userData.role?.replace('_', ' ')}
                       </Badge>
                       <Badge variant="outline" className="bg-muted/30 text-muted-foreground border-border text-[10px] font-medium">
                         <Mail className="size-3 mr-1" />
@@ -307,6 +352,7 @@ export default function UserInfo({ variant = "create-user", username }) {
                         value={userData.username}
                         onChange={(e) => handleInputChange("username", e.target.value)}
                         className="h-10 pl-9"
+                        disabled={!isCreate}
                       />
                       <CheckCircle2 className="absolute left-3 top-3 size-4 text-muted-foreground" />
                     </div>
@@ -370,6 +416,67 @@ export default function UserInfo({ variant = "create-user", username }) {
             </Card>
           </TabsContent>
 
+          {/* Permissions Tab */}
+          <TabsContent value="permissions" className="mt-0 space-y-6 outline-none animate-fade-in">
+            <Card>
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <Shield className="size-4 text-primary" />
+                  <CardTitle className="text-lg">Role Capabilities</CardTitle>
+                </div>
+                <CardDescription>
+                  This user has the following permissions based on their <strong>{userData.role?.replace('_', ' ')}</strong> role.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[400px] border rounded-lg">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow>
+                        <TableHead className="text-xs font-bold uppercase">Module</TableHead>
+                        <TableHead className="text-xs font-bold uppercase">Permission</TableHead>
+                        <TableHead className="text-xs font-bold uppercase">Description</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {roles.find(r => r.name === userData.role)?.permissions?.map((p) => (
+                        <TableRow key={p.id}>
+                          <TableCell className="font-medium text-xs capitalize">
+                            {p.module || "General"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px]">
+                              {p.label || p.name}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {p.description || "Access to this module's features."}
+                          </TableCell>
+                        </TableRow>
+                      )) || (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center py-20 text-muted-foreground italic">
+                            No granular permissions assigned to this role yet.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+
+                <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/10 flex items-start gap-3">
+                  <AlertCircle className="size-5 text-primary shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-primary">Admin Managed Access</p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Permissions are managed globally through the RBAC settings. Changing a user's role will update their permissions automatically.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
 
           {/* Danger Tab */}
           <TabsContent value="danger" className="mt-0 space-y-6 outline-none animate-fade-in">
@@ -387,37 +494,69 @@ export default function UserInfo({ variant = "create-user", username }) {
                     <p className="text-sm font-bold text-destructive">Delete Account</p>
                     <p className="text-xs text-muted-foreground">This user and all their personal records will be wiped.</p>
                   </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm" className="font-bold">Erase Account</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-2xl max-w-md">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-sm">
-                          Deleting <strong>{userData.fullName} (@{userData.username})</strong> is final.
-                          The user will lose access immediately and all associated metadata will be purged.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter className="mt-4 gap-2">
-                        <AlertDialogCancel disabled={isDeleting} className="rounded-lg h-10 border-2">Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDeleteUser}
-                          disabled={isDeleting}
-                          className="h-10 bg-destructive text-white hover:bg-destructive/90 rounded-lg font-bold"
-                        >
-                          {isDeleting ? "Wiping..." : "Yes, Purge Account"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    className="font-bold"
+                    onClick={() => setDeleteModalOpen(true)}
+                  >
+                    Erase Account
+                  </Button>
                 </div>
 
+                <ConfirmationDialog
+                  open={deleteModalOpen}
+                  onOpenChange={setDeleteModalOpen}
+                  onConfirm={handleDeleteUser}
+                  title="Delete Account"
+                  description={
+                    <span>
+                      Deleting <strong>{userData.fullName} (@{userData.username})</strong> is final.
+                      The user will lose access immediately and all associated metadata will be purged.
+                    </span>
+                  }
+                  confirmText={isDeleting ? "Wiping..." : "Yes, Purge Account"}
+                  variant="destructive"
+                  loading={isDeleting}
+                />
               </CardContent>
             </Card>
           </TabsContent>
         </div>
       </Tabs>
+
+      {/* Success Modal */}
+      <Dialog open={successModal.open} onOpenChange={(open) => setSuccessModal(prev => ({ ...prev, open }))}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <div className="mx-auto my-4 flex h-12 w-12 items-center justify-center rounded-full bg-success/10 text-success">
+              <ThumbsUp className="h-6 w-6" />
+            </div>
+            <DialogTitle className="text-xl text-center">{successModal.title}</DialogTitle>
+            <DialogDescription className="text-center pt-2">
+              {successModal.message}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center flex-row gap-2 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSuccessModal(prev => ({ ...prev, open: false }))}
+            >
+              Close
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setSuccessModal(prev => ({ ...prev, open: false }));
+                router.push("/users");
+              }}
+            >
+              Go to User List
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

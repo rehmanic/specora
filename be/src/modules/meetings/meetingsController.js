@@ -43,6 +43,11 @@ export const createMeeting = async (req, res) => {
     try {
         console.log("Create Meeting User:", req.user); // Debugging
         const { title, description, start_time, end_time, project_id, attendees } = req.body;
+
+        if (!title || title.trim() === "") {
+            return res.status(400).json({ message: "Meeting title is required" });
+        }
+
         const organizerId = req.user.id || req.user.userId; // Handle both cases
 
         let targetProjectId = project_id;
@@ -66,10 +71,10 @@ export const createMeeting = async (req, res) => {
         // Create meeting in DB
         const meeting = await prisma.meeting.create({
             data: {
-                title,
+                title: title.trim(),
                 description,
-                start_time,
-                end_time,
+                start_time: start_time ? new Date(start_time) : new Date(),
+                end_time: end_time ? new Date(end_time) : null,
                 project: {
                     connect: { id: targetProjectId }
                 },
@@ -237,14 +242,20 @@ export const uploadRecording = async (req, res) => {
 export const updateMeeting = async (req, res) => {
     try {
         const { meetingId } = req.params;
-        const { title, description } = req.body;
+        const { title, description, start_time } = req.body;
+
+        if (title !== undefined && title.trim() === "") {
+            return res.status(400).json({ message: "Meeting title cannot be empty" });
+        }
+
+        const updateData = {};
+        if (title) updateData.title = title.trim();
+        if (description !== undefined) updateData.description = description;
+        if (start_time) updateData.start_time = new Date(start_time);
 
         const updated = await prisma.meeting.update({
             where: { id: meetingId },
-            data: {
-                title: title,
-                description: description
-            }
+            data: updateData
         });
 
         res.json(updated);

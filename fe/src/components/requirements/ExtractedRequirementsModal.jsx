@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Edit2, Check, X, Tag } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 
 export function ExtractedRequirementsModal({
   isOpen,
@@ -29,6 +30,7 @@ export function ExtractedRequirementsModal({
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState(null);
+  const [confirmImportOpen, setConfirmImportOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen && requirements.length > 0) {
@@ -95,6 +97,10 @@ export function ExtractedRequirementsModal({
   };
 
   const handleImportClick = () => {
+    setConfirmImportOpen(true);
+  };
+
+  const confirmImport = () => {
     const toImport = localReqs.filter(r => selectedIds.has(r._tempId)).map(r => {
       // Remove temp id
       const { _tempId, ...rest } = r;
@@ -104,6 +110,7 @@ export function ExtractedRequirementsModal({
       };
     });
     onImport(toImport);
+    setConfirmImportOpen(false);
   };
 
   const getPriorityColor = (priority) => {
@@ -259,6 +266,15 @@ export function ExtractedRequirementsModal({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <ConfirmationDialog
+        open={confirmImportOpen}
+        onOpenChange={setConfirmImportOpen}
+        onConfirm={confirmImport}
+        title="Import Requirements"
+        description={`Are you sure you want to import ${selectedIds.size} requirements? They will be saved as drafts in your project.`}
+        confirmText="Import"
+      />
     </Dialog>
   );
 }

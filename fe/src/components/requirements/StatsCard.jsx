@@ -5,7 +5,7 @@ import React from "react";
 export function StatsCard({ icon: Icon, label, value, color = "primary" }) {
   const colorClasses = {
     primary: "bg-primary/10 text-primary",
-    accent: "bg-accent/10 text-accent",
+    accent: "bg-violet-500/10 text-violet-500",
     success: "bg-success/10 text-success",
     warning: "bg-warning/10 text-warning",
     error: "bg-destructive/10 text-destructive",

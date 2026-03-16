@@ -5,22 +5,20 @@ import useSWR from "swr";
 import { useParams, useRouter } from "next/navigation";
 import { getProjectMeetings, createMeeting, updateMeeting, transcribeMeeting, deleteMeeting, extractMeetingRequirements } from "@/api/meetings";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Video, Trash2, Pencil, Plus, Calendar, Clock, Play, FileText, X, CalendarDays } from "lucide-react";
+import { Video, Trash2, Pencil, Calendar, Clock, Play, FileText, CalendarDays } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import PageBanner from "@/components/layout/PageBanner";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 import TablePagination from "@/components/common/TablePagination";
 import StatsCard from "@/components/requirements/StatsCard";
-import { importRequirements } from "@/api/requirements";
-import { ExtractedRequirementsModal } from "@/components/requirements/ExtractedRequirementsModal";
-import { Loader2, Settings } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
+import { Label } from "@/components/ui/label";
 
 export default function MeetingsPage() {
   const { projectId } = useParams();
@@ -32,16 +30,11 @@ export default function MeetingsPage() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState(null);
-  const [viewingRecording, setViewingRecording] = useState(null);
-  const [formData, setFormData] = useState({ title: "", description: "" });
-  const [isGeneratingTranscript, setIsGeneratingTranscript] = useState(false);
+  const [formData, setFormData] = useState({ title: "", description: "", start_time: "" });
+  const [meetingToDelete, setMeetingToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [extractedModalOpen, setExtractedModalOpen] = useState(false);
-  const [extractedReqs, setExtractedReqs] = useState([]);
-  const [isImporting, setIsImporting] = useState(false);
   const pageSize = 5;
 
   const stats = {
@@ -69,10 +62,14 @@ export default function MeetingsPage() {
 
   const handleCreate = async () => {
     try {
-      await createMeeting({ ...formData, project_id: projectId, start_time: new Date() });
+      await createMeeting({ 
+        ...formData, 
+        project_id: projectId, 
+        start_time: formData.start_time || new Date() 
+      });
       mutate();
       setIsCreating(false);
-      setFormData({ title: "", description: "" });
+      setFormData({ title: "", description: "", start_time: "" });
     } catch (err) {
       alert("Failed to create meeting");
     }
@@ -80,7 +77,11 @@ export default function MeetingsPage() {
 
   const handleEdit = (meeting) => {
     setEditingMeeting(meeting);
-    setFormData({ title: meeting.title, description: meeting.description || "" });
+    setFormData({ 
+      title: meeting.title, 
+      description: meeting.description || "",
+      start_time: formatForInput(meeting.start_time)
+    });
   };
 
   const handleUpdate = async () => {
@@ -98,83 +99,34 @@ export default function MeetingsPage() {
     router.push(`/projects/${projectId}/meetings/room/${meetingId}`);
   };
 
-  const handleDelete = async (meetingId) => {
-    if (confirm("Delete meeting?")) {
-      await deleteMeeting(meetingId);
+  const handleDelete = (meetingId) => {
+    setMeetingToDelete(meetingId);
+  };
+
+  const confirmDelete = async () => {
+    if (!meetingToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteMeeting(meetingToDelete);
       mutate();
-    }
-  };
-
-  const handleGenerateTranscript = async (meetingId) => {
-    setIsGeneratingTranscript(true);
-    try {
-      const result = await transcribeMeeting(meetingId);
-      // Update the viewing recording with new transcript
-      if (viewingRecording && viewingRecording.id === meetingId) {
-        setViewingRecording({ ...viewingRecording, transcript: result.transcript });
-      }
-      mutate(); // Refresh list
+      setMeetingToDelete(null);
     } catch (err) {
-      console.error("Failed to generate transcript:", err);
+      console.error("Failed to delete meeting:", err);
     } finally {
-      setIsGeneratingTranscript(false);
+      setIsDeleting(false);
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+  const formatForInput = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const z = d.getTimezoneOffset() * 60 * 1000;
+    const localDate = new Date(d - z);
+    return localDate.toISOString().slice(0, 16);
   };
 
-  const formatTime = (dateString) => {
-    return new Date(dateString).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  // Helper to get transcript content from meeting
-  const getTranscript = (meeting) => {
-    if (meeting?.transcript) return meeting.transcript; // Already set from generate action
-    if (meeting?.transcripts?.length > 0) return meeting.transcripts[0].content;
-    return null;
-  };
-
-  const hasTranscript = (meeting) => {
-    return meeting?.transcript || (meeting?.transcripts?.length > 0);
-  };
-
-  const handleExtractRequirements = async () => {
-    if (!viewingRecording?.id) return;
-    setIsExtracting(true);
-    try {
-      const response = await extractMeetingRequirements(viewingRecording.id);
-      setExtractedReqs(response.data || []);
-      setExtractedModalOpen(true);
-    } catch (err) {
-      console.error("Failed to extract:", err);
-      alert("Failed to extract requirements. Ensure there is a transcript available.");
-    } finally {
-      setIsExtracting(false);
-    }
-  };
-
-  const handleImportRequirements = async (requirementsToImport) => {
-    if (!projectId || !viewingRecording) return;
-    setIsImporting(true);
-    try {
-      await importRequirements(projectId, { requirements: requirementsToImport });
-      setExtractedModalOpen(false);
-      alert(`Successfully imported requirements!`);
-    } catch (err) {
-      console.error("Failed to import requirements:", err);
-      alert("Failed to import requirements: " + (err?.error || err.message || "Unknown error"));
-    } finally {
-      setIsImporting(false);
-    }
+  const handleViewDetails = (meetingId) => {
+    router.push(`/projects/${projectId}/meetings/${meetingId}`);
   };
 
   if (error) return <div className="p-6 text-destructive">Failed to load meetings</div>;
@@ -223,18 +175,43 @@ export default function MeetingsPage() {
             <DialogHeader>
               <DialogTitle>New Meeting</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <Input
-                placeholder="Meeting title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              />
-              <Textarea
-                placeholder="Description (optional)"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-              <Button onClick={handleCreate} className="w-full">Create Meeting</Button>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="title">Meeting Title <span className="text-destructive">*</span></Label>
+                <Input
+                  id="title"
+                  placeholder="e.g., Weekly Sync"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="start_time">Scheduled Time <span className="text-destructive">*</span></Label>
+                <Input
+                  id="start_time"
+                  type="datetime-local"
+                  value={formData.start_time}
+                  onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder="What is this meeting about?"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+              </div>
+              <Button 
+                onClick={handleCreate} 
+                className="w-full"
+                disabled={!formData.title || !formData.start_time}
+              >
+                Create Meeting
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -245,146 +222,48 @@ export default function MeetingsPage() {
             <DialogHeader>
               <DialogTitle>Edit Meeting</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <Input
-                placeholder="Meeting title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              />
-              <Textarea
-                placeholder="Description (optional)"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-              <Button onClick={handleUpdate} className="w-full">Save Changes</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Recording Playback Dialog */}
-        <Dialog open={!!viewingRecording} onOpenChange={(open) => !open && setViewingRecording(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh]">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Play className="w-5 h-5" />
-                {viewingRecording?.title}
-              </DialogTitle>
-            </DialogHeader>
-
-            <Tabs defaultValue="video" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="video">Recording</TabsTrigger>
-                <TabsTrigger value="transcript">Transcript</TabsTrigger>
-                <TabsTrigger value="requirements">Requirements</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="video" className="mt-4">
-                {viewingRecording?.recording_url ? (
-                  <div className="rounded-lg overflow-hidden bg-black aspect-video">
-                    <video
-                      src={viewingRecording.recording_url}
-                      controls
-                      className="w-full h-full"
-                      autoPlay={false}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-muted/20 rounded-lg">
-                    <Video className="w-12 h-12 mb-4 opacity-50" />
-                    <p>No recording available</p>
-                    <p className="text-sm mt-1">Recording becomes available after the meeting ends</p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="transcript" className="mt-4">
-                {getTranscript(viewingRecording) ? (
-                  <ScrollArea className="h-[400px] rounded-lg border p-4">
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      {getTranscript(viewingRecording).split('\n').map((line, i) => (
-                        <p key={i} className="mb-2">{line}</p>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-muted/20 rounded-lg">
-                    <FileText className="w-12 h-12 mb-4 opacity-50" />
-                    <p>No transcript available</p>
-                    {viewingRecording?.recording_url && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-4"
-                        onClick={() => handleGenerateTranscript(viewingRecording.id)}
-                        disabled={isGeneratingTranscript}
-                      >
-                        {isGeneratingTranscript ? "Generating..." : "Generate Transcript"}
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="requirements" className="mt-4">
-                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-muted/20 border-dashed border-2 rounded-lg">
-                  <div className="bg-primary/10 p-4 rounded-full mb-4">
-                    <Settings className="w-8 h-8 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Extract Requirements</h3>
-                  <p className="text-sm max-w-sm text-center mb-6">
-                    Use AI to automatically extract product requirements from the meeting transcript. You'll be able to review and edit them before importing.
-                  </p>
-                  <Button 
-                    onClick={handleExtractRequirements} 
-                    disabled={isExtracting || !hasTranscript(viewingRecording)}
-                    className="gap-2"
-                  >
-                    {isExtracting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Extracting...
-                      </>
-                    ) : (
-                      <>
-                        <Settings className="w-4 h-4" />
-                        Extract Requirements
-                      </>
-                    )}
-                  </Button>
-                  {!hasTranscript(viewingRecording) && (
-                    <p className="text-xs text-destructive mt-3">A transcript is required to extract requirements. Please generate it first.</p>
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
-
-            <div className="flex items-center justify-between text-sm text-muted-foreground pt-2 border-t">
-              <span>{formatDate(viewingRecording?.start_time)} at {formatTime(viewingRecording?.start_time)}</span>
-              <div className="flex gap-2">
-                {viewingRecording?.recording_url && (
-                  <Badge variant="secondary" className="gap-1">
-                    <Video className="w-3 h-3" />
-                    Recorded
-                  </Badge>
-                )}
-                {hasTranscript(viewingRecording) && (
-                  <Badge variant="secondary" className="gap-1">
-                    <FileText className="w-3 h-3" />
-                    Transcribed
-                  </Badge>
-                )}
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">Meeting Title <span className="text-destructive">*</span></Label>
+                <Input
+                  id="edit-title"
+                  placeholder="Meeting title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-start_time">Scheduled Time <span className="text-destructive">*</span></Label>
+                <Input
+                  id="edit-start_time"
+                  type="datetime-local"
+                  value={formData.start_time}
+                  onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  placeholder="Description (optional)"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+              </div>
+              <Button 
+                onClick={handleUpdate} 
+                className="w-full"
+                disabled={!formData.title || !formData.start_time}
+              >
+                Save Changes
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
 
-        <ExtractedRequirementsModal
-          isOpen={extractedModalOpen}
-          onClose={() => setExtractedModalOpen(false)}
-          requirements={extractedReqs}
-          onImport={handleImportRequirements}
-          isImporting={isImporting}
-        />
+
 
         {meetings.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
@@ -457,14 +336,14 @@ export default function MeetingsPage() {
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className={`h-8 w-8 ${meeting.recording_url ? 'text-green-600 hover:text-green-600' : ''}`}
-                              onClick={() => setViewingRecording(meeting)}
-                            >
-                              <Play className="w-4 h-4" />
-                            </Button>
+                             <Button
+                               variant="ghost"
+                               size="icon"
+                               className={`h-8 w-8 ${meeting.recording_url ? 'text-green-600 hover:text-green-600' : ''}`}
+                               onClick={() => handleViewDetails(meeting.id)}
+                             >
+                               <Play className="w-4 h-4" />
+                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>{meeting.recording_url ? 'View Recording' : 'View Details'}</TooltipContent>
                         </Tooltip>
@@ -510,6 +389,17 @@ export default function MeetingsPage() {
           </div>
         )}
       </div>
+
+      <ConfirmationDialog
+        open={!!meetingToDelete}
+        onOpenChange={(open) => !open && setMeetingToDelete(null)}
+        onConfirm={confirmDelete}
+        title="Delete Meeting"
+        description="Are you sure you want to delete this meeting? This action is permanent and will remove all recordings and transcripts associated with it."
+        confirmText={isDeleting ? "Deleting..." : "Delete"}
+        variant="destructive"
+        loading={isDeleting}
+      />
     </TooltipProvider>
   );
 }

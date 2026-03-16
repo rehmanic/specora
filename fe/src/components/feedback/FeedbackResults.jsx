@@ -22,12 +22,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Eye, Trash2 } from "lucide-react";
-import { deleteResponse } from "@/api/feedback"; // Ensure this is exported
+import { deleteResponse } from "@/api/feedback";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 
-export default function FeedbackResults({ feedbackId }) {
+export default function FeedbackResults({ feedbackId, formStructure }) {
     const [responses, setResponses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedResponse, setSelectedResponse] = useState(null);
+    const [responseToDelete, setResponseToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         const fetchResponses = async () => {
@@ -44,15 +47,37 @@ export default function FeedbackResults({ feedbackId }) {
         fetchResponses();
     }, [feedbackId]);
 
-    const handleDelete = async (responseId) => {
-        if (!confirm("Delete this response?")) return;
+    const confirmDelete = async () => {
+        if (!responseToDelete) return;
+        setIsDeleting(true);
         try {
-            await deleteResponse(responseId);
-            setResponses(prev => prev.filter(r => r.id !== responseId));
+            await deleteResponse(responseToDelete);
+            setResponses(prev => prev.filter(r => r.id !== responseToDelete));
+            setResponseToDelete(null);
         } catch (err) {
             console.error(err);
             alert("Failed to delete response");
+        } finally {
+            setIsDeleting(false);
         }
+    };
+
+    const getQuestionTitle = (name) => {
+        if (!formStructure || !formStructure.pages) return name;
+        for (const page of formStructure.pages) {
+            const element = page.elements?.find(e => e.name === name);
+            if (element) return element.title || element.name;
+        }
+        return name;
+    };
+
+    const getPreview = (responseObj) => {
+        const entries = Object.entries(responseObj);
+        if (entries.length === 0) return "Empty response";
+        const [key, value] = entries[0];
+        const title = getQuestionTitle(key);
+        const displayValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+        return `${title}: ${displayValue}`;
     };
 
     if (loading) return <Skeleton className="h-40 w-full" />;
@@ -78,13 +103,13 @@ export default function FeedbackResults({ feedbackId }) {
                             <TableRow key={res.id}>
                                 <TableCell>{format(new Date(res.created_at), "PPP p")}</TableCell>
                                 <TableCell className="max-w-[300px] truncate text-muted-foreground">
-                                    {JSON.stringify(res.response)}
+                                    {getPreview(res.response)}
                                 </TableCell>
                                 <TableCell className="text-right whitespace-nowrap">
                                     <Button variant="ghost" size="icon" onClick={() => setSelectedResponse(res)} title="View Response">
                                         <Eye className="h-4 w-4" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(res.id)} title="Delete Response">
+                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setResponseToDelete(res.id)} title="Delete Response">
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </TableCell>
@@ -105,7 +130,7 @@ export default function FeedbackResults({ feedbackId }) {
                     <div className="space-y-4">
                         {selectedResponse && Object.entries(selectedResponse.response).map(([key, value]) => (
                             <div key={key} className="border-b pb-2">
-                                <span className="font-semibold block text-sm text-muted-foreground mb-1">{key}</span>
+                                <span className="font-semibold block text-sm text-muted-foreground mb-1">{getQuestionTitle(key)}</span>
                                 <div className="text-sm whitespace-pre-wrap">
                                     {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
                                 </div>
@@ -114,6 +139,17 @@ export default function FeedbackResults({ feedbackId }) {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmationDialog
+                open={!!responseToDelete}
+                onOpenChange={(open) => !open && setResponseToDelete(null)}
+                onConfirm={confirmDelete}
+                title="Delete Response"
+                description="Are you sure you want to delete this response? This action cannot be undone."
+                confirmText={isDeleting ? "Deleting..." : "Delete"}
+                variant="destructive"
+                loading={isDeleting}
+            />
         </div>
     );
 }

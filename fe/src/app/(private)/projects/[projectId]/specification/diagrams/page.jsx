@@ -23,6 +23,7 @@ import PageBanner from "@/components/layout/PageBanner";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 import TablePagination from "@/components/common/TablePagination";
 import StatsCard from "@/components/requirements/StatsCard";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import {
     getDiagrams,
     createDiagram,
@@ -39,6 +40,8 @@ export default function Page() {
     const [searchQuery, setSearchQuery] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [itemToDelete, setItemToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const pageSize = 6;
 
     const stats = {
@@ -93,13 +96,18 @@ export default function Page() {
         }
     };
 
-    const handleDelete = async (diagramId) => {
+    const handleConfirmDelete = async () => {
+        if (!itemToDelete) return;
+        setIsDeleting(true);
         try {
-            await deleteDiagramApi(projectId, diagramId);
-            setDiagrams((prev) => prev.filter((d) => d.id !== diagramId));
+            await deleteDiagramApi(projectId, itemToDelete.id);
+            setDiagrams((prev) => prev.filter((d) => d.id !== itemToDelete.id));
             toast.success("Diagram deleted.");
+            setItemToDelete(null);
         } catch (err) {
             toast.error(err.message);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -235,7 +243,7 @@ export default function Page() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                                                onClick={() => handleDelete(diagram.id)}
+                                                                onClick={() => setItemToDelete(diagram)}
                                                                 title="Delete"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
@@ -259,6 +267,22 @@ export default function Page() {
                     )}
                 </div>
             </main>
+
+            <ConfirmationDialog
+                open={!!itemToDelete}
+                onOpenChange={(open) => !open && setItemToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                title="Delete Diagram"
+                description={
+                    <span>
+                        Are you sure you want to delete the diagram <span className="font-semibold">"{itemToDelete?.title || "Untitled Diagram"}"</span>? 
+                        This action cannot be undone.
+                    </span>
+                }
+                confirmText={isDeleting ? "Deleting..." : "Delete"}
+                variant="destructive"
+                loading={isDeleting}
+            />
         </ProtectedRoute>
     );
 }

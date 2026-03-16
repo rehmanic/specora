@@ -119,14 +119,34 @@ export default function ProjectInfo({ variant }) {
             const memberDetails = await getUsersByIds(selectedProject.members);
             members = memberDetails.map((member) => ({
               id: member.id,
-              name: member.name || member.username || "",
+              name: member.display_name || member.name || member.username || "",
               email: member.email || "",
-              role: "Member",
+              role: member.role || "Member",
+              isOwner: member.id === selectedProject.created_by,
+              profile_pic_url: member.profile_pic_url || null,
             }));
           } else {
             // Members are already objects
-            members = selectedProject.members;
+            members = selectedProject.members.map(m => ({
+              ...m,
+              isOwner: m.id === selectedProject.created_by
+            }));
           }
+        }
+        
+        // Ensure owner is always in members list (fallback)
+        const ownerId = selectedProject.created_by;
+        const hasOwner = members.some(m => m.id === ownerId);
+        
+        if (!hasOwner && selectedProject.creator) {
+          members.unshift({
+            id: selectedProject.creator.id,
+            name: selectedProject.creator.display_name || selectedProject.creator.username || "Project Owner",
+            email: "",
+            role: "Manager",
+            isOwner: true,
+            profile_pic_url: selectedProject.creator.profile_pic_url || null,
+          });
         }
 
         setProject({
@@ -164,9 +184,11 @@ export default function ProjectInfo({ variant }) {
         if (user?.id) {
           initialMembers.push({
             id: user.id,
-            name: user.name || user.username || "You",
+            name: user.display_name || user.name || user.username || "You",
             email: user.email || "",
-            role: "Project Owner",
+            role: user.role || "Manager",
+            isOwner: true,
+            profile_pic_url: user.profile_pic_url || null,
           });
         }
 
@@ -253,7 +275,7 @@ export default function ProjectInfo({ variant }) {
   const removeMember = (id) =>
     setProject((prev) => ({
       ...prev,
-      Members: prev.Members.filter((m) => m.id !== id),
+      Members: prev.Members.filter((m) => m.isOwner || m.id !== id),
     }));
 
   const handleAddMember = async () => {
@@ -286,7 +308,9 @@ export default function ProjectInfo({ variant }) {
         id: userData.id,
         name: userData.display_name || userData.name || userData.username || newMemberEmail,
         email: userData.email || newMemberEmail,
-        role: "Member",
+        role: userData.role || "Member",
+        isOwner: false,
+        profile_pic_url: userData.profile_pic_url || null,
       };
 
       setProject((prev) => ({
@@ -295,7 +319,6 @@ export default function ProjectInfo({ variant }) {
       }));
 
       setNewMemberEmail("");
-      notify.success(`User "${userData.username}" added to project`);
     } catch (err) {
       // Provide user-friendly error messages
       let errorMessage = "Failed to add member.";
@@ -502,10 +525,21 @@ export default function ProjectInfo({ variant }) {
         return;
       }
     } catch (err) {
-      const errorMessage =
-        err?.message || "Failed to save project";
-      notify.error(errorMessage, { id: toastId });
-      console.error("Error saving project:", err);
+      setIsSaving(false);
+      const errorMessage = err?.message || "Failed to save project";
+      const isDuplicateError = errorMessage.toLowerCase().includes("already exists");
+      
+      // Handle known errors elegantly
+      if (isDuplicateError) {
+        notify.error("A project with this name already exists. Please choose a different title.", { id: toastId });
+      } else {
+        notify.error(errorMessage, { id: toastId });
+        // Only log unexpected errors
+        console.error("Critical project save error:", err);
+      }
+      
+      // Explicitly return to ensure no further local-level execution if there was any
+      return;
     } finally {
       setIsSaving(false);
     }
@@ -655,21 +689,20 @@ export default function ProjectInfo({ variant }) {
                       </div>
                       <div className="flex flex-col gap-1.5 overflow-hidden">
                         <Input type="file" onChange={handleIconChange} className="h-8 text-[11px] px-2 py-1 cursor-pointer w-full" accept="image/*" />
-                        <p className="text-[10px] text-muted-foreground truncate">SVG, PNG up to 2MB</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <Label className="text-xs font-bold">Cover Banner</Label>
-                    <div className="group relative h-24 w-full rounded-lg border bg-muted/20 overflow-hidden border-dashed flex items-center justify-center hover:bg-muted/30 transition-colors">
+                    <label htmlFor="cover-upload" className="group relative h-24 w-full rounded-lg border bg-muted/20 overflow-hidden border-dashed flex items-center justify-center hover:bg-muted/30 transition-colors cursor-pointer block">
                       {coverPreview ? (
                         <img src={coverPreview} className="size-full object-cover" alt="Cover" />
                       ) : (
                         <p className="text-[10px] font-medium text-muted-foreground">Click to upload cover</p>
                       )}
-                      <Input type="file" onChange={handleCoverImageChange} className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" />
-                    </div>
+                      <input id="cover-upload" type="file" onChange={handleCoverImageChange} className="hidden" accept="image/*" />
+                    </label>
                   </div>
                 </div>
               </CardContent>
@@ -693,6 +726,7 @@ export default function ProjectInfo({ variant }) {
                     placeholder="Search by username..."
                     value={newMemberEmail}
                     onChange={(e) => setNewMemberEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
                     className="border-none bg-transparent focus-visible:ring-0 shadow-none h-9 text-sm"
                   />
                   <Button onClick={handleAddMember} disabled={isAddingMember} size="sm" className="h-8 px-3 text-xs font-bold">
@@ -706,7 +740,7 @@ export default function ProjectInfo({ variant }) {
                       <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg bg-background hover:bg-muted/5 transition-colors">
                         <div className="flex items-center gap-3">
                           <Avatar className="size-9 border">
-                            <AvatarImage src={getAvatarUrl(member.name || "user")} />
+                            <AvatarImage src={member.profile_pic_url || getAvatarUrl(member.name || "user")} />
                             <AvatarFallback>{(member.name || "U")[0]}</AvatarFallback>
                           </Avatar>
                           <div className="overflow-hidden">
@@ -715,8 +749,13 @@ export default function ProjectInfo({ variant }) {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-bold uppercase tracking-wider">{member.role}</Badge>
-                          {member.role !== "Project Owner" && (
+                          <Badge variant="secondary" className={cn(
+                            "text-[10px] h-5 px-1.5 font-bold uppercase tracking-wider",
+                            member.isOwner && "bg-primary/20 text-primary border-primary/30"
+                          )}>
+                            {member.isOwner ? `Project Owner (${member.role?.replace(/_/g, ' ') || "Manager"})` : (member.role?.replace(/_/g, ' ') || "Member")}
+                          </Badge>
+                          {!member.isOwner && (
                             <Button variant="ghost" size="icon" onClick={() => removeMember(member.id)} className="size-7 text-muted-foreground hover:text-destructive">
                               <X className="size-3.5" />
                             </Button>

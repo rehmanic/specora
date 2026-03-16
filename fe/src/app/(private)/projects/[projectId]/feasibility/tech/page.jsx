@@ -24,6 +24,22 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import TablePagination from "@/components/common/TablePagination";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import PageBanner from "@/components/layout/PageBanner";
@@ -188,6 +204,9 @@ export default function Page() {
     const [history, setHistory] = useState([]); // Array of { query, result, timestamp }
     const [requirements, setRequirements] = useState([]);
     const [loadingReqs, setLoadingReqs] = useState(true);
+    const [selectedEntry, setSelectedEntry] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 5;
     const inputRef = useRef(null);
 
     // ─── Fetch Requirements ────────────────────────────
@@ -249,21 +268,21 @@ export default function Page() {
 
             const data = await res.json();
 
-            // Add to history (newest first)
-            setHistory((prev) => [
-                {
-                    query: trimmed,
-                    result: {
-                        answer: data.answer,
-                        sources: data.sources,
-                        groundingSupports: data.groundingSupports,
-                        searchQueries: data.searchQueries,
-                        searchEntryPoint: data.searchEntryPoint,
-                    },
-                    timestamp: new Date(),
+            const entry = {
+                query: trimmed,
+                result: {
+                    answer: data.answer,
+                    sources: data.sources,
+                    groundingSupports: data.groundingSupports,
+                    searchQueries: data.searchQueries,
+                    searchEntryPoint: data.searchEntryPoint,
                 },
-                ...prev,
-            ]);
+                timestamp: new Date(),
+            };
+
+            // Add to history (newest first)
+            setHistory((prev) => [entry, ...prev]);
+            setSelectedEntry(entry); // Show in popup
 
             setQuery("");
             toast.success("Search completed!");
@@ -285,6 +304,13 @@ export default function Page() {
         setHistory([]);
         toast.success("History cleared.");
     };
+
+    // Pagination for requirements
+    const totalPages = Math.ceil(requirements.length / pageSize);
+    const paginatedReqs = requirements.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    );
 
     // ─── Render ────────────────────────────────────────
 
@@ -402,11 +428,20 @@ export default function Page() {
                                         </div>
                                     </div>
 
-                                    {/* Result */}
+                                    {/* Result Preview or View Button */}
                                     <div className="ml-10">
-                                        <SearchResult
-                                            result={entry.result}
-                                        />
+                                        <div className="bg-muted/30 border rounded-lg p-3 text-sm line-clamp-3 text-muted-foreground mb-2">
+                                            {entry.result.answer}
+                                        </div>
+                                        <Button 
+                                            variant="outline" 
+                                            size="sm" 
+                                            onClick={() => setSelectedEntry(entry)}
+                                            className="gap-1.5"
+                                        >
+                                            <ExternalLink className="h-3.5 w-3.5" />
+                                            View Full Analysis
+                                        </Button>
                                     </div>
 
                                     {/* Divider between entries */}
@@ -418,44 +453,107 @@ export default function Page() {
                         </div>
                     )}
 
-                    {/* Requirements Suggestions */}
-                    {requirements.length > 0 && (
-                        <Card className="border-border/50 shadow-sm">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-base flex items-center gap-2">
-                                    <ListChecks className="h-4 w-4 text-primary" />
-                                    Project Requirements
-                                    <Badge variant="secondary" className="text-xs">
-                                        {requirements.length}
-                                    </Badge>
-                                </CardTitle>
-                                <CardDescription>
-                                    Click a requirement to assess its technical feasibility
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex flex-wrap gap-2">
-                                    {requirements.map((req) => (
-                                        <button
-                                            key={req.id}
-                                            onClick={() => {
-                                                setQuery(
-                                                    `Assess the technical feasibility of: ${req.title}${req.description ? `. ${req.description}` : ""}`
-                                                );
-                                                inputRef.current?.focus();
-                                            }}
-                                            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border bg-muted/50 text-muted-foreground hover:border-primary/30 hover:text-foreground hover:bg-primary/5 transition-all text-left"
-                                        >
-                                            <FileText className="h-3 w-3 shrink-0" />
-                                            <span className="truncate max-w-[250px]">
-                                                {req.title}
-                                            </span>
-                                        </button>
-                                    ))}
+                    {/* Requirements Table */}
+                    <Card className="border-border/50 shadow-sm overflow-hidden">
+                        <CardHeader className="pb-3 bg-muted/30 border-b border-border/50">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <ListChecks className="h-4 w-4 text-primary" />
+                                Project Requirements
+                                <Badge variant="secondary" className="text-xs">
+                                    {requirements.length}
+                                </Badge>
+                            </CardTitle>
+                            <CardDescription>
+                                Select a requirement to assess its technical feasibility
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            {loadingReqs ? (
+                                <div className="p-8 space-y-4">
+                                    <Skeleton className="h-10 w-full" />
+                                    <Skeleton className="h-10 w-full" />
                                 </div>
-                            </CardContent>
-                        </Card>
-                    )}
+                            ) : requirements.length === 0 ? (
+                                <div className="p-8 text-center text-muted-foreground">
+                                    No requirements found for this project.
+                                </div>
+                            ) : (
+                                <>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="hover:bg-transparent">
+                                                <TableHead className="w-[80px]">Type</TableHead>
+                                                <TableHead>Requirement</TableHead>
+                                                <TableHead className="w-[100px] text-right">Action</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {paginatedReqs.map((req) => (
+                                                <TableRow key={req.id}>
+                                                    <TableCell>
+                                                        <Badge variant="outline" className="capitalize text-[10px] font-normal px-2 py-0">
+                                                            {req.type || 'Req'}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="max-w-[400px]">
+                                                            <p className="font-medium text-sm truncate">{req.title}</p>
+                                                            {req.description && (
+                                                                <p className="text-xs text-muted-foreground truncate">{req.description}</p>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            onClick={() => {
+                                                                setQuery(`Assess the technical feasibility of: ${req.title}${req.description ? `. ${req.description}` : ""}`);
+                                                                inputRef.current?.focus();
+                                                                window.scrollTo({ top: 300, behavior: 'smooth' });
+                                                            }}
+                                                            className="h-8 text-primary hover:text-primary hover:bg-primary/10"
+                                                        >
+                                                            Assess
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                    <div className="p-4 border-t">
+                                        <TablePagination
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            onPageChange={setCurrentPage}
+                                            totalItems={requirements.length}
+                                            pageSize={pageSize}
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Result Popup */}
+                    <Dialog open={!!selectedEntry} onOpenChange={(open) => !open && setSelectedEntry(null)}>
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                    <Sparkles className="h-5 w-5 text-primary" />
+                                    Technical Analysis
+                                </DialogTitle>
+                                <DialogDescription className="font-medium text-foreground">
+                                    {selectedEntry?.query}
+                                </DialogDescription>
+                            </DialogHeader>
+                            {selectedEntry && (
+                                <div className="mt-4">
+                                    <SearchResult result={selectedEntry.result} />
+                                </div>
+                            )}
+                        </DialogContent>
+                    </Dialog>
 
                     {/* Empty State */}
                     {!searching && history.length === 0 && (

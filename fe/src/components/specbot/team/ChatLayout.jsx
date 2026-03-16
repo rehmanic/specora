@@ -23,9 +23,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
 import { Button } from "@/components/ui/button";
 
-export default function ChatLayout() {
+export default function ChatLayout({
+  onAction,
+  actionLoading = false,
+  downloadedChatIds = new Set(),
+  // For extractive reqs modal which might still be needed here or lifted
+  onImportRequirements,
+  isImporting = false
+}) {
   const { user } = useUserStore();
   const { selectedProject } = useProjectsStore();
   const {
@@ -41,18 +49,14 @@ export default function ChatLayout() {
   } = useSpecbotStore();
 
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
-  const [downloadedChatIds, setDownloadedChatIds] = useState(new Set());
-  const [processing, setProcessing] = useState({
-    open: false,
-    type: null,
-    status: "",
-    result: null,
-    error: false,
-  });
-  const [actionLoading, setActionLoading] = useState(false);
-  const [extractedModalOpen, setExtractedModalOpen] = useState(false);
-  const [extractedReqs, setExtractedReqs] = useState([]);
-  const [isImporting, setIsImporting] = useState(false);
+  
+  // These are now passed as props from parent (SpecbotPage)
+  // const [downloadedChatIds, setDownloadedChatIds] = useState(new Set());
+  // const [processing, setProcessing] = useState({ ... });
+  // const [actionLoading, setActionLoading] = useState(false);
+  // const [extractedModalOpen, setExtractedModalOpen] = useState(false);
+  // const [extractedReqs, setExtractedReqs] = useState([]);
+  // const [isImporting, setIsImporting] = useState(false);
 
   const canAccess = true; // access control is handled by Sidebar and API, but we can double check
   const isClient = user?.role === "client";
@@ -94,89 +98,7 @@ export default function ChatLayout() {
     setCurrentChat(chat);
   };
 
-  const startProcessing = (type, status) => {
-    setProcessing({
-      open: true,
-      type,
-      status,
-      result: null,
-      error: false,
-    });
-  };
 
-  const handleActionError = (type, message) => {
-    setProcessing({
-      open: true,
-      type,
-      status: message,
-      result: null,
-      error: true,
-    });
-  };
-
-  const handleAction = async (type) => {
-    if (!currentChat) return;
-
-    const labels = {
-      download: "Downloading chat...",
-      summarize: "Summarizing chat...",
-      extract: "Extracting requirements...",
-    };
-
-    startProcessing(type, labels[type]);
-    setActionLoading(true);
-
-    try {
-      if (type === "download") {
-        const response = await downloadSpecbotChat(currentChat.id);
-        setDownloadedChatIds((prev) => new Set(prev).add(currentChat.id));
-        setProcessing((prev) => ({
-          ...prev,
-          status: "Chat stored on server",
-          result: response?.artifact,
-        }));
-      } else if (type === "summarize") {
-        const response = await summarizeSpecbotChat(currentChat.id);
-        setProcessing((prev) => ({
-          ...prev,
-          status: "Summary ready",
-          result: response?.artifact,
-        }));
-      } else if (type === "extract") {
-        const response = await extractSpecbotRequirements(currentChat.id);
-        const reqs = response?.artifact?.data?.requirements || [];
-        setExtractedReqs(reqs);
-        setProcessing((prev) => ({ ...prev, open: false }));
-        setExtractedModalOpen(true);
-      }
-    } catch (err) {
-      const message =
-        err?.message ||
-        "Something went wrong while processing this request. Please try again.";
-      handleActionError(type, message);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const closeProcessing = () =>
-    setProcessing((prev) => ({ ...prev, open: false }));
-
-  const handleImportRequirements = async (requirementsToImport) => {
-    if (!selectedProject?.id) return;
-    setIsImporting(true);
-    try {
-      await importRequirements(selectedProject.id, { requirements: requirementsToImport });
-      setExtractedModalOpen(false);
-      // Optional: Add toast notification if available, or just alert
-      alert("Requirements successfully imported!");
-    } catch (err) {
-      console.error("Failed to import requirements:", err);
-      alert("Failed to import requirements: " + (err.message || ""));
-    } finally {
-      setIsImporting(false);
-    }
-  };
 
   const noProjectSelected = !selectedProject?.id;
 
@@ -211,84 +133,16 @@ export default function ChatLayout() {
           loading={loading}
           error={error}
           onDismissError={clearError}
-          onDownload={canAnalyze ? () => handleAction("download") : undefined}
-          onSummarize={canAnalyze ? () => handleAction("summarize") : undefined}
-          onExtract={canAnalyze ? () => handleAction("extract") : undefined}
+          onDownload={canAnalyze ? () => onAction("download") : undefined}
+          onSummarize={canAnalyze ? () => onAction("summarize") : undefined}
+          onExtract={canAnalyze ? () => onAction("extract") : undefined}
           actionsDisabled={actionLoading}
           downloaded={downloaded}
           showAttachments={showAttachments}
         />
       </div>
 
-      <Dialog open={processing.open} onOpenChange={closeProcessing}>
-        <DialogContent className="max-h-[85vh] flex flex-col overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="capitalize">
-              {processing.type || "Processing"}
-            </DialogTitle>
-            <DialogDescription className={processing.error ? "text-destructive" : ""}>
-              {processing.status}
-            </DialogDescription>
-          </DialogHeader>
-          {processing.result?.data?.summary_text && (
-            <div className="mt-4 space-y-2 min-h-0 flex-1 overflow-hidden flex flex-col">
-              <p className="text-sm font-medium shrink-0">Summary</p>
-              <div className="rounded-md bg-muted p-3 text-sm leading-relaxed max-h-64 overflow-y-auto">
-                <div className="prose prose-sm max-w-none prose-p:mb-2 last:prose-p:mb-0 prose-li:my-0 dark:prose-invert">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {processing.result.data.summary_text}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            </div>
-          )}
-          {processing.result?.data?.requirements && (
-            <div className="mt-4 space-y-2">
-              <p className="text-sm font-medium">Extracted Requirements</p>
-              <div className="space-y-2 rounded-md bg-muted p-3 text-sm leading-relaxed max-h-64 overflow-y-auto">
-                {processing.result.data.requirements.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">
-                    No requirements were extracted.
-                  </p>
-                ) : (
-                  processing.result.data.requirements.map((req) => (
-                    <div key={req.id || req.title} className="space-y-1">
-                      <p className="font-semibold">{req.title}</p>
-                      <p className="text-muted-foreground">{req.description}</p>
-                      {req.acceptance_criteria && (
-                        <p className="text-xs text-muted-foreground">
-                          Acceptance: {req.acceptance_criteria}
-                        </p>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-          {processing.result && !processing.result.data && (
-            <div className="mt-2 space-y-1 rounded-md bg-muted p-3 text-sm">
-              <p>{processing.status}</p>
-              {processing.result.path && (
-                <p className="text-xs text-muted-foreground break-all">
-                  Saved at: {processing.result.path}
-                </p>
-              )}
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={closeProcessing}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      <ExtractedRequirementsModal
-        isOpen={extractedModalOpen}
-        onClose={() => setExtractedModalOpen(false)}
-        requirements={extractedReqs}
-        onImport={handleImportRequirements}
-        isImporting={isImporting}
-      />
     </div>
   );
 }

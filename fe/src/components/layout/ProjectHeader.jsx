@@ -37,9 +37,7 @@ export function ProjectHeader() {
 
   const handleProjectSwitch = (project) => {
     setSelectedProject(project);
-    // When switching projects, it's best to redirect to the dashboard 
-    // to ensure all project-specific states are reloaded correctly
-    router.push("/dashboard");
+    router.refresh(); // Refresh current page to reload project context
   };
 
   const ProjectLogo = ({ project, className }) => {

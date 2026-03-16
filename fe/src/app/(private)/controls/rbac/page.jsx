@@ -37,8 +37,8 @@ export default function RbacPage() {
 
   return (
     <ProtectedRoute allowedRoles={["manager"]}>
-      <div className="h-full bg-background overflow-auto p-6 lg:p-8">
-        <div className="max-w-6xl mx-auto space-y-8 transition-all duration-500 animate-in fade-in">
+      <div className="min-h-screen bg-background p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
 
           <PageBanner
             title="RBAC Management"
@@ -71,7 +71,7 @@ export default function RbacPage() {
           />
 
           {/* Table Container */}
-          <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+          <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <RoleList onEdit={handleEdit} searchQuery={searchQuery} />
           </div>
         </div>

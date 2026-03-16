@@ -2,6 +2,7 @@
 
 import { MoreVertical, Users, Calendar, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function ProjectCard({ project, onClick }) {
   if (!project) return null;
@@ -18,6 +19,7 @@ export function ProjectCard({ project, onClick }) {
     start_date,
     end_date,
     tags,
+    creator,
   } = project;
 
   const formatDate = (date) => {
@@ -107,7 +109,7 @@ export function ProjectCard({ project, onClick }) {
         <div className="space-y-4">
           {/* Floating Icon/Initial */}
           <div className="absolute -top-8 left-4 z-10">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${getProjectColor(name)} shadow-xl ring-4 ring-card transition-transform duration-500 group-hover:rotate-6 group-hover:scale-105`}>
+            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-card shadow-xl ring-4 ring-card border border-border/50 transition-transform duration-500 group-hover:rotate-6 group-hover:scale-105`}>
               {icon_url ? (
                 <img
                   src={icon_url}
@@ -155,14 +157,17 @@ export function ProjectCard({ project, onClick }) {
         {/* Footer Meta info */}
         <div className="flex flex-col gap-3 pt-3 mt-3 border-t border-white/10 dark:border-white/5">
           {/* Duration Section */}
-          <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="h-3 w-3 text-primary/70" />
-              <span>{formatDate(start_date)} — {formatDate(end_date)}</span>
+          <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest gap-4">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Calendar className="h-3 w-3 text-primary/70 shrink-0" />
+              <span className="truncate">{formatDate(start_date)} — {formatDate(end_date)}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <Users className="h-3 w-3 text-primary/70" />
-              <span>{members?.length || 0}</span>
+            
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3 text-primary/70" />
+                <span>{members?.length || 0}</span>
+              </div>
             </div>
           </div>
 

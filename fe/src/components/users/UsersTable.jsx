@@ -20,21 +20,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreHorizontal, Pencil, Trash2, Mail, Users } from "lucide-react";
-import { deleteUserRequest } from "@/api/users";
-import { useRouter } from "next/navigation";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import ErrorBox from "@/components/common/ErrorBox";
 import TablePagination from "@/components/common/TablePagination";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
+import { FolderKanban, Mail, Pencil, Trash2, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { deleteUserRequest } from "@/api/users";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Empty State Component
 function EmptyState() {
@@ -104,13 +96,13 @@ export function UsersTable({ users: initialUsers = [] }) {
   const getRoleBadgeClass = (role) => {
     switch (role) {
       case "manager":
-        return "bg-primary/15 text-primary border-primary/30";
+        return "bg-primary/20 text-primary dark:bg-primary/30 dark:text-primary-foreground border-primary/30";
       case "requirements_engineer":
-        return "bg-accent/15 text-accent border-accent/30";
+        return "bg-violet-500/20 text-violet-600 dark:bg-violet-500/30 dark:text-violet-200 border-violet-500/30";
       case "client":
-        return "bg-success/15 text-success border-success/30";
+        return "bg-emerald-500/20 text-emerald-600 dark:bg-emerald-500/30 dark:text-emerald-200 border-emerald-500/30";
       default:
-        return "";
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -131,54 +123,40 @@ export function UsersTable({ users: initialUsers = [] }) {
 
   return (
     <>
-      <AlertDialog open={!!userToDelete} onOpenChange={(open) => {
-        if (!open) {
-          setUserToDelete(null);
-          setDeleteError(null);
+      <ConfirmationDialog
+        open={!!userToDelete}
+        onOpenChange={(open) => {
+          if (!open) {
+            setUserToDelete(null);
+            setDeleteError(null);
+          }
+        }}
+        onConfirm={confirmDelete}
+        title="Delete User"
+        description={
+          <span>
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-foreground">
+              {userBeingDeleted?.display_name || userBeingDeleted?.username || userToDelete}
+            </span>
+            ? This action cannot be undone.
+          </span>
         }
-      }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete User</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-semibold text-foreground">
-                {userBeingDeleted?.display_name || userBeingDeleted?.username || userToDelete}
-              </span>
-              ? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {deleteError && <ErrorBox message={deleteError} />}
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setUserToDelete(null);
-                setDeleteError(null);
-              }}
-              disabled={isDeleting}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-white hover:bg-destructive/90"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        confirmText={isDeleting ? "Deleting..." : "Delete"}
+        variant="destructive"
+        disabled={isDeleting}
+      />
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent bg-muted/30">
-                <TableHead className="w-[300px]">User</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="w-[100px] text-right">Actions</TableHead>
+                <TableHead className="w-[300px] text-xs font-bold uppercase">User</TableHead>
+                <TableHead className="hidden md:table-cell text-xs font-bold uppercase">Email</TableHead>
+                <TableHead className="text-xs font-bold uppercase">Role</TableHead>
+                <TableHead className="text-center text-xs font-bold uppercase">Projects</TableHead>
+                <TableHead className="w-[100px] text-right text-xs font-bold uppercase">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -220,41 +198,48 @@ export function UsersTable({ users: initialUsers = [] }) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={`${getRoleBadgeClass(user.role)} text-[10px]`}>
+                    <Badge variant="outline" className={`${getRoleBadgeClass(user.role)} text-[10px] items-center gap-1 py-0.5 px-2`}>
                       {getRoleLabel(user.role)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleEdit(user.username)}
-                          className="cursor-pointer"
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit User
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onSelect={(e) => {
-                            e.preventDefault();
-                            handleDelete(user.username);
-                          }}
-                          className="text-destructive focus:text-destructive cursor-pointer"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete User
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <TableCell className="text-center font-medium">
+                    <div className="flex items-center justify-center gap-1.5 text-xs">
+                      <FolderKanban className="h-3.5 w-3.5 text-muted-foreground" />
+                      {user.projects_count || 0}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors"
+                              onClick={() => handleEdit(user.username)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit User</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                              onClick={() => handleDelete(user.username)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete User</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

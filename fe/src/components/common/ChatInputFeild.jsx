@@ -75,9 +75,18 @@ export default function ChatInputField({
     }
   };
 
-  const onEmojiClick = (emojiObject) => {
-    const emoji = emojiObject.emoji;
-    setCurrentValue((prev) => prev + emoji);
+  const onEmojiClick = (emojiData) => {
+    const emoji = emojiData.emoji;
+    if (onChange) {
+      onChange(currentValue + emoji);
+    } else {
+      setLocalValue((prev) => prev + emoji);
+    }
+    // Adjust height after emoji addition
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+    }
     // Focus back to textarea
     setTimeout(() => textareaRef.current?.focus(), 0);
   };
@@ -92,10 +101,9 @@ export default function ChatInputField({
   };
 
   return (
-    <div
+    <div  
       className={cn(
         "flex items-end gap-2 px-4 py-3 bg-transparent transition-all duration-200 relative",
-        isFocused ? "bg-accent/50" : "",
         disabled && "opacity-60"
       )}
     >
@@ -113,13 +121,18 @@ export default function ChatInputField({
       {showAttachments && (
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           size="icon"
-          className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+          className={cn(
+            "h-9 w-9 rounded-lg shrink-0 transition-all border-border/50",
+            showAttachments && !uploading
+              ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
+              : "bg-muted text-muted-foreground"
+          )}
           disabled={disabled || uploading}
           onClick={() => fileInputRef.current?.click()}
         >
-          <Paperclip className="h-5 w-5" />
+          <Paperclip className="h-[18px] w-[18px]" />
         </Button>
       )}
 
@@ -169,8 +182,8 @@ export default function ChatInputField({
           placeholder={placeholder}
           disabled={disabled}
           rows={1}
-          className="w-full resize-none bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed max-h-[120px]"
-          style={{ minHeight: "24px" }}
+          className="w-full resize-none bg-transparent text-sm focus:outline-none focus:ring-0 focus:border-0 border-0 placeholder:text-muted-foreground disabled:cursor-not-allowed max-h-[120px] py-2"
+          style={{ minHeight: "36px", boxShadow: "none" }}
         />
       </div>
 
@@ -195,16 +208,18 @@ export default function ChatInputField({
           )}
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             size="icon"
             className={cn(
-              "h-9 w-9 text-muted-foreground hover:text-foreground",
-              showEmojiPicker && "text-primary bg-accent"
+              "h-9 w-9 rounded-lg transition-all border-border/50",
+              showEmojiPicker 
+                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
             )}
             disabled={disabled}
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
           >
-            <Smile className="h-5 w-5" />
+            <Smile className="h-[18px] w-[18px]" />
           </Button>
         </div>
 
@@ -222,7 +237,7 @@ export default function ChatInputField({
               : "bg-muted text-muted-foreground"
           )}
         >
-          <Send className="h-4 w-4" />
+          <Send className="h-[18px] w-[18px]" />
         </Button>
       </div>
     </div>

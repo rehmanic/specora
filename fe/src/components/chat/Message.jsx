@@ -66,8 +66,8 @@ export function Message({
       {/* Avatar */}
       <Avatar className="h-8 w-8 shrink-0">
         <AvatarImage src={avatarUrl} alt={name} />
-        <AvatarFallback className={cn("text-xs", name === "SpecBot" && "bg-primary text-primary-foreground")}>
-          {name === "SpecBot" ? <Bot className="h-4 w-4" /> : name?.charAt(0).toUpperCase()}
+        <AvatarFallback className={cn("text-xs font-bold shadow-sm ring-1 ring-white/10", name === "SpecBot" ? "bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-violet-500/20" : "bg-muted")}>
+          {name === "SpecBot" ? <Bot className="h-4 w-4 animate-in fade-in zoom-in duration-500" /> : name?.charAt(0).toUpperCase()}
         </AvatarFallback>
       </Avatar>
 

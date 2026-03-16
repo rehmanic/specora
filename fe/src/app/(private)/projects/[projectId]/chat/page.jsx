@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Message } from "@/components/chat/Message";
 import ChatInputField from "@/components/common/ChatInputFeild";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -50,9 +51,19 @@ export default function ChatPage() {
         }
     };
 
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [messageToDelete, setMessageToDelete] = useState(null);
+
     const handleDeleteMessage = (messageId) => {
-        if (confirm("Are you sure you want to delete this message?")) {
-            deleteMessage(messageId, projectId);
+        setMessageToDelete(messageId);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = () => {
+        if (messageToDelete) {
+            deleteMessage(messageToDelete, projectId);
+            setDeleteModalOpen(false);
+            setMessageToDelete(null);
         }
     };
 
@@ -66,17 +77,17 @@ export default function ChatPage() {
                 </div>
 
                 {/* Static Glassmorphic Header */}
-                <div className="flex items-center justify-between border-b border-border/50 bg-background/60 backdrop-blur-xl px-6 py-4 sticky top-0 z-20 shadow-sm">
+                {/* <div className="flex items-center justify-between border-b border-border/50 bg-background/60 backdrop-blur-xl px-6 py-4 sticky top-0 z-20 shadow-sm">
                     <div>
                         <div className="flex items-center gap-2">
                             <p className="text-lg font-semibold leading-tight">Team Chat</p>
                             <span className="flex h-2 w-2 rounded-full bg-primary pulse-glow"></span>
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Messages Area */}
-                <div className="flex-1 min-h-0 overflow-hidden bg-transparent">
+                <div className="flex-1 min-h-0 overflow-hidden bg-transparent scroll-smooth">
                     <ScrollArea className="h-full w-full">
                         <div className="p-6 space-y-6">
                             {loading && messages.length === 0 ? (
@@ -116,11 +127,21 @@ export default function ChatPage() {
 
                 {/* Input Area */}
                 <div className="p-4 sm:p-6 pb-6 bg-transparent">
-                    <div className="max-w-4xl mx-auto rounded-2xl shadow-2xl shadow-primary/5 dark:shadow-primary/10 border border-primary/10 bg-card/80 backdrop-blur-xl overflow-hidden ring-1 ring-white/10 dark:ring-white/5 transition-all">
+                    <div className="max-w-4xl mx-auto rounded-2xl shadow-2xl shadow-primary/5 border border-border bg-card/80 backdrop-blur-xl ring-1 ring-black/5 dark:ring-white/5 transition-all scroll-smooth">
                         <ChatInputField onSend={handleSendMessage} />
                     </div>
                 </div>
             </div>
+
+            <ConfirmationDialog
+                open={deleteModalOpen}
+                onOpenChange={setDeleteModalOpen}
+                onConfirm={confirmDelete}
+                title="Delete Message"
+                description="Are you sure you want to delete this message? This action cannot be undone."
+                confirmText="Delete"
+                variant="destructive"
+            />
         </ProtectedRoute>
     );
 }

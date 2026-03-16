@@ -9,7 +9,7 @@ import useProjectsStore from "@/store/projectsStore";
 function EmptyState({ isSearching }) {
   if (isSearching) {
     return (
-      <div className="py-12 text-center border border-dashed border-white/20 dark:border-white/10 rounded-2xl bg-card/40 backdrop-blur-xl animate-fade-in">
+      <div className="py-12 text-center border border-dashed border-border/50 rounded-2xl bg-card/40 backdrop-blur-xl animate-fade-in">
         <p className="text-muted-foreground">
           No projects found matching your search.
         </p>
@@ -18,7 +18,7 @@ function EmptyState({ isSearching }) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-20 animate-fade-in border border-dashed border-white/20 dark:border-white/10 rounded-2xl bg-card/40 backdrop-blur-xl hover:bg-card/60 transition-colors">
+    <div className="flex flex-col items-center justify-center py-20 animate-fade-in border border-dashed border-border/50 rounded-2xl bg-card/40 backdrop-blur-xl hover:bg-card/60 transition-colors">
       <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
         <FolderOpen className="h-8 w-8 text-primary" />
       </div>
@@ -35,7 +35,7 @@ function LoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="rounded-2xl border border-white/10 dark:border-white/5 bg-card/60 backdrop-blur-xl overflow-hidden shadow-sm">
+        <div key={i} className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-xl overflow-hidden shadow-sm">
           <div className="aspect-[16/10] skeleton-shimmer" />
           <div className="p-6 space-y-4">
             <div className="pt-2 space-y-2">
@@ -101,7 +101,7 @@ export default function ProjectList({ projects, loading, isSearching }) {
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex items-center justify-between px-5 py-3 border border-white/10 dark:border-white/5 bg-card/60 backdrop-blur-xl rounded-2xl shadow-sm mt-4">
+      <div className="flex items-center justify-between px-5 py-3 border border-border/50 bg-card/60 backdrop-blur-xl rounded-2xl shadow-sm mt-4">
         <p className="text-xs text-muted-foreground">
           Showing{" "}
           <span className="font-semibold">{indexOfFirstItem + 1}</span>{" "}

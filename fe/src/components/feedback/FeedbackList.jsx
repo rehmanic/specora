@@ -23,6 +23,8 @@ import { MessageCircleQuestion } from "lucide-react";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 import TablePagination from "@/components/common/TablePagination";
 import StatsCard from "@/components/requirements/StatsCard";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function FeedbackList({ projectId }) {
     const router = useRouter();
@@ -32,6 +34,8 @@ export default function FeedbackList({ projectId }) {
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [itemToDelete, setItemToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const pageSize = 5;
 
     // Filtered list
@@ -179,27 +183,32 @@ export default function FeedbackList({ projectId }) {
                                                             <Edit className="h-4 w-4" />
                                                         </Link>
                                                     </Button>
-                                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        if (confirm("Are you sure you want to delete this form? This action cannot be undone.")) {
-                                                            try {
-                                                                await deleteFeedback(item.id);
-                                                                setFeedbacks(prev => prev.filter(f => f.id !== item.id));
-                                                            } catch (err) {
-                                                                console.error(err);
-                                                                alert("Failed to delete form");
-                                                            }
-                                                        }
-                                                    }} title="Delete">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10" 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setItemToDelete(item);
+                                                        }} 
+                                                        title="Delete"
+                                                    >
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </>
                                             )}
-                                            <Button variant="ghost" size="icon" asChild title="View">
-                                                <Link href={`./feedback/${item.id}`}>
-                                                    <Eye className="h-4 w-4" />
-                                                </Link>
-                                            </Button>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button variant="ghost" size="icon" asChild onClick={(e) => e.stopPropagation()}>
+                                                            <Link href={`./feedback/${item.id}`}>
+                                                                <Eye className="h-4 w-4" />
+                                                            </Link>
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Responses</TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -215,6 +224,35 @@ export default function FeedbackList({ projectId }) {
                     pageSize={pageSize}
                 />
             </div>
+
+            <ConfirmationDialog
+                open={!!itemToDelete}
+                onOpenChange={(open) => !open && setItemToDelete(null)}
+                onConfirm={async () => {
+                    if (!itemToDelete) return;
+                    setIsDeleting(true);
+                    try {
+                        await deleteFeedback(itemToDelete.id);
+                        setFeedbacks(prev => prev.filter(f => f.id !== itemToDelete.id));
+                        setItemToDelete(null);
+                    } catch (err) {
+                        console.error(err);
+                        alert("Failed to delete form");
+                    } finally {
+                        setIsDeleting(false);
+                    }
+                }}
+                title="Delete Feedback Form"
+                description={
+                    <span>
+                        Are you sure you want to delete the form <span className="font-semibold">"{itemToDelete?.title}"</span>? 
+                        This will permanently remove all responses associated with it. This action cannot be undone.
+                    </span>
+                }
+                confirmText={isDeleting ? "Deleting..." : "Delete"}
+                variant="destructive"
+                loading={isDeleting}
+            />
         </div>
     );
 }

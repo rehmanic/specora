@@ -1,4 +1,5 @@
-import { Loader2, Download, FileText, ListChecks } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Download, FileText, ListChecks, Bot } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Message } from "@/components/chat/Message";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
@@ -15,8 +16,10 @@ export default function MainPanel({
   onSummarize,
   onExtract,
   actionsDisabled = false,
-  downloaded = false,
+  showAttachments = false,
 }) {
+  const [menuOpenId, setMenuOpenId] = useState(null);
+
   if (!canAccess) {
     return (
       <div className="flex h-full flex-col items-center justify-center bg-background px-6 text-center">
@@ -131,6 +134,8 @@ export default function MainPanel({
                 avatarUrl={null}
                 metadata={msg.metadata}
                 allowedActions={["copy"]}
+                menuOpenId={menuOpenId}
+                setMenuOpenId={setMenuOpenId}
               />
             );
           })
