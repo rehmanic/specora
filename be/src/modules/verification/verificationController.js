@@ -181,44 +181,55 @@ export const verifyAI = async (req, res) => {
         }
 
         // Format requirements for the LLM prompt
-        const reqsText = requirements.map((r, i) => `[REQ-${i + 1} ID:${r.id}] Title: ${r.title}\nDescription: ${r.description}`).join('\n\n');
+        // Process in parallel chunks to avoid timeouts (approx. 5 parallel calls)
+        const CHUNK_SIZE = 3;
+        const chunkPromises = [];
 
-        const promptText = `
-Please evaluate each of the following software requirements based on the IEEE standard characteristics of a good requirement.
-The characteristics to evaluate are:
-1. Unambiguous: The requirement has only one interpretation.
-2. Complete: It describes everything required by the user, without missing information.
-3. Verifiable: There is a cost-effective way to check that the software meets this requirement.
-4. Consistent: It does not conflict with other requirements.
-5. Modifiable: Structure and style are such that changes can be made easily.
-6. Traceable: Its origin is clear and it can be referenced in development.
+        for (let i = 0; i < requirements.length; i += CHUNK_SIZE) {
+            const chunk = requirements.slice(i, i + CHUNK_SIZE);
+            const reqsText = chunk.map((r, idx) => `[REQ-${i + idx + 1} ID:${r.id}] Title: ${r.title}\nDescription: ${r.description}`).join('\n\n');
 
-Requirements:
+            const promptText = `
+Please evaluate each of the following software requirements based on the IEEE standard characteristics:
+1. Unambiguous
+2. Complete
+3. Verifiable
+4. Consistent
+5. Modifiable
+6. Traceable
+
+Requirements for Project "${projectId}":
 ${reqsText}
-        `;
+            `;
 
-        const instructions = {
-            task: "evaluate_requirements",
-            expectations: "Evaluate each requirement strictly against IEEE characteristics. For each characteristic, state true if fulfilled, false if not.",
-            output: "JSON ONLY. Expected format: [{ \"requirement_id\": \"id-from-prompt\", \"unambiguous\": true, \"complete\": false, \"verifiable\": true, \"consistent\": true, \"modifiable\": true, \"traceable\": true, \"reasoning\": \"brief explanation\" }]"
-        };
+            const instructions = {
+                task: "evaluate_requirements",
+                expectations: "Evaluate each requirement strictly against IEEE characteristics. For each characteristic, provide a boolean status. Provide a structured reasoning string where each point is on a new line (e.g., 'Unambiguous: explanation\\nComplete: explanation...'). If satisfied, keep the reasoning brief ('Satisfied').",
+                output: "Return a JSON array of objects.",
+                jsonMode: true
+            };
 
-        const aiResponse = await generateStatelessResponse(promptText, instructions);
-
-        // The generateStatelessResponse returns a string, we need to parse it as JSON
-        let parsedResults = [];
-        try {
-            // we'll try to extract JSON if it wrapped in markdown block
-            const cleanedText = extractJson(aiResponse);
-            parsedResults = JSON.parse(cleanedText);
-        } catch (parseError) {
-            console.error("LLM JSON Parse Error:", parseError, aiResponse);
-            return res.status(500).json({ message: "Failed to parse AI response into valid format." });
+            chunkPromises.push(
+                generateStatelessResponse(promptText, instructions)
+                    .then(aiResponse => {
+                        const cleanedText = extractJson(aiResponse);
+                        const parsed = JSON.parse(cleanedText);
+                        // Ensure it's an array for robustness
+                        return Array.isArray(parsed) ? parsed : [parsed];
+                    })
+                    .catch(error => {
+                        console.error(`Error processing requirements chunk ${i / CHUNK_SIZE + 1}:`, error);
+                        return [];
+                    })
+            );
         }
+
+        const chunkedResults = await Promise.all(chunkPromises);
+        const results = chunkedResults.flat();
 
         // Return combined results
         const enrichedResults = requirements.map(req => {
-            const aiAnalysis = parsedResults.find(p => p.requirement_id === req.id) || null;
+            const aiAnalysis = results.find(p => p.requirement_id === req.id) || null;
             return {
                 requirement_id: req.id,
                 title: req.title,
@@ -278,16 +289,17 @@ Description: ${requirement.description}
 
         const instructions = {
             task: "evaluate_requirements",
-            expectations: "Evaluate the requirement strictly against IEEE characteristics. For each characteristic, state true if fulfilled, false if not.",
-            output: "JSON ONLY. Expected format: [{ \"requirement_id\": \"id-from-prompt\", \"unambiguous\": true, \"complete\": false, \"verifiable\": true, \"consistent\": true, \"modifiable\": true, \"traceable\": true, \"reasoning\": \"brief explanation\" }]"
+            expectations: "Evaluate the requirement strictly against IEEE characteristics. provide a structured reasoning string where each point is on a new line (e.g., 'Unambiguous: explanation\\nComplete: explanation...'). If a characteristic is satisfied, keep the explanation brief ('Satisfied').",
+            output: "Return valid JSON.",
+            jsonMode: true
         };
 
         const aiResponse = await generateStatelessResponse(promptText, instructions);
-
         let parsedResults = [];
         try {
             const cleanedText = extractJson(aiResponse);
-            parsedResults = JSON.parse(cleanedText);
+            const parsed = JSON.parse(cleanedText);
+            parsedResults = Array.isArray(parsed) ? parsed : [parsed];
         } catch (parseError) {
             console.error("LLM JSON Parse Error for single requirement:", parseError, aiResponse);
             return res.status(500).json({ message: "Failed to parse AI response into valid format." });

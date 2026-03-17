@@ -25,6 +25,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { runARMVerification, runAIVerification, runARMVerificationForRequirement, runAIVerificationForRequirement } from "@/api/verification";
 import { getRequirements } from "@/api/requirements";
@@ -320,11 +321,21 @@ export default function Page() {
                                                                     {(armPage - 1) * PAGE_SIZE + index + 1}
                                                                 </TableCell>
                                                                 <TableCell>
-                                                                    <div>
+                                                                    <div className="flex flex-col">
                                                                         <span className="font-medium">{req.title}</span>
-                                                                        <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
-                                                                            {req.description}
-                                                                        </p>
+                                                                        <TooltipProvider>
+                                                                            <Tooltip>
+                                                                                <TooltipTrigger asChild>
+                                                                                    <p className="text-sm text-muted-foreground mt-0.5 cursor-pointer">
+                                                                                        {req.description?.split(' ').slice(0, 10).join(' ')}
+                                                                                        {req.description?.split(' ').length > 10 ? '...' : ''}
+                                                                                    </p>
+                                                                                </TooltipTrigger>
+                                                                                <TooltipContent className="max-w-xs">
+                                                                                    {req.description}
+                                                                                </TooltipContent>
+                                                                            </Tooltip>
+                                                                        </TooltipProvider>
                                                                     </div>
                                                                 </TableCell>
                                                                 <TableCell>
@@ -459,11 +470,21 @@ export default function Page() {
                                                                         {(aiPage - 1) * PAGE_SIZE + index + 1}
                                                                     </TableCell>
                                                                     <TableCell>
-                                                                        <div>
+                                                                        <div className="flex flex-col">
                                                                             <span className="font-medium">{req.title}</span>
-                                                                            <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
-                                                                                {req.description}
-                                                                            </p>
+                                                                            <TooltipProvider>
+                                                                                <Tooltip>
+                                                                                    <TooltipTrigger asChild>
+                                                                                        <p className="text-sm text-muted-foreground mt-0.5 cursor-pointer">
+                                                                                            {req.description?.split(' ').slice(0, 10).join(' ')}
+                                                                                            {req.description?.split(' ').length > 10 ? '...' : ''}
+                                                                                        </p>
+                                                                                    </TooltipTrigger>
+                                                                                    <TooltipContent className="max-w-xs">
+                                                                                        {req.description}
+                                                                                    </TooltipContent>
+                                                                                </Tooltip>
+                                                                            </TooltipProvider>
                                                                         </div>
                                                                     </TableCell>
                                                                     <TableCell className="text-center">
@@ -639,9 +660,20 @@ export default function Page() {
                                             <div className="font-medium text-sm">AI Reasoning Feedback</div>
                                         </CardHeader>
                                         <CardContent className="py-3 px-4">
-                                            <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
-                                                {activeAiResult.reasoning || "No reasoning context was provided."}
-                                            </p>
+                                            <div className="space-y-3">
+                                                {(activeAiResult.reasoning || "No reasoning context was provided.").split('\n').filter(line => line.trim()).map((line, idx) => {
+                                                    const colonIndex = line.indexOf(':');
+                                                    if (colonIndex === -1) return <p key={idx} className="text-sm text-foreground/90">{line}</p>;
+                                                    const label = line.substring(0, colonIndex).trim();
+                                                    const text = line.substring(colonIndex + 1).trim();
+                                                    return (
+                                                        <div key={idx} className="text-sm border-l-2 border-primary/20 pl-3 py-0.5">
+                                                            <span className="font-semibold text-primary/80 mr-1">{label}</span>
+                                                            <p className="text-foreground/90 mt-0.5">{text}</p>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </CardContent>
                                     </Card>
                                 </div>

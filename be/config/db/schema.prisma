@@ -118,6 +118,17 @@ model diagram {
   mermaid_code String    @default("") @db.Text
   created_at   DateTime? @default(now()) @db.Timestamptz(6)
   updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+
+  requirement_links diagram_requirement[]
+}
+
+model diagram_requirement {
+  diagram_id     String      @db.Uuid
+  diagram        diagram     @relation(fields: [diagram_id], references: [id], onDelete: Cascade)
+  requirement_id String      @db.Uuid
+  requirement    requirement @relation(fields: [requirement_id], references: [id], onDelete: Cascade)
+
+  @@id([diagram_id, requirement_id])
 }
 
 model doc {
@@ -129,6 +140,17 @@ model doc {
   type         doc_type_enum @default(general)
   created_at   DateTime? @default(now()) @db.Timestamptz(6)
   updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+
+  requirement_links doc_requirement[]
+}
+
+model doc_requirement {
+  doc_id         String      @db.Uuid
+  doc            doc         @relation(fields: [doc_id], references: [id], onDelete: Cascade)
+  requirement_id String      @db.Uuid
+  requirement    requirement @relation(fields: [requirement_id], references: [id], onDelete: Cascade)
+
+  @@id([doc_id, requirement_id])
 }
 
 model project_member {
@@ -164,6 +186,8 @@ model requirement {
   
   economic_estimate economic_estimate?
   screen_links      screen_requirement[]
+  diagram_links     diagram_requirement[]
+  doc_links         doc_requirement[]
   history           requirement_history[]
   comments          requirement_comment[]
   

@@ -8,6 +8,7 @@ import {
     deleteDiagram,
     generateFromDescription,
     editDiagram,
+    updateDiagramRequirements,
 } from "./diagramController.js";
 
 const router = express.Router();
@@ -20,6 +21,7 @@ router.post("/:projectId/generate", generateFromDescription);
 router.post("/:projectId/edit", editDiagram);
 router.get("/:projectId/:diagramId", getDiagram);
 router.put("/:projectId/:diagramId", updateDiagram);
+router.put("/:projectId/:diagramId/requirements", updateDiagramRequirements);
 router.delete("/:projectId/:diagramId", deleteDiagram);
 
 export default router;

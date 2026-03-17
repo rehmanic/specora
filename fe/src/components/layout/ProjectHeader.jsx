@@ -17,13 +17,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Folder, ChevronsUpDown, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export function ProjectHeader() {
   const { selectedProject, projects, fetchProjects, setSelectedProject } = useProjectsStore();
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const router = useRouter();
+  const pathname = usePathname();
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -36,8 +37,28 @@ export function ProjectHeader() {
   const activeProject = selectedProject;
 
   const handleProjectSwitch = (project) => {
+    const oldSlug = selectedProject?.slug;
     setSelectedProject(project);
-    router.refresh(); // Refresh current page to reload project context
+
+    // If we are in a project-specific route (/projects/[slug]/...)
+    if (oldSlug && pathname.includes(`/projects/${oldSlug}`)) {
+      const segments = pathname.split("/");
+      if (segments[1] === "projects" && segments[2] === oldSlug) {
+        segments[2] = project.slug;
+        
+        // Safety: If deeply nested (e.g. at a specific document or diagram), 
+        // fall back to the section list page instead of trying to load p1's id in p2
+        if (segments.length > 5) {
+          segments.splice(5);
+        }
+        
+        const nextPath = segments.join("/");
+        router.push(nextPath);
+      }
+    } else {
+      // If we're on a generic page like /dashboard or /users, just refresh the data
+      router.refresh();
+    }
   };
 
   const ProjectLogo = ({ project, className }) => {

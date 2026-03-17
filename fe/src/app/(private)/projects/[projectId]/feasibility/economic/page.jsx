@@ -770,7 +770,7 @@ export default function Page() {
                                                                             <Tooltip>
                                                                                 <TooltipTrigger asChild>
                                                                                     <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1 cursor-help">
-                                                                                        {req.description}
+                                                                                        {req.description?.split(' ').slice(0, 10).join(' ')}{req.description?.split(' ').length > 10 ? '...' : ''}
                                                                                     </p>
                                                                                 </TooltipTrigger>
                                                                                 <TooltipContent className="max-w-xs">

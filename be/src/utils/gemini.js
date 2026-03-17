@@ -188,6 +188,17 @@ Output Format: ${instructions.output || "Return structured JSON when possible."}
 
 Important: Analyze the ENTIRE content provided below. Do not treat this as a conversation continuation.`;
 
+        const generationConfig = {
+            maxOutputTokens: 6000,
+            temperature: 0.3,
+            topP: 0.8,
+            topK: 40,
+        };
+
+        if (instructions.jsonMode) {
+            generationConfig.responseMimeType = "application/json";
+        }
+
         const result = await model.generateContent({
             contents: [
                 {
@@ -195,12 +206,7 @@ Important: Analyze the ENTIRE content provided below. Do not treat this as a con
                     parts: [{ text: `${systemPrompt}\n\n---\n\nCONTENT TO ANALYZE:\n\n${content}` }]
                 }
             ],
-            generationConfig: {
-                maxOutputTokens: 4000,
-                temperature: 0.3,  // Lower temperature for more consistent output
-                topP: 0.8,
-                topK: 40,
-            },
+            generationConfig
         });
 
         return result.response.text();

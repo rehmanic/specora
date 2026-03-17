@@ -57,3 +57,9 @@ export const editDiagram = (projectId, { current_mermaid_code, edit_instruction 
         method: "POST",
         body: JSON.stringify({ current_mermaid_code, edit_instruction }),
     });
+
+export const updateDiagramRequirements = (projectId, diagramId, requirementIds) =>
+    request(`/diagrams/${projectId}/${diagramId}/requirements`, {
+        method: "PUT",
+        body: JSON.stringify({ requirement_ids: requirementIds }),
+    });

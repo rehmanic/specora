@@ -18,6 +18,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import useAuthStore from "@/store/authStore";
+import useProjectsStore from "@/store/projectsStore";
+import ScreenSidebar from "@/components/prototyping/ScreenSidebar";
 import NewPrototypeDialog from "@/components/prototyping/NewPrototypeDialog";
 import PageBanner from "@/components/layout/PageBanner";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
@@ -26,6 +28,7 @@ import StatsCard from "@/components/requirements/StatsCard";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
+    getScreens,
     getPrototypes,
     createPrototype,
     deletePrototype as deletePrototypeApi,
@@ -40,6 +43,9 @@ export default function Page() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [isCreating, setIsCreating] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [prototypeName, setPrototypeName] = useState("");
+    const setEntityTitle = useProjectsStore(state => state.setEntityTitle);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -76,6 +82,13 @@ export default function Page() {
             try {
                 const data = await getPrototypes(projectId);
                 setPrototypes(data.prototypes || []);
+                
+                if (data.prototypes) {
+                    const setEntityTitleStore = useProjectsStore.getState().setEntityTitle;
+                    data.prototypes.forEach(p => {
+                        if (p.id && p.name) setEntityTitleStore(p.id, p.name);
+                    });
+                }
             } catch (err) {
                 console.error("Error loading prototypes:", err);
                 toast.error("Failed to load prototypes.");
@@ -133,7 +146,7 @@ export default function Page() {
                         icon={PenTool}
                     />
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+                    <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
                         <StatsCard
                             icon={Layers}
                             label="Total Prototypes"
@@ -145,18 +158,6 @@ export default function Page() {
                             label="Total Screens"
                             value={stats.screens}
                             color="success"
-                        />
-                        <StatsCard
-                            icon={Search}
-                            label="Searchable"
-                            value={filtered.length}
-                            color="info"
-                        />
-                        <StatsCard
-                            icon={Calendar}
-                            label="Active Project"
-                            value="Yes"
-                            color="warning"
                         />
                     </div>
 

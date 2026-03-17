@@ -20,13 +20,26 @@ export const createDoc = async (req, res, next) => {
         }
 
         const { title, content, type } = req.body;
+        const normalizedType = type?.toLowerCase();
+
+        if (normalizedType === "srs") {
+            const existingSrs = await prisma.doc.findFirst({
+                where: { project_id: resolvedId, type: "srs" },
+            });
+            if (existingSrs) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "A project can only have one SRS document.",
+                });
+            }
+        }
 
         const doc = await prisma.doc.create({
             data: {
                 project_id: resolvedId,
                 title,
                 content: content || "",
-                type: type || "general",
+                type: normalizedType || "general",
             },
         });
 
@@ -77,6 +90,13 @@ export const getDocById = async (req, res, next) => {
                 id: id,
                 project_id: resolvedId,
             },
+            include: {
+                requirement_links: {
+                    include: {
+                        requirement: true
+                    }
+                }
+            }
         });
 
         if (!doc) {
@@ -102,6 +122,7 @@ export const updateDoc = async (req, res, next) => {
 
         const { id } = req.params;
         const { title, content, type } = req.body;
+        const normalizedType = type?.toLowerCase();
 
         const doc = await prisma.doc.findFirst({
             where: { id: id, project_id: resolvedId },
@@ -110,9 +131,21 @@ export const updateDoc = async (req, res, next) => {
             return res.status(404).json({ status: "error", message: "Doc not found" });
         }
 
+        if (normalizedType === "srs" && doc.type !== "srs") {
+            const existingSrs = await prisma.doc.findFirst({
+                where: { project_id: resolvedId, type: "srs" },
+            });
+            if (existingSrs) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "A project can only have one SRS document.",
+                });
+            }
+        }
+
         const updatedDoc = await prisma.doc.update({
             where: { id: id },
-            data: { title, content, type, updated_at: new Date() },
+            data: { title, content, type: normalizedType, updated_at: new Date() },
         });
 
         res.status(200).json({
@@ -148,6 +181,47 @@ export const deleteDoc = async (req, res, next) => {
         res.status(204).json({
             status: "success",
             data: null,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// LINK REQUIREMENTS
+export const updateDocRequirements = async (req, res, next) => {
+    try {
+        const resolvedId = await resolveProjectId(req.params.projectId);
+        if (!resolvedId) {
+            return res.status(404).json({ status: "error", message: "Project not found" });
+        }
+
+        const { id } = req.params;
+        const { requirementIds } = req.body;
+
+        const doc = await prisma.doc.findFirst({
+            where: { id, project_id: resolvedId },
+        });
+
+        if (!doc) {
+            return res.status(404).json({ status: "error", message: "Doc not found" });
+        }
+
+        // Transactions to delete old links and create new ones
+        await prisma.$transaction([
+            prisma.doc_requirement.deleteMany({
+                where: { doc_id: id }
+            }),
+            prisma.doc_requirement.createMany({
+                data: (requirementIds || []).map(rid => ({
+                    doc_id: id,
+                    requirement_id: rid
+                }))
+            })
+        ]);
+
+        res.status(200).json({
+            status: "success",
+            message: "Requirements links updated",
         });
     } catch (err) {
         next(err);

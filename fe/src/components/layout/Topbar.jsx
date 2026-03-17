@@ -51,10 +51,14 @@ export function Topbar() {
                             // Check for entity title first (for IDs)
                             let name = entityTitles[path];
                             if (!name) {
-                                // Default formatting
-                                name = path.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
-                                // If it's a UUID and we don't have a title, shorten it or keep it
-                                if (isUUID(path)) name = path.slice(0, 8) + "...";
+                                if (path === selectedProject?.id) {
+                                    name = selectedProject.name;
+                                } else {
+                                    // Default formatting
+                                    name = path.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+                                    // If it's a UUID and we don't have a title, shorten it or keep it
+                                    if (isUUID(path)) name = path.slice(0, 8) + "...";
+                                }
                             }
 
                             return (

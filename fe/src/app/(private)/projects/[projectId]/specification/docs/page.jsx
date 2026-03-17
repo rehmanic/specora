@@ -48,7 +48,7 @@ export default function Page() {
         total: docs.length,
         srs: docs.filter(d => d.type === 'srs').length,
         useCase: docs.filter(d => d.type === 'use_case').length,
-        drafted: docs.filter(d => !!d.content?.trim()).length
+        general: docs.filter(d => d.type === 'general').length
     };
 
     // Filtered list
@@ -148,9 +148,9 @@ export default function Page() {
                             color="warning"
                         />
                         <StatsCard
-                            icon={Pencil}
-                            label="Drafted"
-                            value={stats.drafted}
+                            icon={Info}
+                            label="General Notes"
+                            value={stats.general}
                             color="success"
                         />
                     </div>
@@ -163,7 +163,12 @@ export default function Page() {
                         buttonText="New Doc"
                         onAction={() => setIsCreating(true)}
                     />
-                    <NewDocDialog open={isCreating} onOpenChange={setIsCreating} onSubmit={handleCreate} />
+                    <NewDocDialog 
+                        open={isCreating} 
+                        onOpenChange={setIsCreating} 
+                        onSubmit={handleCreate} 
+                        srsExists={docs.some(d => d.type === 'srs')}
+                    />
 
                     {loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

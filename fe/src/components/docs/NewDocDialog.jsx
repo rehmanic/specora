@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Plus } from "lucide-react";
 import { getTemplateForType } from "@/utils/docTemplates";
 
-export default function NewDocDialog({ onSubmit, open, onOpenChange }) {
+export default function NewDocDialog({ onSubmit, open, onOpenChange, srsExists }) {
     const [title, setTitle] = useState("");
     const [type, setType] = useState("general");
     const [loading, setLoading] = useState(false);
@@ -68,7 +68,9 @@ export default function NewDocDialog({ onSubmit, open, onOpenChange }) {
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <option value="general">General Note</option>
-                                <option value="srs">SRS (Software Requirements Spec)</option>
+                                <option value="srs" disabled={srsExists}>
+                                    SRS (Software Requirements Spec) {srsExists ? "(Found existing)" : ""}
+                                </option>
                                 <option value="use_case">Textual Use Case</option>
                             </select>
                         </div>

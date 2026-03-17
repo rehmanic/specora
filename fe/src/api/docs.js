@@ -46,3 +46,9 @@ export const updateDoc = async (projectId, docId, docData) => {
 };
 
 export const deleteDoc = (projectId, docId) => request(`/docs/${projectId}/${docId}`, { method: "DELETE" });
+
+export const updateDocRequirements = (projectId, docId, requirementIds) =>
+    request(`/docs/${projectId}/${docId}/requirements`, {
+        method: "PUT",
+        body: JSON.stringify({ requirementIds }),
+    });

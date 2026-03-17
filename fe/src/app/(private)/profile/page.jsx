@@ -50,9 +50,7 @@ export default function ProfilePage() {
 
         let userData = {
             display_name: data.get("displayname"),
-            username: data.get("username"),
             email: data.get("email"),
-            role: data.get("role")
         };
 
         const updatePromise = async () => {
@@ -180,8 +178,8 @@ export default function ProfilePage() {
                                         name="username"
                                         id="username"
                                         defaultValue={user?.username}
-                                        readOnly
-                                        className="pl-10 bg-muted/50 cursor-not-allowed select-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                                        disabled
+                                        className="pl-10 bg-muted cursor-not-allowed select-none focus-visible:ring-0 focus-visible:ring-offset-0 opacity-80"
                                     />
                                 </div>
                                 <p className="text-xs text-muted-foreground">
@@ -231,8 +229,8 @@ export default function ProfilePage() {
                                         name="role"
                                         id="role"
                                         defaultValue={user?.role}
-                                        readOnly
-                                        className="pl-10 bg-muted/50 cursor-not-allowed select-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                                        disabled
+                                        className="pl-10 bg-muted cursor-not-allowed select-none focus-visible:ring-0 focus-visible:ring-offset-0 opacity-80"
                                     />
                                 </div>
                                 <p className="text-xs text-muted-foreground">

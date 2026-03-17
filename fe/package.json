@@ -54,6 +54,7 @@
     "react-force-graph-2d": "^1.29.1",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.4",
+    "react-zoom-pan-pinch": "^3.7.0",
     "remark-gfm": "^4.0.1",
     "simple-peer": "^9.11.1",
     "socket.io-client": "^4.8.3",

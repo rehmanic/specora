@@ -10,6 +10,7 @@ import useAuthStore from "@/store/authStore";
 import ScreenSidebar from "@/components/prototyping/ScreenSidebar";
 import ScreenCanvas from "@/components/prototyping/ScreenCanvas";
 import RequirementLinker from "@/components/prototyping/RequirementLinker";
+import useProjectsStore from "@/store/projectsStore";
 import {
     getScreens,
     createScreen,
@@ -30,6 +31,7 @@ export default function Page() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [prototypeName, setPrototypeName] = useState("");
+    const setEntityTitle = useProjectsStore(state => state.setEntityTitle);
 
     // Requirements
     const [requirements, setRequirements] = useState([]);
@@ -71,7 +73,10 @@ export default function Page() {
                 if (protoRes.ok) {
                     const protoData = await protoRes.json();
                     const proto = (protoData.prototypes || []).find((p) => p.id === prototypeId);
-                    if (proto) setPrototypeName(proto.name);
+                    if (proto) {
+                        setPrototypeName(proto.name);
+                        setEntityTitle(prototypeId, proto.name);
+                    }
                 }
 
                 // Fetch requirements

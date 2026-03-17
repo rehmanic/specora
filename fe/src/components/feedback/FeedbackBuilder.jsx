@@ -10,12 +10,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createFeedback, updateFeedback, getFeedback } from "@/api/feedback";
 import { toast } from "sonner";
+import useProjectsStore from "@/store/projectsStore";
 
 export default function FeedbackBuilder({ projectId, feedbackId }) {
     const router = useRouter();
     const [creator, setCreator] = useState(null);
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(!!feedbackId); // Load if editing
+    const setEntityTitle = useProjectsStore((state) => state.setEntityTitle);
 
     useEffect(() => {
         const options = {
@@ -41,6 +43,9 @@ export default function FeedbackBuilder({ projectId, feedbackId }) {
                 if (feedback) {
                     creator.JSON = feedback.form_structure;
                     creator.text = JSON.stringify(feedback.form_structure);
+                    if (feedback.title) {
+                        setEntityTitle(feedbackId, feedback.title);
+                    }
                 }
             } catch (error) {
                 console.error(error);

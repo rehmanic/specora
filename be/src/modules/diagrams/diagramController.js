@@ -72,6 +72,15 @@ export async function getDiagram(req, res) {
 
         const diagram = await prisma.diagram.findFirst({
             where: { id: diagramId, project_id: resolvedId },
+            include: {
+                requirement_links: {
+                    include: {
+                        requirement: {
+                            select: { id: true, readable_id: true, title: true }
+                        }
+                    }
+                }
+            }
         });
 
         if (!diagram) return res.status(404).json({ message: "Diagram not found" });
@@ -185,5 +194,41 @@ export async function editDiagram(req, res) {
     } catch (err) {
         console.error("editDiagram error:", err);
         res.status(500).json({ message: err.message || "Failed to edit diagram" });
+    }
+}
+
+// ─── Diagram-Requirement Linking ─────────────────────────
+
+export async function updateDiagramRequirements(req, res) {
+    try {
+        const resolvedId = await resolveProjectId(req.params.projectId);
+        if (!resolvedId) return res.status(404).json({ message: "Project not found" });
+
+        const { diagramId } = req.params;
+        const { requirement_ids } = req.body; // Array of UUIDs
+
+        if (!Array.isArray(requirement_ids)) {
+            return res.status(400).json({ message: "requirement_ids must be an array" });
+        }
+
+        // 1. Delete existing links
+        await prisma.diagram_requirement.deleteMany({
+            where: { diagram_id: diagramId }
+        });
+
+        // 2. Create new links
+        if (requirement_ids.length > 0) {
+            await prisma.diagram_requirement.createMany({
+                data: requirement_ids.map(rid => ({
+                    diagram_id: diagramId,
+                    requirement_id: rid
+                }))
+            });
+        }
+
+        res.json({ message: "Requirement links updated" });
+    } catch (err) {
+        console.error("updateDiagramRequirements error:", err);
+        res.status(500).json({ message: "Failed to update requirement links" });
     }
 }

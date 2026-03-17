@@ -13,4 +13,6 @@ router
     .put(docController.updateDoc)
     .delete(docController.deleteDoc);
 
+router.put("/:id/requirements", docController.updateDocRequirements);
+
 export default router;

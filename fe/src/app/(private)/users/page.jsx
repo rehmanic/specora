@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { UsersTable } from "@/components/users/UsersTable";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Users, UserCheck, UserX, Shield } from "lucide-react";
+import { UserPlus, Users, Code, Briefcase, Shield } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { getAllUsersRequest } from "@/api/users";
 import ErrorBox from "@/components/common/ErrorBox";
@@ -107,13 +107,13 @@ export default function UsersPage() {
                 color="accent"
               />
               <StatsCard
-                icon={UserCheck}
+                icon={Code}
                 label="Engineers"
                 value={roleCounts.requirements_engineer || 0}
                 color="success"
               />
               <StatsCard
-                icon={UserX}
+                icon={Briefcase}
                 label="Clients"
                 value={roleCounts.client || 0}
                 color="warning"

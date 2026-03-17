@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getProjectFeedbacks } from "@/api/feedback";
 import useAuthStore from "@/store/authStore";
+import useProjectsStore from "@/store/projectsStore";
 import { Button } from "@/components/ui/button";
 import {
     Table,
@@ -61,6 +62,14 @@ export default function FeedbackList({ projectId }) {
                 setLoading(true);
                 const data = await getProjectFeedbacks(projectId);
                 setFeedbacks(data.feedbacks || []);
+                
+                // Set entity titles for breadcrumbs
+                if (data.feedbacks) {
+                    const setEntityTitle = useProjectsStore.getState().setEntityTitle;
+                    data.feedbacks.forEach(f => {
+                        if (f.id && f.title) setEntityTitle(f.id, f.title);
+                    });
+                }
             } catch (err) {
                 setError(err.message);
             } finally {
