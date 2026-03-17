@@ -6,21 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, Video, ExternalLink, Play, Copy, Check } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import VideoPlayer from "@/components/video/VideoPlayer";
-import { Loader2, Settings } from "lucide-react";
-import { ExtractedRequirementsModal } from "@/components/requirements/ExtractedRequirementsModal";
-import { extractMeetingRequirements } from "@/api/meetings";
-import { importRequirements } from "@/api/requirements";
+import { Settings } from "lucide-react";
 
 export default function MeetingCard({ meeting, type }) {
   const router = useRouter();
-  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [extractedModalOpen, setExtractedModalOpen] = useState(false);
-  const [extractedReqs, setExtractedReqs] = useState([]);
-  const [isImporting, setIsImporting] = useState(false);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -86,33 +76,9 @@ export default function MeetingCard({ meeting, type }) {
     }
   };
 
-  const handleExtractRequirements = async () => {
-    setIsExtracting(true);
-    try {
-      const response = await extractMeetingRequirements(meeting.id);
-      setExtractedReqs(response.data || []);
-      setExtractedModalOpen(true);
-    } catch (err) {
-      console.error("Failed to extract:", err);
-      alert("Failed to extract requirements. Ensure there is a transcript available.");
-    } finally {
-      setIsExtracting(false);
-    }
-  };
-
-  const handleImportRequirements = async (requirementsToImport) => {
-    if (!meeting.project_id) return;
-    setIsImporting(true);
-    try {
-      await importRequirements(meeting.project_id, { requirements: requirementsToImport });
-      setExtractedModalOpen(false);
-      alert(`Successfully imported requirements!`);
-    } catch (err) {
-      console.error("Failed to import requirements:", err);
-      alert("Failed to import requirements: " + (err?.error || err.message || "Unknown error"));
-    } finally {
-      setIsImporting(false);
-    }
+  const handleExtractRequirements = () => {
+    // Navigate to the meeting review page and switch to requirements tab
+    router.push(`/projects/${meeting.project_id}/meetings/${meeting.id}?tab=requirements`);
   };
 
   return (
@@ -224,15 +190,15 @@ export default function MeetingCard({ meeting, type }) {
             </Button>
           )}
 
-          {type === "completed" && meeting.recording_link && (
+          {type === "completed" && meeting.recording_url && (
             <Button
               variant="outline"
               size="sm"
               className="flex-1 gap-2"
-              onClick={() => setShowVideoPlayer(!showVideoPlayer)}
+              onClick={() => router.push(`/projects/${meeting.project_id}/meetings/${meeting.id}`)}
             >
-              <Play className="w-4 h-4" />
-              {showVideoPlayer ? "Hide Recording" : "View Recording"}
+              <Video className="w-4 h-4" />
+               View Recording
             </Button>
           )}
 
@@ -240,36 +206,15 @@ export default function MeetingCard({ meeting, type }) {
             <Button
               variant="secondary"
               size="sm"
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 border-primary/20 hover:bg-primary/5 transition-colors"
               onClick={handleExtractRequirements}
-              disabled={isExtracting}
             >
-              {isExtracting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Settings className="w-4 h-4" />
-              )}
-              {isExtracting ? "Extracting..." : "Extract Requirements"}
+              <Settings className="w-4 h-4" />
+              Requirements
             </Button>
           )}
         </div>
-
-        {showVideoPlayer && meeting.recording_link && (
-          <div className="mt-4 rounded-lg overflow-hidden">
-            <VideoPlayer
-              src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${meeting.recording_link}`}
-            />
-          </div>
-        )}
       </CardContent>
-
-      <ExtractedRequirementsModal
-        isOpen={extractedModalOpen}
-        onClose={() => setExtractedModalOpen(false)}
-        requirements={extractedReqs}
-        onImport={handleImportRequirements}
-        isImporting={isImporting}
-      />
     </Card>
   );
 }

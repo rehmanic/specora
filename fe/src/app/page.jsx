@@ -109,19 +109,7 @@ export default function Home() {
                 <span className="relative inline-block">
                   Clear Specifications
                   {/* Scribble Underline */}
-                  <svg
-                    className="absolute w-[110%] -bottom-4 -left-2 text-[oklch(0.85_0.20_130)] opacity-80"
-                    viewBox="0 0 200 20"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M2 12C30 8 70 5 100 8C130 11 160 15 198 10"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                  </svg>
+
                 </span>
               </h1>
 

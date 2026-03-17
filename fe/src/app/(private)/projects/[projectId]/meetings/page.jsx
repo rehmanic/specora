@@ -30,7 +30,12 @@ export default function MeetingsPage() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState(null);
-  const [formData, setFormData] = useState({ title: "", description: "", start_time: "" });
+  const [formData, setFormData] = useState({ 
+    title: "", 
+    description: "", 
+    scheduled_date: new Date().toISOString().split('T')[0], 
+    scheduled_time: "10:00" 
+  });
   const [meetingToDelete, setMeetingToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,37 +64,60 @@ export default function MeetingsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
-
   const handleCreate = async () => {
     try {
+      const startTime = new Date(`${formData.scheduled_date}T${formData.scheduled_time}`).toISOString();
       await createMeeting({ 
-        ...formData, 
-        project_id: projectId, 
-        start_time: formData.start_time || new Date() 
+        title: formData.title,
+        description: formData.description,
+        start_time: startTime,
+        project_id: projectId
       });
       mutate();
       setIsCreating(false);
-      setFormData({ title: "", description: "", start_time: "" });
+      setFormData({ 
+        title: "", 
+        description: "", 
+        scheduled_date: new Date().toISOString().split('T')[0], 
+        scheduled_time: "10:00" 
+      });
     } catch (err) {
       alert("Failed to create meeting");
     }
   };
 
   const handleEdit = (meeting) => {
+    const d = new Date(meeting.start_time);
+    // Pad local components
+    const pad = (n) => n.toString().padStart(2, '0');
+    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    
     setEditingMeeting(meeting);
     setFormData({ 
       title: meeting.title, 
       description: meeting.description || "",
-      start_time: formatForInput(meeting.start_time)
+      scheduled_date: dateStr,
+      scheduled_time: timeStr
     });
   };
 
   const handleUpdate = async () => {
     try {
-      await updateMeeting(editingMeeting.id, formData);
+      const startTime = new Date(`${formData.scheduled_date}T${formData.scheduled_time}`).toISOString();
+      await updateMeeting(editingMeeting.id, {
+        title: formData.title,
+        description: formData.description,
+        start_time: startTime
+      });
       mutate();
       setEditingMeeting(null);
-      setFormData({ title: "", description: "" });
+      setFormData({ 
+        title: "", 
+        description: "", 
+        scheduled_date: new Date().toISOString().split('T')[0], 
+        scheduled_time: "10:00" 
+      });
     } catch (err) {
       alert("Failed to update meeting");
     }
@@ -200,84 +228,108 @@ export default function MeetingsPage() {
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
                 <Label htmlFor="title">Meeting Title <span className="text-destructive">*</span></Label>
-                <Input
-                  id="title"
-                  placeholder="e.g., Weekly Sync"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="start_time">Scheduled Time <span className="text-destructive">*</span></Label>
-                <Input
-                  id="start_time"
-                  type="datetime-local"
-                  value={formData.start_time}
-                  onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="What is this meeting about?"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <Button 
-                onClick={handleCreate} 
-                className="w-full"
-                disabled={!formData.title || !formData.start_time}
-              >
-                Create Meeting
-              </Button>
-            </div>
-          </DialogContent>
+                        <Input
+                            id="title"
+                            placeholder="e.g., Weekly Sync"
+                            value={formData.title || ""}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            required
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="date">Scheduled Date <span className="text-destructive">*</span></Label>
+                            <Input
+                                id="date"
+                                type="date"
+                                value={formData.scheduled_date || ""}
+                                onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="time">Scheduled Time <span className="text-destructive">*</span></Label>
+                            <Input
+                                id="time"
+                                type="time"
+                                value={formData.scheduled_time || ""}
+                                onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                            id="description"
+                            placeholder="What is this meeting about?"
+                            value={formData.description || ""}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        />
+                    </div>
+                    <Button 
+                        onClick={handleCreate} 
+                        className="w-full"
+                        disabled={!formData.title || !formData.start_time}
+                    >
+                        Create Meeting
+                    </Button>
+                </div>
+            </DialogContent>
         </Dialog>
 
         {/* Edit Dialog */}
         <Dialog open={!!editingMeeting} onOpenChange={(open) => !open && setEditingMeeting(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Meeting</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <Label htmlFor="edit-title">Meeting Title <span className="text-destructive">*</span></Label>
-                <Input
-                  id="edit-title"
-                  placeholder="Meeting title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-start_time">Scheduled Time <span className="text-destructive">*</span></Label>
-                <Input
-                  id="edit-start_time"
-                  type="datetime-local"
-                  value={formData.start_time}
-                  onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea
-                  id="edit-description"
-                  placeholder="Description (optional)"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Meeting</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-title">Meeting Title <span className="text-destructive">*</span></Label>
+                        <Input
+                            id="edit-title"
+                            placeholder="Meeting title"
+                            value={formData.title || ""}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            required
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-date">Scheduled Date <span className="text-destructive">*</span></Label>
+                            <Input
+                                id="edit-date"
+                                type="date"
+                                value={formData.scheduled_date || ""}
+                                onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-time">Scheduled Time <span className="text-destructive">*</span></Label>
+                            <Input
+                                id="edit-time"
+                                type="time"
+                                value={formData.scheduled_time || ""}
+                                onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-description">Description</Label>
+                        <Textarea
+                            id="edit-description"
+                            placeholder="Description (optional)"
+                            value={formData.description || ""}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        />
+                    </div>
               <Button 
                 onClick={handleUpdate} 
                 className="w-full"
-                disabled={!formData.title || !formData.start_time}
+                disabled={!formData.title || !formData.scheduled_date || !formData.scheduled_time}
               >
                 Save Changes
               </Button>

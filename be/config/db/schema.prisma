@@ -188,7 +188,7 @@ model role_permission {
 
 model specbot_chat {
   id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title           String            @unique @db.VarChar(255)
+  title           String            @db.VarChar(255)
   created_at      DateTime?         @default(now()) @db.Timestamptz(6)
   updated_at      DateTime?         @default(now()) @db.Timestamptz(6)
   project_id      String            @db.Uuid
@@ -197,6 +197,8 @@ model specbot_chat {
   last_summarized_at DateTime?      @db.Timestamptz(6)
   last_extracted_at  DateTime?      @db.Timestamptz(6)
   specbot_message specbot_message[]
+
+  @@unique([project_id, title])
 }
 
 model specbot_message {
