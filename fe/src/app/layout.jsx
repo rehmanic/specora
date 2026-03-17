@@ -19,7 +19,7 @@ export const metadata = {
   title: "Specora",
   description: "AI-powered requirements engineering platform. Collaborate, communicate, and create better software specifications.",
   icons: {
-    icon: "/specora_favicon_circle.svg",
+    icon: "/specora-logo.svg",
   },
   keywords: ["requirements engineering", "AI", "collaboration", "software development"],
   authors: [{ name: "Specora Team" }],

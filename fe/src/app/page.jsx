@@ -12,7 +12,6 @@ import {
   ChevronRight,
   Code2,
   Layout,
-  Layers,
   List,
   MessageSquare,
   MoreHorizontal,
@@ -31,14 +30,19 @@ export default function Home() {
       <header className="bg-white w-full sticky top-0 z-50 border-b border-slate-100/50 backdrop-blur-md bg-white/80">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[oklch(0.15_0.02_285)] text-white rounded-lg flex items-center justify-center">
-              <Layers className="w-5 h-5" />
+          <Link href="/" className="flex items-center gap-3 group transition-all duration-300">
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-tr from-primary/40 to-emerald-400/40 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <img 
+                src="/specora-logo.svg" 
+                alt="Specora" 
+                className="w-10 h-10 relative z-10 drop-shadow-sm group-hover:scale-105 transition-transform duration-300" 
+              />
             </div>
-            <span className="text-lg font-bold tracking-tight text-slate-900">
+            <span className="text-xl font-bold tracking-tight text-slate-900 bg-clip-text">
               Specora
             </span>
-          </div>
+          </Link>
 
           {/* Nav */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500">
@@ -615,9 +619,13 @@ export default function Home() {
         <footer className="text-slate-400 text-sm">
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
             <div className="col-span-2">
-              <div className="flex items-center gap-2 mb-4 text-white">
-                <Layers className="w-5 h-5" />
-                <span className="text-lg font-semibold tracking-tight">
+              <div className="flex items-center gap-3 mb-6 group cursor-default">
+                <img 
+                  src="/specora-logo.svg" 
+                  alt="Specora Logo" 
+                  className="w-8 h-8 opacity-90 group-hover:opacity-100 transition-opacity" 
+                />
+                <span className="text-xl font-bold tracking-tight text-white">
                   Specora
                 </span>
               </div>
