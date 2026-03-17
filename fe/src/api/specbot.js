@@ -85,6 +85,45 @@ export async function deleteSpecbotChat(chatId) {
 }
 
 // ======================
+// Clear Specbot Chat
+// ======================
+export async function clearSpecbotChat(chatId) {
+    try {
+        const { token } = useAuthStore.getState();
+
+        const res = await fetch(`${API_BASE}/specbot/chat/${chatId}/clear`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        let data;
+        try {
+            data = await res.json();
+        } catch (parseError) {
+            throw new Error(
+                "Server response is invalid. Please try again later."
+            );
+        }
+
+        if (!res.ok) {
+            throw new Error(
+                data?.message ||
+                `Failed to clear chat${res.status ? ` (${res.status})` : ""}`
+            );
+        }
+
+        return data;
+    } catch (err) {
+        if (err instanceof Error) {
+            throw err;
+        }
+        throw new Error(
+            err?.message || "Network error. Please check your connection and try again."
+        );
+    }
+}
+
+// ======================
 // Get All Specbot Chats
 // ======================
 export async function getAllSpecbotChats(projectId) {

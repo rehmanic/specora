@@ -6,7 +6,9 @@ import {
     updateSpecbotChat,
     createMessage,
     getAllMessages,
+    clearSpecbotChat,
 } from "@/api/specbot";
+import useAuthStore from "@/store/authStore";
 
 const useSpecbotStore = create((set, get) => ({
     // State
@@ -24,7 +26,12 @@ const useSpecbotStore = create((set, get) => ({
         set({ loading: true, error: null });
         try {
             const data = await getAllSpecbotChats(projectId);
-            set({ chats: data.chats || [], loading: false });
+            const chat = data.chats && data.chats.length > 0 ? data.chats[0] : null;
+            set({ chats: data.chats || [], currentChat: chat, loading: false });
+            if (chat) {
+                const msgData = await getAllMessages(chat.id);
+                set({ messages: msgData.messages || [] });
+            }
         } catch (err) {
             set({ loading: false, error: err.message });
             throw err;
@@ -75,6 +82,21 @@ const useSpecbotStore = create((set, get) => ({
     },
 
     // ======================
+    // Update Chat Local Only
+    // ======================
+    updateChatLocal: (chatId, updateData) => {
+        set((state) => ({
+            chats: state.chats.map((chat) =>
+                chat.id === chatId ? { ...chat, ...updateData } : chat
+            ),
+            currentChat:
+                state.currentChat?.id === chatId
+                    ? { ...state.currentChat, ...updateData }
+                    : state.currentChat,
+        }));
+    },
+
+    // ======================
     // Delete Chat
     // ======================
     deleteChat: async (chatId) => {
@@ -88,6 +110,20 @@ const useSpecbotStore = create((set, get) => ({
             }));
         } catch (err) {
             set({ error: err.message });
+            throw err;
+        }
+    },
+
+    // ======================
+    // Clear Chat
+    // ======================
+    clearChat: async (chatId) => {
+        set({ loading: true, error: null });
+        try {
+            await clearSpecbotChat(chatId);
+            set({ messages: [], loading: false });
+        } catch (err) {
+            set({ loading: false, error: err.message });
             throw err;
         }
     },
@@ -135,8 +171,15 @@ const useSpecbotStore = create((set, get) => ({
             id: tempId,
             content: messageData.content,
             sender_type: "user",
+            sender_id: messageData.sender_id, // Added top-level sender_id
             created_at: new Date().toISOString(),
-            metadata: { sender_type: "user", sender_id: messageData.sender_id }
+            metadata: { sender_type: "user", sender_id: messageData.sender_id },
+            sender: {
+                id: messageData.sender_id,
+                username: useAuthStore.getState().user?.username,
+                display_name: useAuthStore.getState().user?.display_name,
+                profile_pic_url: useAuthStore.getState().user?.profile_pic_url
+            }
         };
 
         set((state) => ({
@@ -154,6 +197,8 @@ const useSpecbotStore = create((set, get) => ({
             }
 
             set((state) => ({
+                chats: state.chats.map(c => c.id === messageData.chat_id ? { ...c, updated_at: new Date().toISOString() } : c),
+                currentChat: state.currentChat?.id === messageData.chat_id ? { ...state.currentChat, updated_at: new Date().toISOString() } : state.currentChat,
                 messages: state.messages.map(m => m.id === tempId ? data.data : m).concat(data.botMessage ? [data.botMessage] : []),
                 sendingMessage: false,
             }));

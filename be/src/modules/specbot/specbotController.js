@@ -141,11 +141,9 @@ export const getAllSpecbotChats = async (req, res) => {
             return res.status(403).json({ message: "Access denied. You don't have access to this project." });
         }
 
-        const chats = await prisma.specbot_chat.findMany({
-            where: { project_id: projectId },
-            orderBy: {
-                created_at: 'desc',
-            },
+        // Find or Create Default Specbot Chat for this project
+        let chat = await prisma.specbot_chat.findFirst({
+            where: { project_id: projectId, title: "Default Specbot Chat" },
             include: {
                 project: {
                     select: {
@@ -156,13 +154,72 @@ export const getAllSpecbotChats = async (req, res) => {
             }
         });
 
+        if (!chat) {
+            chat = await prisma.specbot_chat.create({
+                data: {
+                    title: "Default Specbot Chat",
+                    project_id: projectId,
+                },
+                include: {
+                    project: {
+                        select: {
+                            name: true,
+                            slug: true
+                        }
+                    }
+                }
+            });
+        }
+
         res.status(200).json({
-            message: "Specbot Chats fetched successfully",
-            count: chats.length,
-            chats,
+            message: "Specbot Chat fetched successfully",
+            chats: [chat], // Keep as array for frontend compatibility if needed, but only 1
         });
     } catch (error) {
-        console.error("Error fetching Specbot Chats:", error);
+        console.error("Error fetching Specbot Chat:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const clearSpecbotMessages = async (req, res) => {
+    try {
+        const { chatId } = req.params;
+        const userId = req.user.userId;
+
+        const chat = await prisma.specbot_chat.findUnique({
+            where: { id: chatId },
+            include: {
+                project: {
+                    include: {
+                        project_member: {
+                            where: { member_id: userId },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!chat) {
+            return res.status(404).json({ message: "Chat not found" });
+        }
+
+        // Check access: user must be creator or project member
+        const isCreator = chat.project.created_by === userId;
+        const isMember = chat.project.project_member.length > 0;
+        if (!isCreator && !isMember) {
+            return res.status(403).json({ message: "Access denied. You can only clear chats in projects you're part of." });
+        }
+
+        await prisma.specbot_message.deleteMany({
+            where: { specbot_chat_id: chatId },
+        });
+
+        // Clear the cached Gemini chat session
+        clearChatSession(chatId);
+
+        res.status(200).json({ message: "Specbot Chat cleared successfully" });
+    } catch (error) {
+        console.error("Error clearing Specbot Chat:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -273,13 +330,30 @@ const createMessageCore = async ({ chat_type, chat_id, content, sender_type, sen
             throw new Error("Specbot chat not found");
         }
 
-        // Create specbot message (metadata can store sender info if needed)
+        // Update chat's updated_at
+        await prisma.specbot_chat.update({
+            where: { id: chat_id },
+            data: { updated_at: new Date() }
+        });
+
+        // Create specbot message
         return await prisma.specbot_message.create({
             data: {
                 specbot_chat_id: chat_id,
                 content,
                 sender_type,
-                metadata: sender_type === 'user' ? { sender_id } : {}, // Remove redundant data
+                metadata: sender_type === 'user' ? { sender_id } : {}, 
+                sender_id: sender_type === 'user' ? sender_id : null,
+            },
+            include: {
+                sender: {
+                    select: {
+                        id: true,
+                        username: true,
+                        display_name: true,
+                        profile_pic_url: true,
+                    },
+                },
             },
         });
     } else if (chat_type === 'group') {
@@ -351,6 +425,16 @@ export const getAllMessages = async (req, res) => {
         const messages = await prisma.specbot_message.findMany({
             where: { specbot_chat_id: chatId },
             orderBy: { created_at: 'asc' },
+            include: {
+                sender: {
+                    select: {
+                        id: true,
+                        username: true,
+                        display_name: true,
+                        profile_pic_url: true,
+                    }
+                }
+            }
         });
 
         res.status(200).json({
@@ -462,10 +546,35 @@ export const downloadSpecbotChat = async (req, res) => {
         const messages = await prisma.specbot_message.findMany({
             where: { specbot_chat_id: chatId },
             orderBy: { created_at: "asc" },
+            include: {
+                sender: {
+                    select: {
+                        id: true,
+                        username: true,
+                        display_name: true,
+                        profile_pic_url: true,
+                    },
+                },
+            },
         });
 
         const artifactPaths = buildArtifactPaths(chat.project_id, chatId);
         await ensureDirectory(artifactPaths.base);
+
+        // Check if we already have it up to date
+        if (chat.last_downloaded_at && chat.updated_at && chat.last_downloaded_at >= chat.updated_at) {
+            if (await fileExists(artifactPaths.chat)) {
+                return res.status(200).json({
+                    message: "Using existing stored chat",
+                    artifact: {
+                        type: "chat",
+                        path: artifactPaths.chat,
+                        exported_at: chat.last_downloaded_at,
+                    },
+                    downloaded: true,
+                });
+            }
+        }
 
         const exportedAt = new Date().toISOString();
         const payload = {
@@ -481,6 +590,12 @@ export const downloadSpecbotChat = async (req, res) => {
             JSON.stringify(payload, null, 2),
             "utf8"
         );
+
+        // Update last_downloaded_at
+        await prisma.specbot_chat.update({
+            where: { id: chatId },
+            data: { last_downloaded_at: new Date() }
+        });
 
         res.status(200).json({
             message: "Chat downloaded and stored on the server",
@@ -532,6 +647,22 @@ export const summarizeSpecbotChat = async (req, res) => {
         }
 
         const artifactPaths = buildArtifactPaths(chat.project_id, chatId);
+        
+        // Check if we already have it up to date
+        if (chat.last_summarized_at && chat.updated_at && chat.last_summarized_at >= chat.updated_at) {
+            if (await fileExists(artifactPaths.summary)) {
+                const storedSummaryRaw = await fs.promises.readFile(artifactPaths.summary, "utf8");
+                return res.status(200).json({
+                    message: "Using existing summary",
+                    artifact: {
+                        type: "summary",
+                        path: artifactPaths.summary,
+                        data: JSON.parse(storedSummaryRaw),
+                    },
+                });
+            }
+        }
+
         if (!(await fileExists(artifactPaths.chat))) {
             return res.status(400).json({
                 message: "Please download the chat before summarizing.",
@@ -574,6 +705,12 @@ export const summarizeSpecbotChat = async (req, res) => {
             JSON.stringify(summaryPayload, null, 2),
             "utf8"
         );
+
+        // Update last_summarized_at
+        await prisma.specbot_chat.update({
+            where: { id: chatId },
+            data: { last_summarized_at: new Date() }
+        });
 
         res.status(200).json({
             message: "Summary generated and stored",
@@ -625,6 +762,22 @@ export const extractRequirementsFromChat = async (req, res) => {
         }
 
         const artifactPaths = buildArtifactPaths(chat.project_id, chatId);
+
+        // Check if we already have it up to date
+        if (chat.last_extracted_at && chat.updated_at && chat.last_extracted_at >= chat.updated_at) {
+            if (await fileExists(artifactPaths.requirements)) {
+                const storedReqsRaw = await fs.promises.readFile(artifactPaths.requirements, "utf8");
+                return res.status(200).json({
+                    message: "Using existing requirements",
+                    artifact: {
+                        type: "requirements",
+                        path: artifactPaths.requirements,
+                        data: JSON.parse(storedReqsRaw),
+                    },
+                });
+            }
+        }
+
         if (!(await fileExists(artifactPaths.chat))) {
             return res.status(400).json({
                 message: "Please download the chat before extracting requirements.",
@@ -701,6 +854,12 @@ Do NOT wrap the output in markdown code blocks. Return ONLY the raw JSON string.
             JSON.stringify(requirementsPayload, null, 2),
             "utf8"
         );
+
+        // Update last_extracted_at
+        await prisma.specbot_chat.update({
+            where: { id: chatId },
+            data: { last_extracted_at: new Date() }
+        });
 
         res.status(200).json({
             message: "Requirements extracted and stored",

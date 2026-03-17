@@ -129,6 +129,28 @@ export default function MeetingsPage() {
     router.push(`/projects/${projectId}/meetings/${meetingId}`);
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "—";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return "—";
+    return new Date(dateString).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const hasTranscript = (meeting) => {
+    if (!meeting) return false;
+    return !!(meeting.transcript || (meeting.transcripts && meeting.transcripts.length > 0));
+  };
+
   if (error) return <div className="p-6 text-destructive">Failed to load meetings</div>;
   if (!meetings) return <div className="p-6 text-muted-foreground">Loading...</div>;
 

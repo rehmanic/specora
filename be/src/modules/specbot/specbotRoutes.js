@@ -9,6 +9,7 @@ import {
   downloadSpecbotChat,
   summarizeSpecbotChat,
   extractRequirementsFromChat,
+  clearSpecbotMessages,
 } from './specbotController.js';
 import { requireClient, requireRoles } from '../../middlewares/common/roleCheck.js';
 import { validateChatInput, validateMessageInput } from '../../middlewares/specbot/inputValidation.js';
@@ -21,6 +22,7 @@ router.use(verifyToken);
 
 router.post('/chat/create', requireFields(["title"]), requireClient, validateChatInput, createSpecbotChat);
 router.delete('/chat/delete/:chatId', requireClient, deleteSpecbotChat);
+router.delete('/chat/:chatId/clear', requireClient, clearSpecbotMessages);
 router.get('/chat/all', requireRoles("client", "manager", "requirements_engineer"), getAllSpecbotChats);
 router.put('/chat/update/:chatId', requireFields(["title"]), requireClient, validateChatInput, updateSpecbotChat);
 router.post('/message/create', requireFields(["chat_type", "chat_id", "content", "sender_type", "sender_id"]), requireClient, validateMessageInput, createMessage);

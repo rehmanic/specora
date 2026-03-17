@@ -73,24 +73,14 @@ export default function ChatLayout({
   const canAnalyze = isManager || isReqEngineer;
   const showAttachments = !isClient; // "Remove the file attachment option from the chat" for Client
 
-  useEffect(() => {
-    if (!canAccess) return;
-    if (selectedProject?.id) {
-      fetchChats(selectedProject.id);
-      clearCurrentChat();
-      clearError();
-      setDownloadedChatIds(new Set());
-    }
-  }, [
-    canAccess,
-    selectedProject?.id,
-    fetchChats,
-    clearCurrentChat,
-    clearError,
-  ]);
 
   const downloaded = useMemo(
-    () => (currentChat ? downloadedChatIds.has(currentChat.id) : false),
+    () => {
+      if (!currentChat) return false;
+      const isUpToDate = currentChat.last_downloaded_at && currentChat.updated_at && 
+                        (new Date(currentChat.last_downloaded_at) >= new Date(currentChat.updated_at));
+      return isUpToDate || downloadedChatIds.has(currentChat.id);
+    },
     [currentChat, downloadedChatIds]
   );
 

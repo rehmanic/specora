@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, MessageSquare, Trash2, ChevronLeft, ChevronRight, Loader2, Edit2 } from "lucide-react";
+import { Plus, MessageSquare, Trash2, ChevronLeft, ChevronRight, Loader2, Edit2, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -43,11 +43,12 @@ export default function LeftSidebar({
     >
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-border">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <span className="font-semibold font-display text-sm">SpecBot</span>
+        <div className={cn("flex items-center gap-2", collapsed && "w-full justify-center")}>
+          <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+            <Bot className="h-5 w-5" />
           </div>
-        )}
+          {!collapsed && <span className="font-semibold text-sm tracking-tight">SpecBot</span>}
+        </div>
         <Button
           variant="ghost"
           size="icon"

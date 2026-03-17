@@ -55,7 +55,9 @@ export default function SpecbotTableView({
             </TableRow>
           ) : (
             chats.map((chat) => {
-              const isDownloaded = downloadedChatIds.has(chat.id);
+              const isUpToDate = chat.last_downloaded_at && chat.updated_at && 
+                                 (new Date(chat.last_downloaded_at) >= new Date(chat.updated_at));
+              const isDownloaded = isUpToDate || downloadedChatIds.has(chat.id);
               
               return (
                 <TableRow key={chat.id} className="group hover:bg-muted/5 transition-colors">
@@ -66,7 +68,6 @@ export default function SpecbotTableView({
                       </div>
                       <div>
                         <p className="font-semibold text-sm leading-none">{chat.title || "Untitled Chat"}</p>
-                        <p className="text-[11px] text-muted-foreground mt-1">Chat ID: {chat.id.substring(0, 8)}...</p>
                       </div>
                     </div>
                   </TableCell>
@@ -98,7 +99,7 @@ export default function SpecbotTableView({
                               className="h-8 w-8 text-primary hover:bg-primary/10"
                               onClick={() => onViewChat(chat)}
                             >
-                              <ChevronRight className="h-4 w-4" />
+                              <MessageSquare className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="bottom">View Chat</TooltipContent>

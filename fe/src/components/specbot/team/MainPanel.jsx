@@ -16,6 +16,7 @@ export default function MainPanel({
   onSummarize,
   onExtract,
   actionsDisabled = false,
+  downloaded = false,
   showAttachments = false,
 }) {
   const [menuOpenId, setMenuOpenId] = useState(null);
@@ -130,8 +131,11 @@ export default function MainPanel({
                 text={msg.content}
                 timestamp={formattedTime}
                 isSender={msg.sender_type === "user"}
-                name={msg.sender_type === "user" ? "User" : "SpecBot"}
-                avatarUrl={null}
+                name={
+                  msg.sender_type === "bot" ? "SpecBot" : 
+                  (msg.sender?.display_name || msg.sender?.username || "Client")
+                }
+                avatarUrl={msg.sender_type === "user" ? msg.sender?.profile_pic_url : null}
                 metadata={msg.metadata}
                 allowedActions={["copy"]}
                 menuOpenId={menuOpenId}

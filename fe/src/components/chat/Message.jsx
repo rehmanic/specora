@@ -21,7 +21,7 @@ export function Message({
   name,
   avatarUrl,
   menuOpenId,
-  setMenuOpenId,
+  setMenuOpenId = () => {},
   onDelete,
   metadata,
   allowedActions = ["copy", "delete", "reply"]
@@ -188,7 +188,7 @@ export function Message({
             >
               <DropdownMenu
                 open={menuOpenId === id}
-                onOpenChange={(open) => setMenuOpenId(open ? id : null)}
+                onOpenChange={(open) => typeof setMenuOpenId === 'function' && setMenuOpenId(open ? id : null)}
               >
                 <DropdownMenuTrigger asChild>
                   <Button

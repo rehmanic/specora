@@ -146,7 +146,7 @@ export function ExtractedRequirementsModal({
           </label>
         </div>
 
-        <ScrollArea className="flex-1 -mx-6 px-6 relative">
+        <div className="flex-1 overflow-y-auto px-6 -mx-6 min-h-0">
           <div className="space-y-4 pb-4">
             {localReqs.map((req) => {
               const isEditing = editingId === req._tempId;
@@ -252,7 +252,7 @@ export function ExtractedRequirementsModal({
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="shrink-0 pt-4">
           <Button variant="outline" onClick={onClose} disabled={isImporting}>
