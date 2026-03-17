@@ -1,5 +1,5 @@
+import Link from "next/link";
 import Logo from "@/components/common/Logo";
-import AuthForm from "@/components/auth/AuthForm";
 import { Layers } from "lucide-react";
 
 export default function Signup() {
@@ -83,25 +83,25 @@ export default function Signup() {
             <Logo size="lg" />
           </div>
 
-          <AuthForm variant="signup" />
-
-          {/* Additional info */}
-          <p className="mt-8 text-center text-xs text-slate-400">
-            By signing up, you agree to our{" "}
-            <a
-              href="#"
-              className="underline underline-offset-4 hover:text-slate-900 transition-colors"
-            >
-              Terms of Service
-            </a>{" "}
-            and{" "}
-            <a
-              href="#"
-              className="underline underline-offset-4 hover:text-slate-900 transition-colors"
-            >
-              Privacy Policy
-            </a>
-          </p>
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-xl p-8 text-center space-y-6 animate-fade-in">
+             <div className="mx-auto w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center">
+                <Layers className="w-8 h-8 text-amber-500" />
+             </div>
+             <div className="space-y-2">
+                <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">
+                  Registration Frozen
+                </h2>
+                <p className="text-sm text-slate-500 max-w-[280px] mx-auto">
+                  We&apos;re currently not accepting new sign-ups. Please contact an administrator if you require access.
+                </p>
+             </div>
+             <Link
+                href="/login"
+                className="inline-flex w-full h-11 items-center justify-center font-bold text-sm rounded-full bg-primary text-primary-foreground hover:brightness-110 transition-all"
+             >
+                Return to Login
+             </Link>
+          </div>
         </div>
       </div>
     </div>

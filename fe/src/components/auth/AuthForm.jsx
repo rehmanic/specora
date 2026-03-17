@@ -226,42 +226,22 @@ export default function AuthForm({ className, variant = "login", ...props }) {
               )}
             </button>
 
-            {/* Divider */}
-            <div className="relative my-2">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-400">
-                  or
-                </span>
-              </div>
-            </div>
-
-            {/* Toggle between login/signup */}
-            <p className="text-center text-sm text-slate-500">
-              {isLogin ? (
-                <>
-                  Don&apos;t have an account?{" "}
-                  <Link
-                    href="/signup"
-                    className="font-semibold text-primary hover:text-primary/80 transition-colors"
-                  >
-                    Sign up
-                  </Link>
-                </>
-              ) : (
-                <>
-                  Already have an account?{" "}
-                  <Link
-                    href="/login"
-                    className="font-semibold text-primary hover:text-primary/80 transition-colors"
-                  >
-                    Sign in
-                  </Link>
-                </>
-              )}
-            </p>
+            {/* Divider element and registration link removed as it's frozen */}
+            {isLogin ? (
+              <p className="text-center text-xs text-slate-400 mt-2">
+                Need an account? Contact an administrator.
+              </p>
+            ) : (
+              <p className="text-center text-sm text-slate-500">
+                Already have an account?{" "}
+                <Link
+                  href="/login"
+                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                >
+                  Sign in
+                </Link>
+              </p>
+            )}
           </div>
         </form>
       </div>
