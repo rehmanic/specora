@@ -1,89 +1,74 @@
 "use client";
 
 import React from "react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { 
-  Download, 
-  FileText, 
-  ListChecks, 
-  MessageSquare, 
-  Calendar,
-  ChevronRight,
-  Bot
-} from "lucide-react";
+import { Download, FileText, ListChecks, MessageSquare, Calendar, ChevronRight, Bot } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-export default function SpecbotTableView({ 
-  chats = [], 
-  onAction, 
+export default function SpecbotTableView({
+  chats = [],
+  onAction,
   onViewChat,
   actionLoading = false,
-  downloadedChatIds = new Set()
+  downloadedChatIds = new Set(),
 }) {
   return (
-    <div className="rounded-xl border bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden transition-all duration-300">
+    <div className="bg-card/50 overflow-hidden rounded-xl border shadow-sm backdrop-blur-sm transition-all duration-300">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/30 hover:bg-muted/30">
-            <TableHead className="w-[40%] px-6 py-4 font-bold text-foreground">Chat Title</TableHead>
-            <TableHead className="px-6 py-4 font-bold text-foreground">Created Date</TableHead>
-            <TableHead className="px-6 py-4 font-bold text-foreground">Status</TableHead>
-            <TableHead className="px-6 py-4 text-right font-bold text-foreground">Actions</TableHead>
+            <TableHead className="text-foreground w-[40%] px-6 py-4 font-bold">Chat Title</TableHead>
+            <TableHead className="text-foreground px-6 py-4 font-bold">Created Date</TableHead>
+            <TableHead className="text-foreground px-6 py-4 font-bold">Status</TableHead>
+            <TableHead className="text-foreground px-6 py-4 text-right font-bold">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {chats.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="h-32 text-center text-muted-foreground italic">
+              <TableCell colSpan={4} className="text-muted-foreground h-32 text-center italic">
                 No chats found for this project.
               </TableCell>
             </TableRow>
           ) : (
             chats.map((chat) => {
-              const isUpToDate = chat.last_downloaded_at && chat.updated_at && 
-                                 (new Date(chat.last_downloaded_at) >= new Date(chat.updated_at));
+              const isUpToDate =
+                chat.last_downloaded_at &&
+                chat.updated_at &&
+                new Date(chat.last_downloaded_at) >= new Date(chat.updated_at);
               const isDownloaded = isUpToDate || downloadedChatIds.has(chat.id);
-              
+
               return (
                 <TableRow key={chat.id} className="group hover:bg-muted/5 transition-colors">
                   <TableCell className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <div className="bg-primary/10 text-primary flex h-9 w-9 items-center justify-center rounded-lg">
                         <MessageSquare className="h-4 w-4" />
                       </div>
                       <div>
-                        <p className="font-semibold text-sm leading-none">{chat.title || "Untitled Chat"}</p>
+                        <p className="text-sm leading-none font-semibold">{chat.title || "Untitled Chat"}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="text-muted-foreground flex items-center gap-2 text-sm">
                       <Calendar className="h-3.5 w-3.5" />
                       {chat.created_at ? format(new Date(chat.created_at), "MMM d, yyyy") : "Unknown"}
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     {isDownloaded ? (
-                      <Badge variant="success" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] h-5 px-1.5 uppercase tracking-wider font-bold">
+                      <Badge
+                        variant="success"
+                        className="h-5 border-emerald-500/20 bg-emerald-500/10 px-1.5 text-[10px] font-bold tracking-wider text-emerald-500 uppercase"
+                      >
                         Analyzable
                       </Badge>
                     ) : (
-                        <Badge variant="secondary" className="text-[10px] h-5 px-1.5 uppercase tracking-wider font-bold">
+                      <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-bold tracking-wider uppercase">
                         Chat Only
                       </Badge>
                     )}
@@ -96,7 +81,7 @@ export default function SpecbotTableView({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-primary hover:bg-primary/10"
+                              className="text-primary hover:bg-primary/10 h-8 w-8"
                               onClick={() => onViewChat(chat)}
                             >
                               <MessageSquare className="h-4 w-4" />
@@ -105,14 +90,14 @@ export default function SpecbotTableView({
                           <TooltipContent side="bottom">View Chat</TooltipContent>
                         </Tooltip>
 
-                        <div className="w-px h-4 bg-border/50 mx-1" />
+                        <div className="bg-border/50 mx-1 h-4 w-px" />
 
                         <Tooltip delayDuration={100}>
                           <TooltipTrigger asChild>
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8 hover:bg-accent disabled:opacity-50"
+                              className="hover:bg-accent h-8 w-8 disabled:opacity-50"
                               onClick={() => onAction("download", chat)}
                               disabled={actionLoading}
                             >
@@ -127,7 +112,7 @@ export default function SpecbotTableView({
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8 hover:bg-accent disabled:opacity-50"
+                              className="hover:bg-accent h-8 w-8 disabled:opacity-50"
                               onClick={() => onAction("summarize", chat)}
                               disabled={actionLoading || !isDownloaded}
                             >
@@ -142,7 +127,7 @@ export default function SpecbotTableView({
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8 hover:bg-accent disabled:opacity-50"
+                              className="hover:bg-accent h-8 w-8 disabled:opacity-50"
                               onClick={() => onAction("extract", chat)}
                               disabled={actionLoading || !isDownloaded}
                             >

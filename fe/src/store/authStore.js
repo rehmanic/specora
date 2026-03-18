@@ -23,8 +23,7 @@ const useAuthStore = create(
           });
           return data.user;
         } catch (err) {
-          const errorMessage =
-            err?.message || "An unexpected error occurred. Please try again.";
+          const errorMessage = err?.message || "An unexpected error occurred. Please try again.";
           set({ loading: false, error: errorMessage });
           throw err;
         }
@@ -41,8 +40,7 @@ const useAuthStore = create(
           });
           return data.user;
         } catch (err) {
-          const errorMessage =
-            err?.message || "An unexpected error occurred. Please try again.";
+          const errorMessage = err?.message || "An unexpected error occurred. Please try again.";
           set({ loading: false, error: errorMessage });
           throw err;
         }

@@ -18,16 +18,11 @@ export async function getAllProjects(token) {
     try {
       data = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        data?.message ||
-        `Failed to fetch projects${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(data?.message || `Failed to fetch projects${res.status ? ` (${res.status})` : ""}`);
     }
 
     return data;
@@ -35,9 +30,7 @@ export async function getAllProjects(token) {
     if (err instanceof Error) {
       throw err;
     }
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
 
@@ -57,16 +50,11 @@ export async function getUserProjects(userId) {
     try {
       responseData = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        responseData?.message ||
-        `Fetching user projects failed${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(responseData?.message || `Fetching user projects failed${res.status ? ` (${res.status})` : ""}`);
     }
 
     return responseData;
@@ -74,9 +62,7 @@ export async function getUserProjects(userId) {
     if (err instanceof Error) {
       throw err;
     }
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
 
@@ -100,16 +86,11 @@ export async function createProject(projectData) {
     try {
       data = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        data?.message ||
-        `Failed to create project${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(data?.message || `Failed to create project${res.status ? ` (${res.status})` : ""}`);
     }
 
     return data;
@@ -117,9 +98,7 @@ export async function createProject(projectData) {
     if (err instanceof Error) {
       throw err;
     }
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
 
@@ -143,16 +122,11 @@ export async function updateProject(projectId, updateData) {
     try {
       data = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        data?.message ||
-        `Failed to update project${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(data?.message || `Failed to update project${res.status ? ` (${res.status})` : ""}`);
     }
 
     return data;
@@ -160,9 +134,7 @@ export async function updateProject(projectId, updateData) {
     if (err instanceof Error) {
       throw err;
     }
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
 
@@ -182,16 +154,11 @@ export async function deleteProject(projectId) {
     try {
       data = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        data?.message ||
-        `Failed to delete project${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(data?.message || `Failed to delete project${res.status ? ` (${res.status})` : ""}`);
     }
 
     return data;
@@ -199,8 +166,6 @@ export async function deleteProject(projectId) {
     if (err instanceof Error) {
       throw err;
     }
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }

@@ -26,18 +26,21 @@ async function request(url, options = {}) {
 export const getAllRolesRequest = () => request("/rbac/roles");
 export const getRoleByIdRequest = (id) => request(`/rbac/roles/${id}`);
 export const createRoleRequest = (data) => request("/rbac/roles", { method: "POST", body: JSON.stringify(data) });
-export const updateRoleRequest = (id, data) => request(`/rbac/roles/${id}`, { method: "PUT", body: JSON.stringify(data) });
+export const updateRoleRequest = (id, data) =>
+  request(`/rbac/roles/${id}`, { method: "PUT", body: JSON.stringify(data) });
 export const deleteRoleRequest = (id) => request(`/rbac/roles/${id}`, { method: "DELETE" });
 
 // PERMISSIONS
 export const getAllPermissionsRequest = () => request("/rbac/permissions");
 export const getPermissionByIdRequest = (id) => request(`/rbac/permissions/${id}`);
-export const createPermissionRequest = (data) => request("/rbac/permissions", { method: "POST", body: JSON.stringify(data) });
-export const updatePermissionRequest = (id, data) => request(`/rbac/permissions/${id}`, { method: "PUT", body: JSON.stringify(data) });
+export const createPermissionRequest = (data) =>
+  request("/rbac/permissions", { method: "POST", body: JSON.stringify(data) });
+export const updatePermissionRequest = (id, data) =>
+  request(`/rbac/permissions/${id}`, { method: "PUT", body: JSON.stringify(data) });
 export const deletePermissionRequest = (id) => request(`/rbac/permissions/${id}`, { method: "DELETE" });
 
 // ASSIGNMENTS
-export const assignPermissionToRoleRequest = (roleId, permissionId) => 
+export const assignPermissionToRoleRequest = (roleId, permissionId) =>
   request(`/rbac/roles/${roleId}/permissions`, { method: "POST", body: JSON.stringify({ permissionId }) });
-export const removePermissionFromRoleRequest = (roleId, permissionId) => 
+export const removePermissionFromRoleRequest = (roleId, permissionId) =>
   request(`/rbac/roles/${roleId}/permissions/${permissionId}`, { method: "DELETE" });

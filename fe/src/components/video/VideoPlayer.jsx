@@ -35,12 +35,9 @@ export default function VideoPlayer({ src, poster }) {
   }, [src, poster]);
 
   return (
-    <div className="w-full rounded-lg overflow-hidden bg-black">
+    <div className="w-full overflow-hidden rounded-lg bg-black">
       <div data-vjs-player>
-        <video
-          ref={videoRef}
-          className="video-js vjs-big-play-centered vjs-theme-city"
-        />
+        <video ref={videoRef} className="video-js vjs-big-play-centered vjs-theme-city" />
       </div>
     </div>
   );

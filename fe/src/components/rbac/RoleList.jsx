@@ -6,14 +6,7 @@ import { Button } from "@/components/ui/button";
 import useRbacStore from "@/store/rbacStore";
 import TablePagination from "@/components/common/TablePagination";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function RoleList({ onEdit, searchQuery = "" }) {
@@ -23,15 +16,10 @@ export function RoleList({ onEdit, searchQuery = "" }) {
   const [roleToDelete, setRoleToDelete] = useState(null);
   const pageSize = 5;
 
-  const filteredRoles = roles.filter((role) =>
-    role.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRoles = roles.filter((role) => role.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const totalPages = Math.ceil(filteredRoles.length / pageSize);
-  const paginatedRoles = filteredRoles.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const paginatedRoles = filteredRoles.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Reset to first page if search query changes
   useEffect(() => {
@@ -52,11 +40,11 @@ export function RoleList({ onEdit, searchQuery = "" }) {
 
   return (
     <div className="w-full">
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="border-border bg-card overflow-hidden rounded-xl border">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent bg-muted/30">
+              <TableRow className="bg-muted/30 hover:bg-transparent">
                 <TableHead className="w-[300px] text-xs font-bold uppercase">Role Name</TableHead>
                 <TableHead className="text-center text-xs font-bold uppercase">Capabilities</TableHead>
                 <TableHead className="w-[100px] text-right text-xs font-bold uppercase">Actions</TableHead>
@@ -64,18 +52,15 @@ export function RoleList({ onEdit, searchQuery = "" }) {
             </TableHeader>
             <TableBody>
               {paginatedRoles.map((role) => (
-                <TableRow
-                  key={role.id}
-                  className="animate-fade-in hover:bg-muted/20 transition-colors"
-                >
+                <TableRow key={role.id} className="animate-fade-in hover:bg-muted/20 transition-colors">
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                       <Shield className="h-4 w-4 text-primary shrink-0" />
-                       <span className="text-sm font-semibold">{role.name}</span>
+                      <Shield className="text-primary h-4 w-4 shrink-0" />
+                      <span className="text-sm font-semibold">{role.name}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-center font-medium">
-                    <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground flex items-center justify-center gap-1.5 text-xs">
                       <ShieldCheck className="h-3.5 w-3.5" />
                       {role.permissions?.length || 0} permissions
                     </div>
@@ -88,7 +73,7 @@ export function RoleList({ onEdit, searchQuery = "" }) {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors"
+                              className="text-muted-foreground hover:text-primary h-8 w-8 transition-colors"
                               onClick={() => onEdit(role)}
                             >
                               <Pencil className="h-4 w-4" />
@@ -102,7 +87,7 @@ export function RoleList({ onEdit, searchQuery = "" }) {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                              className="text-muted-foreground hover:text-destructive h-8 w-8 transition-colors"
                               onClick={() => setRoleToDelete(role)}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -117,9 +102,9 @@ export function RoleList({ onEdit, searchQuery = "" }) {
               ))}
               {filteredRoles.length === 0 && !loading && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-20 text-muted-foreground">
+                  <TableCell colSpan={3} className="text-muted-foreground py-20 text-center">
                     <div className="flex flex-col items-center justify-center opacity-40">
-                      <Key className="h-12 w-12 mb-4" />
+                      <Key className="mb-4 h-12 w-12" />
                       <p className="text-sm font-medium">No system roles detected.</p>
                     </div>
                   </TableCell>
@@ -127,9 +112,9 @@ export function RoleList({ onEdit, searchQuery = "" }) {
               )}
               {loading && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-20">
-                    <div className="flex flex-col items-center justify-center animate-pulse text-muted-foreground">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                  <TableCell colSpan={3} className="py-20 text-center">
+                    <div className="text-muted-foreground flex animate-pulse flex-col items-center justify-center">
+                      <Loader2 className="text-primary mb-2 h-8 w-8 animate-spin" />
                       <p className="text-sm font-medium">Syncing security roles...</p>
                     </div>
                   </TableCell>
@@ -158,8 +143,7 @@ export function RoleList({ onEdit, searchQuery = "" }) {
         description={
           <span>
             Are you sure you want to delete the role{" "}
-            <span className="font-semibold text-foreground">"{roleToDelete?.name}"</span>? 
-            This action cannot be undone.
+            <span className="text-foreground font-semibold">"{roleToDelete?.name}"</span>? This action cannot be undone.
           </span>
         }
         confirmText="Delete"

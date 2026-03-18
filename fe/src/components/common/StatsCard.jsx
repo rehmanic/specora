@@ -12,13 +12,13 @@ export function StatsCard({ icon: Icon, label, value, color = "primary" }) {
   };
 
   return (
-    <div className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border hover-lift cursor-default">
-      <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+    <div className="bg-card border-border hover-lift flex cursor-default items-center gap-4 rounded-xl border p-4">
+      <div className={`rounded-lg p-3 ${colorClasses[color]}`}>
         <Icon className="h-5 w-5" />
       </div>
       <div>
-        <p className="text-2xl font-bold font-display">{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="font-display text-2xl font-bold">{value}</p>
+        <p className="text-muted-foreground text-sm">{label}</p>
       </div>
     </div>
   );

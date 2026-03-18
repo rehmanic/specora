@@ -37,9 +37,8 @@ export default function RbacPage() {
 
   return (
     <ProtectedRoute allowedRoles={["manager"]}>
-      <div className="min-h-screen bg-background p-6 lg:p-8">
-        <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
-
+      <div className="bg-background min-h-screen p-6 lg:p-8">
+        <div className="animate-fade-in mx-auto max-w-6xl space-y-8">
           <PageBanner
             title="RBAC Management"
             description="Manage system roles, permissions, and access control policies."
@@ -47,19 +46,9 @@ export default function RbacPage() {
           />
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <StatsCard
-              icon={Shield}
-              label="Total Roles"
-              value={roles.length}
-              color="primary"
-            />
-            <StatsCard
-              icon={Key}
-              label="Total Permissions"
-              value={permissions.length}
-              color="accent"
-            />
+          <div className="animate-fade-in grid grid-cols-1 gap-4 md:grid-cols-2" style={{ animationDelay: "0.1s" }}>
+            <StatsCard icon={Shield} label="Total Roles" value={roles.length} color="primary" />
+            <StatsCard icon={Key} label="Total Permissions" value={permissions.length} color="accent" />
           </div>
 
           <SearchCreateHeader
@@ -71,17 +60,16 @@ export default function RbacPage() {
           />
 
           {/* Table Container */}
-          <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div
+            className="border-border bg-card animate-fade-in overflow-hidden rounded-xl border shadow-sm"
+            style={{ animationDelay: "0.2s" }}
+          >
             <RoleList onEdit={handleEdit} searchQuery={searchQuery} />
           </div>
         </div>
       </div>
 
-      <RoleDialog
-        role={selectedRole}
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-      />
+      <RoleDialog role={selectedRole} open={isDialogOpen} onOpenChange={setIsDialogOpen} />
     </ProtectedRoute>
   );
 }

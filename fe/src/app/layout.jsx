@@ -17,7 +17,8 @@ const outfit = Outfit({
 
 export const metadata = {
   title: "Specora",
-  description: "AI-powered requirements engineering platform. Collaborate, communicate, and create better software specifications.",
+  description:
+    "AI-powered requirements engineering platform. Collaborate, communicate, and create better software specifications.",
   icons: {
     icon: "/specora-logo.svg",
   },
@@ -33,16 +34,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} ${outfit.variable} antialiased`}
-        style={{ fontFamily: "var(--font-sans)" }}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+      <body className={`${inter.variable} ${outfit.variable} antialiased`} style={{ fontFamily: "var(--font-sans)" }}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
           <Toaster
             richColors
@@ -59,4 +52,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-

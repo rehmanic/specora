@@ -7,8 +7,8 @@ import StatItem from "./StatItem";
  */
 export default function Stats() {
   return (
-    <section className="bg-[oklch(0.15_0.02_285)] py-20 px-6 mt-64 md:mt-80 lg:mt-96 hero-grid">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-16 gap-x-8 md:gap-x-16 justify-items-center items-center">
+    <section className="hero-grid mt-64 bg-[oklch(0.15_0.02_285)] px-6 py-20 md:mt-80 lg:mt-96">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center justify-items-center gap-x-8 gap-y-16 sm:grid-cols-2 md:gap-x-16 lg:grid-cols-4">
         <StatItem value="10x Faster" label="Time to Specification" />
         <StatItem value="99.2%" label="AI Consistency" />
         <StatItem value="1.5M+" label="Reqs Extracted" />

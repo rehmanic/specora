@@ -5,9 +5,5 @@ export const metadata = {
 };
 
 export default function PublicLayout({ children }) {
-  return (
-    <div className="min-h-screen w-full">
-      {children}
-    </div>
-  );
+  return <div className="min-h-screen w-full">{children}</div>;
 }

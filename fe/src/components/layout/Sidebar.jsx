@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Users,
-  ShieldCheck
-} from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck } from "lucide-react";
 import { ProjectHeader } from "./ProjectHeader";
 import { UserMenu } from "./UserMenu";
 import { ProjectNavigation } from "./ProjectNavigation";
@@ -74,7 +70,6 @@ export function Sidebar({ ...props }) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

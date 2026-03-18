@@ -34,19 +34,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import {
   getRequirements,
@@ -167,17 +156,12 @@ export default function Page() {
     total: requirements.length,
     approved: requirements.filter((r) => r.status === "approved").length,
     pending: requirements.filter((r) => r.status === "pending").length,
-    drafts: requirements.filter(
-      (r) => r.status === "draft" || r.status === "rejected"
-    ).length,
+    drafts: requirements.filter((r) => r.status === "draft" || r.status === "rejected").length,
   };
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(requirements.length / PAGE_SIZE));
-  const paginatedRequirements = requirements.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
+  const paginatedRequirements = requirements.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   // ---- Export (Standard Format) ----
   const handleExport = (format) => {
@@ -230,9 +214,7 @@ export default function Page() {
       };
       const rows = [];
       requirements.forEach((r) => flattenCsv(r, rows));
-      content = [headers.join(","), ...rows.map((row) => row.join(","))].join(
-        "\n"
-      );
+      content = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
       fileName += ".csv";
       type = "text/csv";
     }
@@ -285,20 +267,22 @@ export default function Page() {
       } else {
         // CSV parsing
         const text = await file.text();
-        const lines = text.split(/\r?\n/).filter(l => l.trim());
+        const lines = text.split(/\r?\n/).filter((l) => l.trim());
         if (lines.length < 2) {
           toast.error("CSV file is empty or missing headers.");
           return;
         }
 
-        const headers = lines[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.trim().toLowerCase().replace(/^"|"$/g, ''));
-        reqData = lines.slice(1).map(line => {
+        const headers = lines[0]
+          .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+          .map((h) => h.trim().toLowerCase().replace(/^"|"$/g, ""));
+        reqData = lines.slice(1).map((line) => {
           const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
           const obj = {};
           headers.forEach((h, idx) => {
             let v = values[idx]?.trim() || "";
-            v = v.replace(/^"|"$/g, '').replace(/""/g, '"'); // Cleanup quotes
-            if (h === "tags") obj[h] = v ? v.split(/[;|]/).map(t => t.trim()) : [];
+            v = v.replace(/^"|"$/g, "").replace(/""/g, '"'); // Cleanup quotes
+            if (h === "tags") obj[h] = v ? v.split(/[;|]/).map((t) => t.trim()) : [];
             else obj[h] = v;
           });
           return obj;
@@ -405,42 +389,30 @@ export default function Page() {
 
   return (
     <ProtectedRoute>
-      <main className="w-full p-6 lg:p-8 overflow-y-auto h-full">
-        <div className="max-w-6xl mx-auto space-y-8 pb-20">
+      <main className="h-full w-full overflow-y-auto p-6 lg:p-8">
+        <div className="mx-auto max-w-6xl space-y-8 pb-20">
           {/* Hidden file input for import */}
           <input
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept={importType === 'json' ? '.json' : importType === 'csv' ? '.csv' : '.json,.csv'}
+            accept={importType === "json" ? ".json" : importType === "csv" ? ".csv" : ".json,.csv"}
             className="hidden"
           />
 
-          <div className="flex justify-end animate-fade-in">
-            <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
+          <div className="animate-fade-in flex justify-end">
+            <div className="mt-2 flex flex-wrap items-center gap-2 md:mt-0">
               {/* Import */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    disabled={importLoading}
-                  >
-                    {importLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4" />
-                    )}
+                  <Button variant="outline" className="gap-2" disabled={importLoading}>
+                    {importLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                     Import
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleImportClick("json")}>
-                    Import JSON
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleImportClick("csv")}>
-                    Import CSV
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleImportClick("json")}>Import JSON</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleImportClick("csv")}>Import CSV</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -452,20 +424,12 @@ export default function Page() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleExport("json")}>
-                    As JSON
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport("csv")}>
-                    As CSV
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport("json")}>As JSON</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport("csv")}>As CSV</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={() => setGraphOpen(true)}
-              >
+              <Button variant="outline" className="gap-2" onClick={() => setGraphOpen(true)}>
                 <GitBranch className="h-4 w-4" /> Graph View
               </Button>
             </div>
@@ -479,34 +443,11 @@ export default function Page() {
           />
 
           {/* Stats */}
-          <div
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in"
-            style={{ animationDelay: "0.1s" }}
-          >
-            <StatsCard
-              icon={FileText}
-              label="Total"
-              value={stats.total}
-              color="primary"
-            />
-            <StatsCard
-              icon={CheckCircle}
-              label="Approved"
-              value={stats.approved}
-              color="success"
-            />
-            <StatsCard
-              icon={AlertTriangle}
-              label="Pending Review"
-              value={stats.pending}
-              color="warning"
-            />
-            <StatsCard
-              icon={Clipboard}
-              label="Drafts/Others"
-              value={stats.drafts}
-              color="accent"
-            />
+          <div className="animate-fade-in grid grid-cols-2 gap-4 lg:grid-cols-4" style={{ animationDelay: "0.1s" }}>
+            <StatsCard icon={FileText} label="Total" value={stats.total} color="primary" />
+            <StatsCard icon={CheckCircle} label="Approved" value={stats.approved} color="success" />
+            <StatsCard icon={AlertTriangle} label="Pending Review" value={stats.pending} color="warning" />
+            <StatsCard icon={Clipboard} label="Drafts/Others" value={stats.drafts} color="accent" />
           </div>
 
           {/* Filters Area */}
@@ -520,16 +461,16 @@ export default function Page() {
 
           {/* Table Area */}
           <div
-            className="rounded-xl border border-border bg-card overflow-hidden animate-fade-in"
+            className="border-border bg-card animate-fade-in overflow-hidden rounded-xl border"
             style={{ animationDelay: "0.2s" }}
           >
             {loading && requirements.length === 0 ? (
               <div className="flex items-center justify-center py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="text-primary h-8 w-8 animate-spin" />
               </div>
             ) : requirements.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 opacity-60">
-                <Clipboard className="h-12 w-12 mb-4" />
+                <Clipboard className="mb-4 h-12 w-12" />
                 <p>No requirements match your filters.</p>
               </div>
             ) : (
@@ -537,85 +478,80 @@ export default function Page() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border bg-muted/30">
-                        <th className="text-left py-3 px-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                      <tr className="border-border bg-muted/30 border-b">
+                        <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                           ID
                         </th>
-                        <th className="text-left py-3 px-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                        <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                           Title
                         </th>
-                        <th className="text-left py-3 px-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                        <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                           Status
                         </th>
-                        <th className="text-left py-3 px-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                        <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
                           Priority
                         </th>
-                        <th className="text-center py-3 px-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                        <th className="text-muted-foreground px-4 py-3 text-center text-xs font-semibold tracking-wider uppercase">
                           Incoming
                         </th>
-                        <th className="text-center py-3 px-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                        <th className="text-muted-foreground px-4 py-3 text-center text-xs font-semibold tracking-wider uppercase">
                           Outgoing
                         </th>
-                        <th className="text-right py-3 px-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                        <th className="text-muted-foreground px-4 py-3 text-right text-xs font-semibold tracking-wider uppercase">
                           Actions
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {paginatedRequirements.map((req) => (
-                        <tr
-                          key={req.id}
-                          className="border-b border-border/50 hover:bg-muted/20 transition-colors"
-                        >
-                          <td className="py-3 px-4">
-                            <span className="font-mono text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        <tr key={req.id} className="border-border/50 hover:bg-muted/20 border-b transition-colors">
+                          <td className="px-4 py-3">
+                            <span className="text-muted-foreground bg-muted rounded px-1.5 py-0.5 font-mono text-xs">
                               {req.readable_id}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="px-4 py-3">
                             <div className="flex flex-col">
-                              <span className="font-semibold text-sm">
-                                {req.title}
-                              </span>
-                              <span className="text-muted-foreground text-xs line-clamp-1 max-w-[300px]">
+                              <span className="text-sm font-semibold">{req.title}</span>
+                              <span className="text-muted-foreground line-clamp-1 max-w-[300px] text-xs">
                                 {req.description}
                               </span>
                             </div>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="px-4 py-3">
                             <Badge
                               variant="outline"
-                              className={`${getStatusColor(req.status)} text-[10px] px-1.5 py-0 capitalize`}
+                              className={`${getStatusColor(req.status)} px-1.5 py-0 text-[10px] capitalize`}
                             >
                               {req.status}
                             </Badge>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="px-4 py-3">
                             <Badge
                               variant="outline"
-                              className={`${getPriorityColor(req.priority)} text-[10px] px-1.5 py-0 capitalize`}
+                              className={`${getPriorityColor(req.priority)} px-1.5 py-0 text-[10px] capitalize`}
                             >
                               {req.priority}
                             </Badge>
                           </td>
-                          <td className="py-3 px-4 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full w-fit mx-auto border border-blue-100">
+                          <td className="px-4 py-3 text-center">
+                            <div className="mx-auto flex w-fit items-center justify-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
                               <ArrowDownLeft className="h-3 w-3" />
                               {req._count?.target_links || 0}
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full w-fit mx-auto border border-amber-100">
+                          <td className="px-4 py-3 text-center">
+                            <div className="mx-auto flex w-fit items-center justify-center gap-1.5 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600">
                               <ArrowUpRight className="h-3 w-3" />
                               {req._count?.source_links || 0}
                             </div>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="px-4 py-3">
                             <div className="flex items-center justify-end gap-1">
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                className="text-muted-foreground hover:text-primary h-8 w-8"
                                 onClick={() => handleEditClick(req)}
                                 title="Edit"
                               >
@@ -624,7 +560,7 @@ export default function Page() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                className="text-muted-foreground hover:text-destructive h-8 w-8"
                                 onClick={() => setItemToDelete(req)}
                                 title="Delete"
                               >
@@ -633,7 +569,7 @@ export default function Page() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                className="text-muted-foreground hover:text-primary h-8 w-8"
                                 onClick={() => handleAddChildClick(req)}
                                 title="Add Child"
                               >
@@ -643,7 +579,7 @@ export default function Page() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-8 gap-1 text-muted-foreground hover:text-primary text-xs"
+                                  className="text-muted-foreground hover:text-primary h-8 gap-1 text-xs"
                                   onClick={() => handleViewChildren(req)}
                                   title="View Children"
                                 >
@@ -660,54 +596,38 @@ export default function Page() {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/10">
-                  <p className="text-xs text-muted-foreground">
-                    Showing{" "}
-                    <span className="font-semibold">
-                      {(currentPage - 1) * PAGE_SIZE + 1}
-                    </span>{" "}
-                    to{" "}
-                    <span className="font-semibold">
-                      {Math.min(currentPage * PAGE_SIZE, requirements.length)}
-                    </span>{" "}
-                    of{" "}
-                    <span className="font-semibold">{requirements.length}</span>{" "}
-                    results
+                <div className="border-border bg-muted/10 flex items-center justify-between border-t px-4 py-3">
+                  <p className="text-muted-foreground text-xs">
+                    Showing <span className="font-semibold">{(currentPage - 1) * PAGE_SIZE + 1}</span> to{" "}
+                    <span className="font-semibold">{Math.min(currentPage * PAGE_SIZE, requirements.length)}</span> of{" "}
+                    <span className="font-semibold">{requirements.length}</span> results
                   </p>
                   <div className="flex items-center gap-1">
                     <Button
                       variant="outline"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() =>
-                        setCurrentPage((p) => Math.max(1, p - 1))
-                      }
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <Button
-                          key={page}
-                          variant={
-                            currentPage === page ? "default" : "outline"
-                          }
-                          size="icon"
-                          className={`h-8 w-8 text-xs ${currentPage === page ? "gradient-primary border-0" : ""}`}
-                          onClick={() => setCurrentPage(page)}
-                        >
-                          {page}
-                        </Button>
-                      )
-                    )}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="icon"
+                        className={`h-8 w-8 text-xs ${currentPage === page ? "gradient-primary border-0" : ""}`}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ))}
                     <Button
                       variant="outline"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() =>
-                        setCurrentPage((p) => Math.min(totalPages, p + 1))
-                      }
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -728,66 +648,61 @@ export default function Page() {
           loading={actionLoading}
         />
 
-        {graphOpen && (
-          <DependencyGraph
-            projectId={projectId}
-            onClose={() => setGraphOpen(false)}
-          />
-        )}
+        {graphOpen && <DependencyGraph projectId={projectId} onClose={() => setGraphOpen(false)} />}
 
         {/* Children Popup */}
         <Dialog open={childrenDialogOpen} onOpenChange={setChildrenDialogOpen}>
-          <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
-            <div className="px-6 py-4 border-b border-border bg-muted/20 shrink-0">
+          <DialogContent className="flex max-h-[80vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[600px]">
+            <div className="border-border bg-muted/20 shrink-0 border-b px-6 py-4">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                <div className="bg-primary/10 text-primary rounded-lg p-1.5">
                   <GitBranch className="h-4 w-4" />
                 </div>
                 <div>
                   <DialogTitle className="text-sm font-bold">
-                    Sub-requirements of{" "}
-                    <span className="text-primary">{childrenParent?.readable_id}</span>
+                    Sub-requirements of <span className="text-primary">{childrenParent?.readable_id}</span>
                   </DialogTitle>
-                  <p className="text-xs text-muted-foreground">
-                    {childrenParent?.children?.length || 0} child requirement{childrenParent?.children?.length !== 1 ? 's' : ''}
+                  <p className="text-muted-foreground text-xs">
+                    {childrenParent?.children?.length || 0} child requirement
+                    {childrenParent?.children?.length !== 1 ? "s" : ""}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="overflow-y-auto flex-1 p-4">
+            <div className="flex-1 overflow-y-auto p-4">
               {childrenParent?.children && childrenParent.children.length > 0 ? (
                 <div className="space-y-2">
                   {childrenParent.children.map((child) => (
                     <div
                       key={child.id}
-                      className="group p-3.5 rounded-xl border border-border bg-card hover:border-primary/30 transition-all duration-200"
+                      className="group border-border bg-card hover:border-primary/30 rounded-xl border p-3.5 transition-all duration-200"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-mono text-[11px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex items-center gap-2">
+                            <span className="text-muted-foreground bg-muted rounded px-1.5 py-0.5 font-mono text-[11px]">
                               {child.readable_id}
                             </span>
                             <Badge
                               variant="outline"
-                              className={`${getStatusColor(child.status)} text-[10px] px-1.5 py-0 capitalize rounded-full`}
+                              className={`${getStatusColor(child.status)} rounded-full px-1.5 py-0 text-[10px] capitalize`}
                             >
                               {child.status}
                             </Badge>
                             <Badge
                               variant="outline"
-                              className={`${getPriorityColor(child.priority)} text-[10px] px-1.5 py-0 capitalize rounded-full`}
+                              className={`${getPriorityColor(child.priority)} rounded-full px-1.5 py-0 text-[10px] capitalize`}
                             >
                               {child.priority}
                             </Badge>
                           </div>
-                          <p className="text-sm font-medium truncate">{child.title}</p>
+                          <p className="truncate text-sm font-medium">{child.title}</p>
                         </div>
-                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            className="text-muted-foreground hover:text-primary h-7 w-7"
                             onClick={() => {
                               setChildrenDialogOpen(false);
                               handleEditClick(child);
@@ -799,7 +714,7 @@ export default function Page() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            className="text-muted-foreground hover:text-destructive h-7 w-7"
                             onClick={() => {
                               setChildrenDialogOpen(false);
                               setItemToDelete(child);
@@ -814,8 +729,8 @@ export default function Page() {
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                  <GitBranch className="h-10 w-10 mb-3 opacity-30" />
+                <div className="text-muted-foreground flex flex-col items-center justify-center py-16">
+                  <GitBranch className="mb-3 h-10 w-10 opacity-30" />
                   <p className="text-sm">No sub-requirements found</p>
                 </div>
               )}
@@ -823,29 +738,30 @@ export default function Page() {
           </DialogContent>
         </Dialog>
         <ConfirmationDialog
-            open={!!itemToDelete}
-            onOpenChange={(open) => !open && setItemToDelete(null)}
-            onConfirm={confirmDelete}
-            title="Delete Requirement"
-            description={
-                <span>
-                    Are you sure you want to delete requirement <span className="font-semibold text-foreground">"{itemToDelete?.readable_id}"</span>? 
-                    This action cannot be undone and will remove all associated links and children.
-                </span>
-            }
-            confirmText={isDeleting ? "Deleting..." : "Delete"}
-            variant="destructive"
-            loading={isDeleting}
+          open={!!itemToDelete}
+          onOpenChange={(open) => !open && setItemToDelete(null)}
+          onConfirm={confirmDelete}
+          title="Delete Requirement"
+          description={
+            <span>
+              Are you sure you want to delete requirement{" "}
+              <span className="text-foreground font-semibold">"{itemToDelete?.readable_id}"</span>? This action cannot
+              be undone and will remove all associated links and children.
+            </span>
+          }
+          confirmText={isDeleting ? "Deleting..." : "Delete"}
+          variant="destructive"
+          loading={isDeleting}
         />
 
         <ConfirmationDialog
-            open={!!importConfirmData}
-            onOpenChange={(open) => !open && setImportConfirmData(null)}
-            onConfirm={confirmImport}
-            title="Import Requirements"
-            description={`You are about to import ${importConfirmData?.length} requirement(s). This will add them to your current project. Continue?`}
-            confirmText={importLoading ? "Importing..." : "Confirm Import"}
-            loading={importLoading}
+          open={!!importConfirmData}
+          onOpenChange={(open) => !open && setImportConfirmData(null)}
+          onConfirm={confirmImport}
+          title="Import Requirements"
+          description={`You are about to import ${importConfirmData?.length} requirement(s). This will add them to your current project. Continue?`}
+          confirmText={importLoading ? "Importing..." : "Confirm Import"}
+          loading={importLoading}
         />
       </main>
     </ProtectedRoute>

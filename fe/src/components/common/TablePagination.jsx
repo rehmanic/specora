@@ -4,32 +4,22 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function TablePagination({
-  currentPage,
-  totalPages,
-  onPageChange,
-  totalItems,
-  pageSize,
-}) {
+export default function TablePagination({ currentPage, totalPages, onPageChange, totalItems, pageSize }) {
   const indexOfFirstItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const indexOfLastItem = Math.min(currentPage * pageSize, totalItems);
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/10">
-      <p className="text-xs text-muted-foreground">
-        Showing{" "}
-        <span className="font-semibold">{indexOfFirstItem}</span>{" "}
-        to{" "}
-        <span className="font-semibold">{indexOfLastItem}</span>{" "}
-        of{" "}
-        <span className="font-semibold">{totalItems}</span>{" "}
+    <div className="border-border bg-muted/10 flex items-center justify-between border-t px-4 py-3">
+      <p className="text-muted-foreground text-xs">
+        Showing <span className="font-semibold">{indexOfFirstItem}</span> to{" "}
+        <span className="font-semibold">{indexOfLastItem}</span> of <span className="font-semibold">{totalItems}</span>{" "}
         results
       </p>
       <div className="flex items-center gap-1">
         <Button
           variant="outline"
           size="icon"
-          className="h-8 w-8 border-border/50 bg-background/50 hover:bg-background transition-colors"
+          className="border-border/50 bg-background/50 hover:bg-background h-8 w-8 transition-colors"
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
         >
@@ -43,7 +33,7 @@ export default function TablePagination({
             size="icon"
             className={`h-8 w-8 text-xs transition-all duration-300 ${
               currentPage === page
-                ? "gradient-primary border-0 shadow-lg shadow-primary/25 scale-105"
+                ? "gradient-primary shadow-primary/25 scale-105 border-0 shadow-lg"
                 : "border-border/50 bg-background/50 hover:bg-background"
             }`}
             onClick={() => onPageChange(page)}
@@ -55,7 +45,7 @@ export default function TablePagination({
         <Button
           variant="outline"
           size="icon"
-          className="h-8 w-8 border-border/50 bg-background/50 hover:bg-background transition-colors"
+          className="border-border/50 bg-background/50 hover:bg-background h-8 w-8 transition-colors"
           onClick={() => onPageChange(Math.min(Math.max(1, totalPages), currentPage + 1))}
           disabled={currentPage === Math.max(1, totalPages) || totalPages === 0}
         >

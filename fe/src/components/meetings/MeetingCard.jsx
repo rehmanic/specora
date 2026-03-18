@@ -38,7 +38,7 @@ export default function MeetingCard({ meeting, type }) {
     const projectId = meeting.project_id;
 
     if (meeting.meeting_link) {
-      const roomId = meeting.meeting_link.split('/').pop();
+      const roomId = meeting.meeting_link.split("/").pop();
       router.push(`/projects/${projectId}/meetings/room/${roomId}`);
       return;
     }
@@ -85,13 +85,11 @@ export default function MeetingCard({ meeting, type }) {
     <Card className="card-interactive overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg mb-1 truncate group-hover:text-primary transition-colors font-display">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="group-hover:text-primary font-display mb-1 truncate text-lg transition-colors">
               {meeting.name}
             </CardTitle>
-            <CardDescription className="line-clamp-2 text-sm">
-              {meeting.description}
-            </CardDescription>
+            <CardDescription className="line-clamp-2 text-sm">{meeting.description}</CardDescription>
           </div>
           <Badge
             variant={type === "completed" ? "secondary" : "default"}
@@ -105,39 +103,41 @@ export default function MeetingCard({ meeting, type }) {
       <CardContent className="space-y-4">
         {/* Scheduled Date & Time */}
         <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="w-4 h-4 text-primary" />
+          <div className="text-muted-foreground flex items-center gap-2">
+            <Calendar className="text-primary h-4 w-4" />
             <span>{formatDate(meeting.scheduled_at)}</span>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Clock className="w-4 h-4 text-primary" />
+          <div className="text-muted-foreground flex items-center gap-2">
+            <Clock className="text-primary h-4 w-4" />
             <span>{formatTime(meeting.scheduled_at)}</span>
           </div>
         </div>
 
         {/* Scheduled By */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Users className="w-4 h-4" />
-          <span>Scheduled by <span className="font-medium text-foreground">{meeting.scheduled_by}</span></span>
+        <div className="text-muted-foreground flex items-center gap-2 text-sm">
+          <Users className="h-4 w-4" />
+          <span>
+            Scheduled by <span className="text-foreground font-medium">{meeting.scheduled_by}</span>
+          </span>
         </div>
 
         {/* Stakeholders */}
         <div>
-          <p className="text-xs text-muted-foreground mb-2">Participants</p>
+          <p className="text-muted-foreground mb-2 text-xs">Participants</p>
           <div className="flex -space-x-2">
             {meeting.stakeholders.slice(0, 5).map((stakeholder, idx) => (
               <Avatar
                 key={idx}
-                className="border-2 border-card w-8 h-8 hover:z-10 transition-transform hover:scale-110"
+                className="border-card h-8 w-8 border-2 transition-transform hover:z-10 hover:scale-110"
                 title={stakeholder}
               >
-                <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
                   {getInitials(stakeholder)}
                 </AvatarFallback>
               </Avatar>
             ))}
             {meeting.stakeholders.length > 5 && (
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted border-2 border-card text-xs font-medium">
+              <div className="bg-muted border-card flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-medium">
                 +{meeting.stakeholders.length - 5}
               </div>
             )}
@@ -146,32 +146,16 @@ export default function MeetingCard({ meeting, type }) {
 
         {/* Meeting Link (if exists) */}
         {meeting.meeting_link && (
-          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Meeting Link</p>
+          <div className="bg-muted/50 space-y-2 rounded-lg p-3">
+            <p className="text-muted-foreground text-xs font-medium">Meeting Link</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 text-xs bg-card px-2 py-1.5 rounded border truncate">
-                {meeting.meeting_link}
-              </code>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={copyMeetingLink}
-                className="shrink-0 h-8 w-8 p-0"
-              >
-                {copied ? (
-                  <Check className="w-4 h-4 text-success" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
+              <code className="bg-card flex-1 truncate rounded border px-2 py-1.5 text-xs">{meeting.meeting_link}</code>
+              <Button variant="ghost" size="sm" onClick={copyMeetingLink} className="h-8 w-8 shrink-0 p-0">
+                {copied ? <Check className="text-success h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
-            <Button
-              variant="link"
-              size="sm"
-              className="h-auto p-0 text-xs text-primary"
-              onClick={handleJoinMeeting}
-            >
-              <ExternalLink className="w-3 h-3 mr-1" />
+            <Button variant="link" size="sm" className="text-primary h-auto p-0 text-xs" onClick={handleJoinMeeting}>
+              <ExternalLink className="mr-1 h-3 w-3" />
               Click to join meeting
             </Button>
           </div>
@@ -180,12 +164,8 @@ export default function MeetingCard({ meeting, type }) {
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2">
           {type === "upcoming" && (
-            <Button
-              size="sm"
-              className="flex-1 gap-2 gradient-primary border-0"
-              onClick={handleJoinMeeting}
-            >
-              <Video className="w-4 h-4" />
+            <Button size="sm" className="gradient-primary flex-1 gap-2 border-0" onClick={handleJoinMeeting}>
+              <Video className="h-4 w-4" />
               Start Meeting
             </Button>
           )}
@@ -197,8 +177,8 @@ export default function MeetingCard({ meeting, type }) {
               className="flex-1 gap-2"
               onClick={() => router.push(`/projects/${meeting.project_id}/meetings/${meeting.id}`)}
             >
-              <Video className="w-4 h-4" />
-               View Recording
+              <Video className="h-4 w-4" />
+              View Recording
             </Button>
           )}
 
@@ -206,10 +186,10 @@ export default function MeetingCard({ meeting, type }) {
             <Button
               variant="secondary"
               size="sm"
-              className="flex-1 gap-2 border-primary/20 hover:bg-primary/5 transition-colors"
+              className="border-primary/20 hover:bg-primary/5 flex-1 gap-2 transition-colors"
               onClick={handleExtractRequirements}
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="h-4 w-4" />
               Requirements
             </Button>
           )}

@@ -1,240 +1,238 @@
 import { create } from "zustand";
 import {
-    createSpecbotChat,
-    deleteSpecbotChat,
-    getAllSpecbotChats,
-    updateSpecbotChat,
-    createMessage,
-    getAllMessages,
-    clearSpecbotChat,
+  createSpecbotChat,
+  deleteSpecbotChat,
+  getAllSpecbotChats,
+  updateSpecbotChat,
+  createMessage,
+  getAllMessages,
+  clearSpecbotChat,
 } from "@/api/specbot";
 import useAuthStore from "@/store/authStore";
 
 const useSpecbotStore = create((set, get) => ({
-    // State
-    chats: [],
-    currentChat: null,
-    messages: [],
-    loading: false,
-    error: null,
-    sendingMessage: false,
+  // State
+  chats: [],
+  currentChat: null,
+  messages: [],
+  loading: false,
+  error: null,
+  sendingMessage: false,
 
-    // ======================
-    // Fetch All Chats
-    // ======================
-    fetchChats: async (projectId) => {
-        set({ loading: true, error: null });
-        try {
-            const data = await getAllSpecbotChats(projectId);
-            const chat = data.chats && data.chats.length > 0 ? data.chats[0] : null;
-            set({ chats: data.chats || [], currentChat: chat, loading: false });
-            if (chat) {
-                const msgData = await getAllMessages(chat.id);
-                set({ messages: msgData.messages || [] });
-            }
-        } catch (err) {
-            set({ loading: false, error: err.message });
-            throw err;
-        }
-    },
+  // ======================
+  // Fetch All Chats
+  // ======================
+  fetchChats: async (projectId) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await getAllSpecbotChats(projectId);
+      const chat = data.chats && data.chats.length > 0 ? data.chats[0] : null;
+      set({ chats: data.chats || [], currentChat: chat, loading: false });
+      if (chat) {
+        const msgData = await getAllMessages(chat.id);
+        set({ messages: msgData.messages || [] });
+      }
+    } catch (err) {
+      set({ loading: false, error: err.message });
+      throw err;
+    }
+  },
 
-    // ======================
-    // Create New Chat
-    // ======================
-    createChat: async (chatData) => {
-        set({ loading: true, error: null });
-        try {
-            const data = await createSpecbotChat(chatData);
-            const newChat = data.chat;
-            set((state) => ({
-                chats: [newChat, ...state.chats],
-                currentChat: newChat,
-                messages: [],
-                loading: false,
-            }));
-            return newChat;
-        } catch (err) {
-            set({ loading: false, error: err.message });
-            throw err;
-        }
-    },
+  // ======================
+  // Create New Chat
+  // ======================
+  createChat: async (chatData) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await createSpecbotChat(chatData);
+      const newChat = data.chat;
+      set((state) => ({
+        chats: [newChat, ...state.chats],
+        currentChat: newChat,
+        messages: [],
+        loading: false,
+      }));
+      return newChat;
+    } catch (err) {
+      set({ loading: false, error: err.message });
+      throw err;
+    }
+  },
 
-    // ======================
-    // Update Chat
-    // ======================
-    updateChat: async (chatId, updateData) => {
-        set({ error: null });
-        try {
-            const data = await updateSpecbotChat(chatId, updateData);
-            const updatedChat = data.chat;
-            set((state) => ({
-                chats: state.chats.map((chat) =>
-                    chat.id === chatId ? updatedChat : chat
-                ),
-                currentChat:
-                    state.currentChat?.id === chatId ? updatedChat : state.currentChat,
-            }));
-            return updatedChat;
-        } catch (err) {
-            set({ error: err.message });
-            throw err;
-        }
-    },
+  // ======================
+  // Update Chat
+  // ======================
+  updateChat: async (chatId, updateData) => {
+    set({ error: null });
+    try {
+      const data = await updateSpecbotChat(chatId, updateData);
+      const updatedChat = data.chat;
+      set((state) => ({
+        chats: state.chats.map((chat) => (chat.id === chatId ? updatedChat : chat)),
+        currentChat: state.currentChat?.id === chatId ? updatedChat : state.currentChat,
+      }));
+      return updatedChat;
+    } catch (err) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
 
-    // ======================
-    // Update Chat Local Only
-    // ======================
-    updateChatLocal: (chatId, updateData) => {
-        set((state) => ({
-            chats: state.chats.map((chat) =>
-                chat.id === chatId ? { ...chat, ...updateData } : chat
-            ),
-            currentChat:
-                state.currentChat?.id === chatId
-                    ? { ...state.currentChat, ...updateData }
-                    : state.currentChat,
-        }));
-    },
+  // ======================
+  // Update Chat Local Only
+  // ======================
+  updateChatLocal: (chatId, updateData) => {
+    set((state) => ({
+      chats: state.chats.map((chat) => (chat.id === chatId ? { ...chat, ...updateData } : chat)),
+      currentChat: state.currentChat?.id === chatId ? { ...state.currentChat, ...updateData } : state.currentChat,
+    }));
+  },
 
-    // ======================
-    // Delete Chat
-    // ======================
-    deleteChat: async (chatId) => {
-        set({ error: null });
-        try {
-            await deleteSpecbotChat(chatId);
-            set((state) => ({
-                chats: state.chats.filter((chat) => chat.id !== chatId),
-                currentChat: state.currentChat?.id === chatId ? null : state.currentChat,
-                messages: state.currentChat?.id === chatId ? [] : state.messages,
-            }));
-        } catch (err) {
-            set({ error: err.message });
-            throw err;
-        }
-    },
+  // ======================
+  // Delete Chat
+  // ======================
+  deleteChat: async (chatId) => {
+    set({ error: null });
+    try {
+      await deleteSpecbotChat(chatId);
+      set((state) => ({
+        chats: state.chats.filter((chat) => chat.id !== chatId),
+        currentChat: state.currentChat?.id === chatId ? null : state.currentChat,
+        messages: state.currentChat?.id === chatId ? [] : state.messages,
+      }));
+    } catch (err) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
 
-    // ======================
-    // Clear Chat
-    // ======================
-    clearChat: async (chatId) => {
-        set({ loading: true, error: null });
-        try {
-            await clearSpecbotChat(chatId);
-            set({ messages: [], loading: false });
-        } catch (err) {
-            set({ loading: false, error: err.message });
-            throw err;
-        }
-    },
+  // ======================
+  // Clear Chat
+  // ======================
+  clearChat: async (chatId) => {
+    set({ loading: true, error: null });
+    try {
+      await clearSpecbotChat(chatId);
+      set({ messages: [], loading: false });
+    } catch (err) {
+      set({ loading: false, error: err.message });
+      throw err;
+    }
+  },
 
-    // ======================
-    // Set Current Chat
-    // ======================
-    setCurrentChat: async (chat) => {
-        set({ currentChat: chat, loading: true, error: null, messages: [] });
-        if (chat) {
-            try {
-                const data = await getAllMessages(chat.id);
-                set({ messages: data.messages || [], loading: false });
-            } catch (err) {
-                set({ loading: false, error: err.message });
-            }
-        } else {
-            set({ loading: false });
-        }
-    },
+  // ======================
+  // Set Current Chat
+  // ======================
+  setCurrentChat: async (chat) => {
+    set({ currentChat: chat, loading: true, error: null, messages: [] });
+    if (chat) {
+      try {
+        const data = await getAllMessages(chat.id);
+        set({ messages: data.messages || [], loading: false });
+      } catch (err) {
+        set({ loading: false, error: err.message });
+      }
+    } else {
+      set({ loading: false });
+    }
+  },
 
-    // ======================
-    // Fetch Messages
-    // ======================
-    fetchMessages: async (chatId) => {
-        set({ loading: true, error: null });
-        try {
-            const data = await getAllMessages(chatId);
-            set({ messages: data.messages || [], loading: false });
-        } catch (err) {
-            set({ loading: false, error: err.message });
-            throw err;
-        }
-    },
+  // ======================
+  // Fetch Messages
+  // ======================
+  fetchMessages: async (chatId) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await getAllMessages(chatId);
+      set({ messages: data.messages || [], loading: false });
+    } catch (err) {
+      set({ loading: false, error: err.message });
+      throw err;
+    }
+  },
 
-    // ======================
-    // Send Message
-    // ======================
-    sendMessage: async (messageData) => {
-        set({ sendingMessage: true, error: null });
+  // ======================
+  // Send Message
+  // ======================
+  sendMessage: async (messageData) => {
+    set({ sendingMessage: true, error: null });
 
-        // Optimistic UI: Add temporary user message immediately
-        const tempId = `temp-${Date.now()}`;
-        const optimisticMessage = {
-            id: tempId,
-            content: messageData.content,
-            sender_type: "user",
-            sender_id: messageData.sender_id, // Added top-level sender_id
-            created_at: new Date().toISOString(),
-            metadata: { sender_type: "user", sender_id: messageData.sender_id },
-            sender: {
-                id: messageData.sender_id,
-                username: useAuthStore.getState().user?.username,
-                display_name: useAuthStore.getState().user?.display_name,
-                profile_pic_url: useAuthStore.getState().user?.profile_pic_url
-            }
-        };
+    // Optimistic UI: Add temporary user message immediately
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMessage = {
+      id: tempId,
+      content: messageData.content,
+      sender_type: "user",
+      sender_id: messageData.sender_id, // Added top-level sender_id
+      created_at: new Date().toISOString(),
+      metadata: { sender_type: "user", sender_id: messageData.sender_id },
+      sender: {
+        id: messageData.sender_id,
+        username: useAuthStore.getState().user?.username,
+        display_name: useAuthStore.getState().user?.display_name,
+        profile_pic_url: useAuthStore.getState().user?.profile_pic_url,
+      },
+    };
 
-        set((state) => ({
-            messages: [...state.messages, optimisticMessage]
-        }));
+    set((state) => ({
+      messages: [...state.messages, optimisticMessage],
+    }));
 
-        try {
-            const data = await createMessage(messageData);
+    try {
+      const data = await createMessage(messageData);
 
-            // Add user message and bot response to messages
-            // Replace optimistic message with real one
-            const newMessages = [data.data];
-            if (data.botMessage) {
-                newMessages.push(data.botMessage);
-            }
+      // Add user message and bot response to messages
+      // Replace optimistic message with real one
+      const newMessages = [data.data];
+      if (data.botMessage) {
+        newMessages.push(data.botMessage);
+      }
 
-            set((state) => ({
-                chats: state.chats.map(c => c.id === messageData.chat_id ? { ...c, updated_at: new Date().toISOString() } : c),
-                currentChat: state.currentChat?.id === messageData.chat_id ? { ...state.currentChat, updated_at: new Date().toISOString() } : state.currentChat,
-                messages: state.messages.map(m => m.id === tempId ? data.data : m).concat(data.botMessage ? [data.botMessage] : []),
-                sendingMessage: false,
-            }));
+      set((state) => ({
+        chats: state.chats.map((c) =>
+          c.id === messageData.chat_id ? { ...c, updated_at: new Date().toISOString() } : c
+        ),
+        currentChat:
+          state.currentChat?.id === messageData.chat_id
+            ? { ...state.currentChat, updated_at: new Date().toISOString() }
+            : state.currentChat,
+        messages: state.messages
+          .map((m) => (m.id === tempId ? data.data : m))
+          .concat(data.botMessage ? [data.botMessage] : []),
+        sendingMessage: false,
+      }));
 
-            return data;
-        } catch (err) {
-            const friendlyMessage =
-                err?.message &&
-                    err.message.toLowerCase().includes("internal server error")
-                    ? "Specbot ran into an issue. Please try again in a moment."
-                    : err?.message || "Specbot could not send your message.";
+      return data;
+    } catch (err) {
+      const friendlyMessage =
+        err?.message && err.message.toLowerCase().includes("internal server error")
+          ? "Specbot ran into an issue. Please try again in a moment."
+          : err?.message || "Specbot could not send your message.";
 
-            // Rollback optimistic message on error
-            set((state) => ({
-                messages: state.messages.filter(m => m.id !== tempId),
-                sendingMessage: false,
-                error: friendlyMessage
-            }));
+      // Rollback optimistic message on error
+      set((state) => ({
+        messages: state.messages.filter((m) => m.id !== tempId),
+        sendingMessage: false,
+        error: friendlyMessage,
+      }));
 
-            throw err;
-        }
-    },
+      throw err;
+    }
+  },
 
-    // ======================
-    // Clear Current Chat
-    // ======================
-    clearCurrentChat: () => {
-        set({ currentChat: null, messages: [] });
-    },
+  // ======================
+  // Clear Current Chat
+  // ======================
+  clearCurrentChat: () => {
+    set({ currentChat: null, messages: [] });
+  },
 
-    // ======================
-    // Clear Error
-    // ======================
-    clearError: () => {
-        set({ error: null });
-    },
+  // ======================
+  // Clear Error
+  // ======================
+  clearError: () => {
+    set({ error: null });
+  },
 }));
 
 export default useSpecbotStore;

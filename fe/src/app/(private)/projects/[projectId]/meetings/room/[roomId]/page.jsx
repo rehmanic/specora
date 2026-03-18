@@ -43,9 +43,7 @@ function RecordingControls({ meetingId }) {
       if (audioTrack?.mediaStreamTrack) stream.addTrack(audioTrack.mediaStreamTrack);
       if (videoTrack?.mediaStreamTrack) stream.addTrack(videoTrack.mediaStreamTrack);
 
-      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-        ? 'video/webm;codecs=vp9'
-        : 'video/webm';
+      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm";
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
@@ -82,9 +80,8 @@ function RecordingControls({ meetingId }) {
       mediaRecorder.start(1000);
       setIsRecording(true);
       setDuration(0);
-      timerRef.current = setInterval(() => setDuration(d => d + 1), 1000);
+      timerRef.current = setInterval(() => setDuration((d) => d + 1), 1000);
       toast.success("Recording started");
-
     } catch (error) {
       console.error("Failed to start recording:", error);
       toast.error("Failed to start recording: " + error.message);
@@ -92,7 +89,7 @@ function RecordingControls({ meetingId }) {
   }, [room, meetingId]);
 
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
       toast.info("Stopping recording...");
     }
@@ -101,24 +98,22 @@ function RecordingControls({ meetingId }) {
   const formatDuration = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
     <div className="flex items-center gap-3">
       {isRecording && (
         <>
-          <div className="bg-red-500/20 text-red-400 px-2 py-1 rounded text-xs font-medium flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+          <div className="flex items-center gap-2 rounded bg-red-500/20 px-2 py-1 text-xs font-medium text-red-400">
+            <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
             Recording
           </div>
           <div className="text-sm font-medium">{formatDuration(duration)}</div>
         </>
       )}
       {isUploading && (
-        <div className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs font-medium">
-          Uploading...
-        </div>
+        <div className="rounded bg-blue-500/20 px-2 py-1 text-xs font-medium text-blue-400">Uploading...</div>
       )}
       {isRecording ? (
         <Button onClick={stopRecording} size="sm" variant="secondary" disabled={isUploading}>
@@ -136,9 +131,9 @@ function RecordingControls({ meetingId }) {
 // Custom layout that includes header with recording controls
 function MeetingLayout({ roomId, projectId, router }) {
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden">
       {/* Header with recording controls */}
-      <header className="flex items-center justify-between px-4 py-2 bg-black/60 backdrop-blur-sm z-10 shrink-0">
+      <header className="z-10 flex shrink-0 items-center justify-between bg-black/60 px-4 py-2 backdrop-blur-sm">
         <div>
           <h1 className="font-medium text-white">Meeting Room</h1>
           <p className="text-xs text-white/50">{roomId}</p>
@@ -147,7 +142,7 @@ function MeetingLayout({ roomId, projectId, router }) {
       </header>
 
       {/* Video Conference - fits remaining space */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-hidden">
         <VideoConference />
       </div>
     </div>
@@ -181,9 +176,9 @@ export default function MeetingRoomPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-neutral-900 text-white">
+      <div className="flex h-screen items-center justify-center bg-neutral-900 text-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
           <p>Joining meeting...</p>
         </div>
       </div>
@@ -192,7 +187,7 @@ export default function MeetingRoomPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-neutral-900 text-white gap-4">
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-neutral-900 text-white">
         <p className="text-red-400">{error}</p>
       </div>
     );
@@ -200,7 +195,7 @@ export default function MeetingRoomPage() {
 
   return (
     <ProtectedRoute allowedRoles={["manager", "client", "requirements_engineer"]}>
-      <div className="h-full bg-neutral-900 text-white overflow-hidden pb-2">
+      <div className="h-full overflow-hidden bg-neutral-900 pb-2 text-white">
         <LiveKitRoom
           video={true}
           audio={true}

@@ -5,23 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,25 +21,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Settings,
-  Users,
-  Tags,
-  Trash2,
-  Plus,
-  X,
-  Calendar,
-  Layers,
-  ShieldAlert,
-  Layout,
-  UserPlus
-} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Settings, Users, Tags, Trash2, Plus, X, Calendar, Layers, ShieldAlert, Layout, UserPlus } from "lucide-react";
 import useProjectsStore from "@/store/projectsStore";
 import useAuthStore from "@/store/authStore";
 import { deleteProject, updateProject, createProject } from "@/api/projects";
@@ -64,9 +35,7 @@ import { cn } from "@/lib/utils";
 
 // ✅ Safe avatar URL generator using DiceBear (trusted, open source)
 const getAvatarUrl = (name) =>
-  `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(
-    name
-  )}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+  `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(name)}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
 
 export default function ProjectInfo({ variant }) {
   const isSettings = variant === "project-settings";
@@ -109,10 +78,7 @@ export default function ProjectInfo({ variant }) {
       if (isSettings && selectedProject) {
         // Fetch member details if members are just IDs
         let members = [];
-        if (
-          Array.isArray(selectedProject.members) &&
-          selectedProject.members.length > 0
-        ) {
+        if (Array.isArray(selectedProject.members) && selectedProject.members.length > 0) {
           // Check if members are objects or just IDs
           if (typeof selectedProject.members[0] === "string") {
             // Members are IDs, fetch their details
@@ -127,17 +93,17 @@ export default function ProjectInfo({ variant }) {
             }));
           } else {
             // Members are already objects
-            members = selectedProject.members.map(m => ({
+            members = selectedProject.members.map((m) => ({
               ...m,
-              isOwner: m.id === selectedProject.created_by
+              isOwner: m.id === selectedProject.created_by,
             }));
           }
         }
-        
+
         // Ensure owner is always in members list (fallback)
         const ownerId = selectedProject.created_by;
-        const hasOwner = members.some(m => m.id === ownerId);
-        
+        const hasOwner = members.some((m) => m.id === ownerId);
+
         if (!hasOwner && selectedProject.creator) {
           members.unshift({
             id: selectedProject.creator.id,
@@ -154,12 +120,8 @@ export default function ProjectInfo({ variant }) {
           name: selectedProject.name || "",
           description: selectedProject.description || "",
           status: selectedProject.status || "active",
-          startDate: selectedProject.start_date
-            ? new Date(selectedProject.start_date).toISOString().split("T")[0]
-            : "",
-          endDate: selectedProject.end_date
-            ? new Date(selectedProject.end_date).toISOString().split("T")[0]
-            : "",
+          startDate: selectedProject.start_date ? new Date(selectedProject.start_date).toISOString().split("T")[0] : "",
+          endDate: selectedProject.end_date ? new Date(selectedProject.end_date).toISOString().split("T")[0] : "",
           tags: Array.isArray(selectedProject.tags) ? selectedProject.tags : [],
           coverImageUrl: selectedProject.cover_image_url || null,
           iconUrl: selectedProject.icon_url || null,
@@ -326,9 +288,11 @@ export default function ProjectInfo({ variant }) {
       if (err?.message) {
         // Check for specific error messages and provide clearer feedback
         const errorMsgLower = err.message.toLowerCase();
-        if (errorMsgLower.includes("user not found") ||
+        if (
+          errorMsgLower.includes("user not found") ||
           errorMsgLower.includes("fetching user details failed") ||
-          errorMsgLower.includes("404")) {
+          errorMsgLower.includes("404")
+        ) {
           errorMessage = `User "${newMemberEmail.trim()}" not found. Please check the username and try again.`;
         } else {
           errorMessage = err.message;
@@ -361,8 +325,7 @@ export default function ProjectInfo({ variant }) {
       router.push("/dashboard");
       notify.success("Project deleted successfully");
     } catch (err) {
-      const errorMessage =
-        err?.message || "Failed to delete project";
+      const errorMessage = err?.message || "Failed to delete project";
       notify.error(errorMessage);
       console.error("Error deleting project:", err);
     } finally {
@@ -388,9 +351,7 @@ export default function ProjectInfo({ variant }) {
     }
 
     if (!/^[A-Za-z0-9 _-]+$/.test(project.name.trim())) {
-      notify.error(
-        "Project name can only contain letters, numbers, spaces, hyphens, and underscores"
-      );
+      notify.error("Project name can only contain letters, numbers, spaces, hyphens, and underscores");
       return;
     }
 
@@ -528,7 +489,7 @@ export default function ProjectInfo({ variant }) {
       setIsSaving(false);
       const errorMessage = err?.message || "Failed to save project";
       const isDuplicateError = errorMessage.toLowerCase().includes("already exists");
-      
+
       // Handle known errors elegantly
       if (isDuplicateError) {
         notify.error("A project with this name already exists. Please choose a different title.", { id: toastId });
@@ -537,7 +498,7 @@ export default function ProjectInfo({ variant }) {
         // Only log unexpected errors
         console.error("Critical project save error:", err);
       }
-      
+
       // Explicitly return to ensure no further local-level execution if there was any
       return;
     } finally {
@@ -550,53 +511,63 @@ export default function ProjectInfo({ variant }) {
       {/* Page Header */}
       <PageBanner
         title={isSettings ? "Project Settings" : "Create New Project"}
-        description={isSettings
-          ? "Configure project parameters, team members, and visibility."
-          : "Define the core attributes and goals for your new venture."}
+        description={
+          isSettings
+            ? "Configure project parameters, team members, and visibility."
+            : "Define the core attributes and goals for your new venture."
+        }
         icon={isSettings ? Settings : Plus}
       />
 
-      <Tabs defaultValue="general" orientation="vertical" className="w-full flex flex-col gap-6 md:flex-row">
-        <div className="flex flex-col gap-4 min-w-[240px] md:sticky md:top-24">
-          <TabsList className="bg-muted/50 h-fit w-full flex-col gap-1 p-1 border rounded-xl">
-            <TabsTrigger value="general" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+      <Tabs defaultValue="general" orientation="vertical" className="flex w-full flex-col gap-6 md:flex-row">
+        <div className="flex min-w-[240px] flex-col gap-4 md:sticky md:top-24">
+          <TabsList className="bg-muted/50 h-fit w-full flex-col gap-1 rounded-xl border p-1">
+            <TabsTrigger
+              value="general"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+            >
               <Settings className="size-4" />
               General Info
             </TabsTrigger>
-            <TabsTrigger value="members" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger
+              value="members"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+            >
               <Users className="size-4" />
               Team Members
             </TabsTrigger>
-            <TabsTrigger value="tags" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger
+              value="tags"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+            >
               <Tags className="size-4" />
               Tags & Categories
             </TabsTrigger>
             {isSettings && (
-              <TabsTrigger value="danger" className="justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-lg text-destructive data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground">
+              <TabsTrigger
+                value="danger"
+                className="text-destructive data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+              >
                 <Trash2 className="size-4" />
                 Danger Zone
               </TabsTrigger>
             )}
           </TabsList>
 
-          <div className="px-1 space-y-3">
-            <Button
-              onClick={handleSaveChanges}
-              disabled={isSaving}
-              className="w-full text-xs font-bold"
-            >
+          <div className="space-y-3 px-1">
+            <Button onClick={handleSaveChanges} disabled={isSaving} className="w-full text-xs font-bold">
               {isSaving ? "Processing..." : isSettings ? "Save Changes" : "Create Project"}
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 w-full flex flex-col">
+        <div className="flex w-full flex-1 flex-col">
           {/* General Tab */}
-          <TabsContent value="general" className="mt-0 space-y-6 outline-none animate-fade-in">
+          <TabsContent value="general" className="animate-fade-in mt-0 space-y-6 outline-none">
             <Card>
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
-                  <Layout className="size-4 text-primary" />
+                  <Layout className="text-primary size-4" />
                   <CardTitle className="text-lg">Project Details</CardTitle>
                 </div>
                 <CardDescription>Core identity and operational parameters.</CardDescription>
@@ -616,14 +587,18 @@ export default function ProjectInfo({ variant }) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="p-status" className="text-xs font-bold">Current Status</Label>
+                    <Label htmlFor="p-status" className="text-xs font-bold">
+                      Current Status
+                    </Label>
                     <Select value={project.status} onValueChange={(v) => handleProjectUpdate("status", v)}>
                       <SelectTrigger id="p-status" className="h-10 capitalize">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {["active", "on_hold", "completed", "archived"].map(s => (
-                          <SelectItem key={s} value={s} className="capitalize">{s.replace('_', ' ')}</SelectItem>
+                        {["active", "on_hold", "completed", "archived"].map((s) => (
+                          <SelectItem key={s} value={s} className="capitalize">
+                            {s.replace("_", " ")}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -631,7 +606,9 @@ export default function ProjectInfo({ variant }) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="p-desc" className="text-xs font-bold">Brief Description</Label>
+                  <Label htmlFor="p-desc" className="text-xs font-bold">
+                    Brief Description
+                  </Label>
                   <Textarea
                     id="p-desc"
                     placeholder="What is this project about?"
@@ -654,7 +631,7 @@ export default function ProjectInfo({ variant }) {
                         onChange={(e) => handleProjectUpdate("startDate", e.target.value)}
                         className="h-10 pl-10"
                       />
-                      <Calendar className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                      <Calendar className="text-muted-foreground absolute top-3 left-3 size-4" />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -669,7 +646,7 @@ export default function ProjectInfo({ variant }) {
                         onChange={(e) => handleProjectUpdate("endDate", e.target.value)}
                         className="h-10 pl-10"
                       />
-                      <Calendar className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                      <Calendar className="text-muted-foreground absolute top-3 left-3 size-4" />
                     </div>
                   </div>
                 </div>
@@ -679,29 +656,43 @@ export default function ProjectInfo({ variant }) {
                 <div className="grid gap-6 sm:grid-cols-2">
                   <div className="space-y-3">
                     <Label className="text-xs font-bold">Branding Icon</Label>
-                    <div className="flex items-center gap-4 p-3 border rounded-lg bg-muted/20">
-                      <div className="size-12 rounded-full border bg-background flex items-center justify-center overflow-hidden shrink-0">
+                    <div className="bg-muted/20 flex items-center gap-4 rounded-lg border p-3">
+                      <div className="bg-background flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border">
                         {iconPreview ? (
                           <img src={iconPreview} className="size-full object-cover" alt="Icon" />
                         ) : (
-                          <Layout className="size-6 text-muted-foreground/50" />
+                          <Layout className="text-muted-foreground/50 size-6" />
                         )}
                       </div>
                       <div className="flex flex-col gap-1.5 overflow-hidden">
-                        <Input type="file" onChange={handleIconChange} className="h-8 text-[11px] px-2 py-1 cursor-pointer w-full" accept="image/*" />
+                        <Input
+                          type="file"
+                          onChange={handleIconChange}
+                          className="h-8 w-full cursor-pointer px-2 py-1 text-[11px]"
+                          accept="image/*"
+                        />
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <Label className="text-xs font-bold">Cover Banner</Label>
-                    <label htmlFor="cover-upload" className="group relative h-24 w-full rounded-lg border bg-muted/20 overflow-hidden border-dashed flex items-center justify-center hover:bg-muted/30 transition-colors cursor-pointer block">
+                    <label
+                      htmlFor="cover-upload"
+                      className="group bg-muted/20 hover:bg-muted/30 relative block flex h-24 w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed transition-colors"
+                    >
                       {coverPreview ? (
                         <img src={coverPreview} className="size-full object-cover" alt="Cover" />
                       ) : (
-                        <p className="text-[10px] font-medium text-muted-foreground">Click to upload cover</p>
+                        <p className="text-muted-foreground text-[10px] font-medium">Click to upload cover</p>
                       )}
-                      <input id="cover-upload" type="file" onChange={handleCoverImageChange} className="hidden" accept="image/*" />
+                      <input
+                        id="cover-upload"
+                        type="file"
+                        onChange={handleCoverImageChange}
+                        className="hidden"
+                        accept="image/*"
+                      />
                     </label>
                   </div>
                 </div>
@@ -710,53 +701,71 @@ export default function ProjectInfo({ variant }) {
           </TabsContent>
 
           {/* Members Tab */}
-          <TabsContent value="members" className="mt-0 space-y-6 outline-none animate-fade-in">
+          <TabsContent value="members" className="animate-fade-in mt-0 space-y-6 outline-none">
             <Card>
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
-                  <Users className="size-4 text-primary" />
+                  <Users className="text-primary size-4" />
                   <CardTitle className="text-lg">Collaborators</CardTitle>
                 </div>
                 <CardDescription>Manage who can access and edit this project.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex gap-2 p-1.5 border rounded-lg bg-muted/20 items-center">
-                  <UserPlus className="ml-2 size-4 text-muted-foreground" />
+                <div className="bg-muted/20 flex items-center gap-2 rounded-lg border p-1.5">
+                  <UserPlus className="text-muted-foreground ml-2 size-4" />
                   <Input
                     placeholder="Search by username..."
                     value={newMemberEmail}
                     onChange={(e) => setNewMemberEmail(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
-                    className="border-none bg-transparent focus-visible:ring-0 shadow-none h-9 text-sm"
+                    className="h-9 border-none bg-transparent text-sm shadow-none focus-visible:ring-0"
                   />
-                  <Button onClick={handleAddMember} disabled={isAddingMember} size="sm" className="h-8 px-3 text-xs font-bold">
+                  <Button
+                    onClick={handleAddMember}
+                    disabled={isAddingMember}
+                    size="sm"
+                    className="h-8 px-3 text-xs font-bold"
+                  >
                     {isAddingMember ? "..." : "Add User"}
                   </Button>
                 </div>
 
-                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="custom-scrollbar max-h-[400px] space-y-2 overflow-y-auto pr-2">
                   {project.Members.length > 0 ? (
                     project.Members.map((member) => (
-                      <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg bg-background hover:bg-muted/5 transition-colors">
+                      <div
+                        key={member.id}
+                        className="bg-background hover:bg-muted/5 flex items-center justify-between rounded-lg border p-3 transition-colors"
+                      >
                         <div className="flex items-center gap-3">
                           <Avatar className="size-9 border">
                             <AvatarImage src={member.profile_pic_url || getAvatarUrl(member.name || "user")} />
                             <AvatarFallback>{(member.name || "U")[0]}</AvatarFallback>
                           </Avatar>
                           <div className="overflow-hidden">
-                            <p className="text-sm font-semibold truncate leading-none mb-1">{member.name}</p>
-                            <p className="text-[11px] text-muted-foreground truncate">{member.email}</p>
+                            <p className="mb-1 truncate text-sm leading-none font-semibold">{member.name}</p>
+                            <p className="text-muted-foreground truncate text-[11px]">{member.email}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className={cn(
-                            "text-[10px] h-5 px-1.5 font-bold uppercase tracking-wider",
-                            member.isOwner && "bg-primary/20 text-primary border-primary/30"
-                          )}>
-                            {member.isOwner ? `Project Owner (${member.role?.replace(/_/g, ' ') || "Manager"})` : (member.role?.replace(/_/g, ' ') || "Member")}
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "h-5 px-1.5 text-[10px] font-bold tracking-wider uppercase",
+                              member.isOwner && "bg-primary/20 text-primary border-primary/30"
+                            )}
+                          >
+                            {member.isOwner
+                              ? `Project Owner (${member.role?.replace(/_/g, " ") || "Manager"})`
+                              : member.role?.replace(/_/g, " ") || "Member"}
                           </Badge>
                           {!member.isOwner && (
-                            <Button variant="ghost" size="icon" onClick={() => removeMember(member.id)} className="size-7 text-muted-foreground hover:text-destructive">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeMember(member.id)}
+                              className="text-muted-foreground hover:text-destructive size-7"
+                            >
                               <X className="size-3.5" />
                             </Button>
                           )}
@@ -764,7 +773,7 @@ export default function ProjectInfo({ variant }) {
                       </div>
                     ))
                   ) : (
-                    <div className="py-12 text-center text-muted-foreground/50 italic">
+                    <div className="text-muted-foreground/50 py-12 text-center italic">
                       No members assigned to this project.
                     </div>
                   )}
@@ -774,35 +783,42 @@ export default function ProjectInfo({ variant }) {
           </TabsContent>
 
           {/* Tags Tab */}
-          <TabsContent value="tags" className="mt-0 space-y-6 outline-none animate-fade-in">
+          <TabsContent value="tags" className="animate-fade-in mt-0 space-y-6 outline-none">
             <Card>
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
-                  <Tags className="size-4 text-primary" />
+                  <Tags className="text-primary size-4" />
                   <CardTitle className="text-lg">Classification</CardTitle>
                 </div>
                 <CardDescription>Use tags to categorize and organize your project.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex flex-wrap gap-2 min-h-[100px] p-4 border-2 border-dashed rounded-xl bg-muted/5 items-center justify-center">
+                <div className="bg-muted/5 flex min-h-[100px] flex-wrap items-center justify-center gap-2 rounded-xl border-2 border-dashed p-4">
                   {project.tags.length > 0 ? (
                     project.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="pl-3 pr-1 py-1 gap-2 text-xs font-semibold rounded-lg hover-lift">
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="hover-lift gap-2 rounded-lg py-1 pr-1 pl-3 text-xs font-semibold"
+                      >
                         {tag}
-                        <button onClick={() => removeTag(tag)} className="p-0.5 rounded-full hover:bg-destructive hover:text-white transition-all">
+                        <button
+                          onClick={() => removeTag(tag)}
+                          className="hover:bg-destructive rounded-full p-0.5 transition-all hover:text-white"
+                        >
                           <X className="size-3" />
                         </button>
                       </Badge>
                     ))
                   ) : (
-                    <div className="flex flex-col items-center gap-2 opacity-30 text-muted-foreground">
+                    <div className="text-muted-foreground flex flex-col items-center gap-2 opacity-30">
                       <Layers className="size-8" />
-                      <p className="text-xs font-bold uppercase tracking-widest">No Tags Defined</p>
+                      <p className="text-xs font-bold tracking-widest uppercase">No Tags Defined</p>
                     </div>
                   )}
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Input
                     placeholder="Add a new keyword..."
                     value={newTag}
@@ -811,51 +827,60 @@ export default function ProjectInfo({ variant }) {
                     className="h-10 text-sm"
                     disabled={project.tags.length >= 10}
                   />
-                  <Button onClick={addTag} disabled={project.tags.length >= 10} size="sm" className="h-10 px-6 font-bold">
+                  <Button
+                    onClick={addTag}
+                    disabled={project.tags.length >= 10}
+                    size="sm"
+                    className="h-10 px-6 font-bold"
+                  >
                     Add Tag
                   </Button>
                 </div>
                 {project.tags.length >= 10 && (
-                  <p className="text-[11px] text-center text-muted-foreground italic">Limit of 10 tags reached.</p>
+                  <p className="text-muted-foreground text-center text-[11px] italic">Limit of 10 tags reached.</p>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Danger Tab */}
-          <TabsContent value="danger" className="mt-0 space-y-6 outline-none animate-fade-in">
+          <TabsContent value="danger" className="animate-fade-in mt-0 space-y-6 outline-none">
             <Card className="border-destructive/20">
               <CardHeader className="pb-4">
-                <div className="flex items-center gap-2 text-destructive">
+                <div className="text-destructive flex items-center gap-2">
                   <Trash2 className="size-4" />
                   <CardTitle className="text-lg">Destructive Actions</CardTitle>
                 </div>
                 <CardDescription>Irreversible operations that destroy project data.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex flex-col justify-between gap-4 p-4 border rounded-lg border-destructive/10 bg-destructive/5 sm:flex-row sm:items-center">
+                <div className="border-destructive/10 bg-destructive/5 flex flex-col justify-between gap-4 rounded-lg border p-4 sm:flex-row sm:items-center">
                   <div>
-                    <p className="text-sm font-bold text-destructive">Delete Project</p>
-                    <p className="text-xs text-muted-foreground">All data will be permanently wiped from the server.</p>
+                    <p className="text-destructive text-sm font-bold">Delete Project</p>
+                    <p className="text-muted-foreground text-xs">All data will be permanently wiped from the server.</p>
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm" className="font-bold">Erase Project</Button>
+                      <Button variant="destructive" size="sm" className="font-bold">
+                        Erase Project
+                      </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-2xl max-w-md">
+                    <AlertDialogContent className="max-w-md rounded-2xl">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription className="text-sm">
-                          Deleting <strong>{project.name}</strong> is final and cannot be undone.
-                          All requirements, designs, and metadata will be purged.
+                          Deleting <strong>{project.name}</strong> is final and cannot be undone. All requirements,
+                          designs, and metadata will be purged.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter className="mt-4 gap-2">
-                        <AlertDialogCancel disabled={isDeleting} className="rounded-lg h-10 border-2">Cancel</AlertDialogCancel>
+                        <AlertDialogCancel disabled={isDeleting} className="h-10 rounded-lg border-2">
+                          Cancel
+                        </AlertDialogCancel>
                         <AlertDialogAction
                           onClick={handleDeleteProject}
                           disabled={isDeleting}
-                          className="h-10 bg-destructive text-white hover:bg-destructive/90 rounded-lg font-bold"
+                          className="bg-destructive hover:bg-destructive/90 h-10 rounded-lg font-bold text-white"
                         >
                           {isDeleting ? "Wiping..." : "Yes, Purge Project"}
                         </AlertDialogAction>
@@ -863,7 +888,6 @@ export default function ProjectInfo({ variant }) {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-
               </CardContent>
             </Card>
           </TabsContent>
@@ -873,6 +897,4 @@ export default function ProjectInfo({ variant }) {
   );
 }
 
-const Separator = ({ className }) => (
-  <div className={cn("h-px w-full bg-border", className)} />
-);
+const Separator = ({ className }) => <div className={cn("bg-border h-px w-full", className)} />;

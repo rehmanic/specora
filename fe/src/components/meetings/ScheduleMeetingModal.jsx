@@ -38,9 +38,7 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const scheduledDateTime = new Date(
-      `${formData.scheduled_date}T${formData.scheduled_time}`
-    ).toISOString();
+    const scheduledDateTime = new Date(`${formData.scheduled_date}T${formData.scheduled_time}`).toISOString();
 
     const meetingData = {
       name: formData.name,
@@ -54,7 +52,7 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
     };
 
     await onSchedule(meetingData);
-    
+
     setFormData({
       name: "",
       description: "",
@@ -62,17 +60,15 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
       scheduled_date: "",
       scheduled_time: "",
     });
-    
+
     setIsSubmitting(false);
   };
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <AlertDialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-2xl">
-            Schedule New Meeting
-          </AlertDialogTitle>
+          <AlertDialogTitle className="text-2xl">Schedule New Meeting</AlertDialogTitle>
           <AlertDialogDescription>
             Fill in the details below to schedule a meeting and send invitations to stakeholders.
           </AlertDialogDescription>
@@ -82,7 +78,7 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
           {/* Meeting Name */}
           <div className="space-y-2">
             <Label htmlFor="name" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
+              <Calendar className="h-4 w-4" />
               Meeting Name *
             </Label>
             <Input
@@ -112,7 +108,7 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
           {/* Stakeholders */}
           <div className="space-y-2">
             <Label htmlFor="stakeholders" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
+              <Users className="h-4 w-4" />
               Stakeholder Emails *
             </Label>
             <Input
@@ -123,16 +119,14 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
               onChange={handleInputChange}
               required
             />
-            <p className="text-xs text-muted-foreground">
-              Separate multiple emails with commas
-            </p>
+            <p className="text-muted-foreground text-xs">Separate multiple emails with commas</p>
           </div>
 
           {/* Date and Time */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="scheduled_date" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
+                <Calendar className="h-4 w-4" />
                 Date *
               </Label>
               <Input
@@ -148,7 +142,7 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
 
             <div className="space-y-2">
               <Label htmlFor="scheduled_time" className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
+                <Clock className="h-4 w-4" />
                 Time *
               </Label>
               <Input
@@ -163,16 +157,14 @@ export default function ScheduleMeetingModal({ isOpen, onClose, onSchedule }) {
           </div>
 
           {/* Video Conference Notice */}
-          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
             <div className="flex items-start gap-3">
-              <Video className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <Video className="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" />
               <div>
-                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                  Custom Video Room
-                </p>
-                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                  A secure video conference room will be automatically created for this meeting. 
-                  Participants can join directly from the meeting card.
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Custom Video Room</p>
+                <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                  A secure video conference room will be automatically created for this meeting. Participants can join
+                  directly from the meeting card.
                 </p>
               </div>
             </div>

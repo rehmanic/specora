@@ -32,7 +32,7 @@ const starters = [
 
 export default function Starter({ onSelect }) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {starters.map((starter, index) => {
         const Icon = starter.icon;
         return (
@@ -40,20 +40,18 @@ export default function Starter({ onSelect }) {
             key={index}
             onClick={() => onSelect(starter.prompt)}
             className={cn(
-              "flex flex-col items-start gap-2 p-4 rounded-xl",
-              "bg-card border border-border hover:border-primary/50",
-              "text-left transition-all duration-200 hover-lift",
+              "flex flex-col items-start gap-2 rounded-xl p-4",
+              "bg-card border-border hover:border-primary/50 border",
+              "hover-lift text-left transition-all duration-200",
               "group cursor-pointer"
             )}
           >
-            <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+            <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground rounded-lg p-2 transition-colors">
               <Icon className="h-4 w-4" />
             </div>
             <div>
-              <h4 className="font-medium text-sm">{starter.title}</h4>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {starter.description}
-              </p>
+              <h4 className="text-sm font-medium">{starter.title}</h4>
+              <p className="text-muted-foreground mt-0.5 text-xs">{starter.description}</p>
             </div>
           </button>
         );

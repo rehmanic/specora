@@ -2,7 +2,6 @@ import useAuthStore from "@/store/authStore";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
-
 // ======================
 // NEW USER
 // ======================
@@ -23,16 +22,11 @@ export async function createUserRequest(userData) {
     try {
       responseData = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        responseData?.message ||
-        `User creation failed${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(responseData?.message || `User creation failed${res.status ? ` (${res.status})` : ""}`);
     }
 
     return responseData;
@@ -40,9 +34,7 @@ export async function createUserRequest(userData) {
     if (err instanceof Error) {
       throw err;
     }
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
 
@@ -59,16 +51,11 @@ export async function getAllUsersRequest() {
     try {
       responseData = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        responseData?.message ||
-        `Fetching all users failed${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(responseData?.message || `Fetching all users failed${res.status ? ` (${res.status})` : ""}`);
     }
 
     return responseData;
@@ -76,9 +63,7 @@ export async function getAllUsersRequest() {
     if (err instanceof Error) {
       throw err;
     }
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
 
@@ -95,16 +80,11 @@ export async function deleteUserRequest(username) {
     try {
       responseData = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        responseData?.message ||
-        `User deletion failed${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(responseData?.message || `User deletion failed${res.status ? ` (${res.status})` : ""}`);
     }
 
     return responseData;
@@ -112,9 +92,7 @@ export async function deleteUserRequest(username) {
     if (err instanceof Error) {
       throw err;
     }
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
 
@@ -135,16 +113,11 @@ export async function updateUserRequest(userData) {
     try {
       responseData = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        responseData?.message ||
-        `User updation failed${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(responseData?.message || `User updation failed${res.status ? ` (${res.status})` : ""}`);
     }
 
     return responseData;
@@ -152,9 +125,7 @@ export async function updateUserRequest(userData) {
     if (err instanceof Error) {
       throw err;
     }
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
 
@@ -171,16 +142,11 @@ export async function getSingleUserDataRequest(username) {
     try {
       responseData = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        responseData?.message ||
-        `Fetching user details failed${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(responseData?.message || `Fetching user details failed${res.status ? ` (${res.status})` : ""}`);
     }
 
     // Backend returns { user: {...}, message: "..." }
@@ -189,9 +155,7 @@ export async function getSingleUserDataRequest(username) {
     if (err instanceof Error) {
       throw err;
     }
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
 
@@ -217,10 +181,7 @@ export async function getUsersByIds(userIds) {
     }
 
     if (!res.ok) {
-      console.error(
-        "Error fetching users by IDs:",
-        responseData?.message || `Failed (${res.status})`
-      );
+      console.error("Error fetching users by IDs:", responseData?.message || `Failed (${res.status})`);
       return [];
     }
 

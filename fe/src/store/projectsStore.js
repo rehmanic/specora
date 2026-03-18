@@ -21,7 +21,7 @@ const useProjectsStore = create(
           if (!user?.id) throw new Error("User not authenticated");
 
           const data = await getUserProjects(user.id);
-          const projectsList = Array.isArray(data) ? data : (data.projects || []);
+          const projectsList = Array.isArray(data) ? data : data.projects || [];
 
           set({ projects: projectsList, isLoading: false });
         } catch (error) {
@@ -31,8 +31,7 @@ const useProjectsStore = create(
       },
 
       // ✅ Set selected project only
-      setSelectedProject: (project) =>
-        set({ selectedProject: project, error: null }),
+      setSelectedProject: (project) => set({ selectedProject: project, error: null }),
 
       // ✅ Clear selected project
       clearSelectedProject: () => set({ selectedProject: null, error: null }),
@@ -44,9 +43,9 @@ const useProjectsStore = create(
       clearError: () => set({ error: null }),
 
       // ✅ Entity Titles for Breadcrumbs
-      setEntityTitle: (id, title) => 
-        set((state) => ({ 
-          entityTitles: { ...state.entityTitles, [id]: title } 
+      setEntityTitle: (id, title) =>
+        set((state) => ({
+          entityTitles: { ...state.entityTitles, [id]: title },
         })),
     }),
     {

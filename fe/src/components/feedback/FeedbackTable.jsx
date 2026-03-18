@@ -23,33 +23,21 @@ export function FeedbackTable({ isClient }) {
       <table className="min-w-full table-auto">
         <thead className="bg-muted/50">
           <tr className="text-left">
-            <th
-              scope="col"
-              className="px-4 py-3 text-sm font-medium text-muted-foreground"
-            >
+            <th scope="col" className="text-muted-foreground px-4 py-3 text-sm font-medium">
               id
             </th>
-            <th
-              scope="col"
-              className="px-4 py-3 text-sm font-medium text-muted-foreground"
-            >
+            <th scope="col" className="text-muted-foreground px-4 py-3 text-sm font-medium">
               Title
             </th>
-            <th
-              scope="col"
-              className="px-4 py-3 text-sm font-medium text-muted-foreground"
-            >
+            <th scope="col" className="text-muted-foreground px-4 py-3 text-sm font-medium">
               Status
             </th>
-            <th
-              scope="col"
-              className="px-4 py-3 text-sm font-medium text-muted-foreground"
-            >
+            <th scope="col" className="text-muted-foreground px-4 py-3 text-sm font-medium">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border">
+        <tbody className="divide-border divide-y">
           {DUMMY_DATA.map((item) => (
             <tr key={item.id} className="bg-card">
               <td className="px-4 py-3 text-sm">{item.id}</td>
@@ -58,10 +46,8 @@ export function FeedbackTable({ isClient }) {
                 <span
                   className={cn(
                     "inline-flex items-center rounded-md px-2 py-1 text-xs",
-                    item.status === "Open" &&
-                      "bg-accent text-accent-foreground",
-                    item.status === "In Progress" &&
-                      "bg-secondary text-secondary-foreground",
+                    item.status === "Open" && "bg-accent text-accent-foreground",
+                    item.status === "In Progress" && "bg-secondary text-secondary-foreground",
                     item.status === "Closed" && "bg-muted text-muted-foreground"
                   )}
                 >
@@ -71,11 +57,7 @@ export function FeedbackTable({ isClient }) {
               <td className="px-4 py-3">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Open actions menu for feedback ${item.id}`}
-                    >
+                    <Button variant="ghost" size="icon" aria-label={`Open actions menu for feedback ${item.id}`}>
                       <span aria-hidden="true" className="text-lg leading-none">
                         ⋮
                       </span>
@@ -83,12 +65,8 @@ export function FeedbackTable({ isClient }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      View
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>View</DropdownMenuItem>
                     {!isClient && (
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"

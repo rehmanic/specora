@@ -27,11 +27,7 @@ const FormBuilder = () => {
 
   return (
     <div style={{ height: "100vh" }}>
-      {creatorReady ? (
-        <SurveyCreatorComponent creator={creatorRef.current} />
-      ) : (
-        <p>Loading Form Builder...</p>
-      )}
+      {creatorReady ? <SurveyCreatorComponent creator={creatorRef.current} /> : <p>Loading Form Builder...</p>}
     </div>
   );
 };

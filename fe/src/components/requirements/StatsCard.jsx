@@ -13,13 +13,17 @@ export function StatsCard({ icon: Icon, label, value, color = "primary" }) {
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 lg:p-4 rounded-xl bg-card border border-border hover-lift cursor-default overflow-hidden">
-      <div className={`flex-shrink-0 p-2.5 lg:p-3 rounded-lg ${colorClasses[color]}`}>
+    <div className="bg-card border-border hover-lift flex cursor-default items-center gap-3 overflow-hidden rounded-xl border p-3 lg:p-4">
+      <div className={`flex-shrink-0 rounded-lg p-2.5 lg:p-3 ${colorClasses[color]}`}>
         <Icon className="h-4 w-4 lg:h-5 lg:w-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-lg lg:text-2xl font-bold font-display truncate leading-tight" title={value}>{value}</p>
-        <p className="text-[10px] lg:text-sm text-muted-foreground truncate leading-tight" title={label}>{label}</p>
+        <p className="font-display truncate text-lg leading-tight font-bold lg:text-2xl" title={value}>
+          {value}
+        </p>
+        <p className="text-muted-foreground truncate text-[10px] leading-tight lg:text-sm" title={label}>
+          {label}
+        </p>
       </div>
     </div>
   );

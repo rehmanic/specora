@@ -23,9 +23,9 @@ export default function MainPanel({
 
   if (!canAccess) {
     return (
-      <div className="flex h-full flex-col items-center justify-center bg-background px-6 text-center">
+      <div className="bg-background flex h-full flex-col items-center justify-center px-6 text-center">
         <h2 className="text-2xl font-semibold">Access limited</h2>
-        <p className="mt-2 text-muted-foreground">
+        <p className="text-muted-foreground mt-2">
           Specbot workspace is available for managers and requirements engineers.
         </p>
       </div>
@@ -34,22 +34,18 @@ export default function MainPanel({
 
   if (!hasProject) {
     return (
-      <div className="flex h-full flex-col items-center justify-center bg-background px-6 text-center">
+      <div className="bg-background flex h-full flex-col items-center justify-center px-6 text-center">
         <h2 className="text-2xl font-semibold">Select a project</h2>
-        <p className="mt-2 text-muted-foreground">
-          Choose a project to view its Specbot chats.
-        </p>
+        <p className="text-muted-foreground mt-2">Choose a project to view its Specbot chats.</p>
       </div>
     );
   }
 
   if (!currentChat) {
     return (
-      <div className="flex h-full flex-col items-center justify-center bg-background px-6 text-center">
+      <div className="bg-background flex h-full flex-col items-center justify-center px-6 text-center">
         <h2 className="text-2xl font-semibold">Pick a chat to review</h2>
-        <p className="mt-2 text-muted-foreground">
-          Chats for this project appear in the sidebar.
-        </p>
+        <p className="text-muted-foreground mt-2">Chats for this project appear in the sidebar.</p>
       </div>
     );
   }
@@ -79,12 +75,14 @@ export default function MainPanel({
   ];
 
   return (
-    <div className="flex h-full flex-col bg-transparent relative z-10">
-      <div className="flex items-center justify-between border-b border-border/50 bg-background/60 backdrop-blur-xl px-6 py-4 sticky top-0 z-20 shadow-sm">
+    <div className="relative z-10 flex h-full flex-col bg-transparent">
+      <div className="border-border/50 bg-background/60 sticky top-0 z-20 flex items-center justify-between border-b px-6 py-4 shadow-sm backdrop-blur-xl">
         <div>
-          <p className="text-lg font-semibold leading-tight">{currentChat?.title}</p>
-          <p className="text-xs text-muted-foreground">
-            {downloaded ? "Downloaded to server. You can summarize or extract." : "Download this chat to enable summarize and extract."}
+          <p className="text-lg leading-tight font-semibold">{currentChat?.title}</p>
+          <p className="text-muted-foreground text-xs">
+            {downloaded
+              ? "Downloaded to server. You can summarize or extract."
+              : "Download this chat to enable summarize and extract."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -96,7 +94,7 @@ export default function MainPanel({
                     type="button"
                     onClick={action.onClick}
                     disabled={action.disabled}
-                    className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+                    className="border-border bg-card text-foreground hover:bg-accent flex h-9 w-9 items-center justify-center rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label={action.label}
                   >
                     {action.icon}
@@ -109,13 +107,13 @@ export default function MainPanel({
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto bg-transparent px-6 py-8 space-y-6">
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto bg-transparent px-6 py-8">
         {loading && messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-muted-foreground">
+          <div className="text-muted-foreground flex h-full items-center justify-center">
             No messages in this chat yet.
           </div>
         ) : (
@@ -132,8 +130,7 @@ export default function MainPanel({
                 timestamp={formattedTime}
                 isSender={msg.sender_type === "user"}
                 name={
-                  msg.sender_type === "bot" ? "SpecBot" : 
-                  (msg.sender?.display_name || msg.sender?.username || "Client")
+                  msg.sender_type === "bot" ? "SpecBot" : msg.sender?.display_name || msg.sender?.username || "Client"
                 }
                 avatarUrl={msg.sender_type === "user" ? msg.sender?.profile_pic_url : null}
                 metadata={msg.metadata}
@@ -148,7 +145,7 @@ export default function MainPanel({
       </div>
 
       {error && (
-        <div className="flex items-center justify-between bg-destructive/10 px-4 py-2 text-sm text-destructive">
+        <div className="bg-destructive/10 text-destructive flex items-center justify-between px-4 py-2 text-sm">
           <span>{error}</span>
           <button className="text-xs underline" onClick={onDismissError}>
             Dismiss

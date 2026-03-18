@@ -2,37 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Eye, EyeOff, Save, X } from "lucide-react";
 import permissionList from "@/utils/permissions";
-import {
-  createUserRequest,
-  updateUserRequest,
-  getSingleUserDataRequest,
-} from "@/api/users";
+import { createUserRequest, updateUserRequest, getSingleUserDataRequest } from "@/api/users";
 import { uploadFileRequest } from "@/api/upload";
 import ErrorBox from "@/components/common/ErrorBox";
 
@@ -81,12 +60,10 @@ export function CreateUserForm({ variant = "create-user", username }) {
           const updatedPermissions = { ...permissionList };
           if (data.permissions && Array.isArray(data.permissions)) {
             Object.keys(updatedPermissions).forEach((category) => {
-              updatedPermissions[category] = updatedPermissions[category].map(
-                (perm) => ({
-                  ...perm,
-                  enabled: data.permissions.includes(perm.id),
-                })
-              );
+              updatedPermissions[category] = updatedPermissions[category].map((perm) => ({
+                ...perm,
+                enabled: data.permissions.includes(perm.id),
+              }));
             });
           }
           setPermissions(updatedPermissions);
@@ -105,9 +82,7 @@ export function CreateUserForm({ variant = "create-user", username }) {
   const handlePermissionToggle = (category, id) => {
     setPermissions((prevState) => ({
       ...prevState,
-      [category]: prevState[category].map((perm) =>
-        perm.id === id ? { ...perm, enabled: !perm.enabled } : perm
-      ),
+      [category]: prevState[category].map((perm) => (perm.id === id ? { ...perm, enabled: !perm.enabled } : perm)),
     }));
   };
 
@@ -142,7 +117,8 @@ export function CreateUserForm({ variant = "create-user", username }) {
     if (!formData.fullName.trim()) {
       errors.fullName = "Display name is required";
     } else if (!displayNameRegex.test(formData.fullName)) {
-      errors.fullName = "Display name must be 3-50 characters and may include letters, numbers, spaces, and punctuation";
+      errors.fullName =
+        "Display name must be 3-50 characters and may include letters, numbers, spaces, and punctuation";
     }
 
     // Email validation
@@ -196,8 +172,8 @@ export function CreateUserForm({ variant = "create-user", username }) {
     }
 
     try {
-      const enabledPermissions = Object.entries(permissions).flatMap(
-        ([category, perms]) => perms.filter((p) => p.enabled).map((p) => p.id)
+      const enabledPermissions = Object.entries(permissions).flatMap(([category, perms]) =>
+        perms.filter((p) => p.enabled).map((p) => p.id)
       );
 
       let profileUrl = "https://cdn-icons-png.flaticon.com/128/1077/1077012.png"; // default
@@ -254,13 +230,9 @@ export function CreateUserForm({ variant = "create-user", username }) {
       {/* User Information */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold">
-            User Information
-          </CardTitle>
+          <CardTitle className="text-2xl font-semibold">User Information</CardTitle>
           <CardDescription>
-            {isCreateUser
-              ? "Enter the basic information for the new user"
-              : "Update user information"}
+            {isCreateUser ? "Enter the basic information for the new user" : "Update user information"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -285,9 +257,7 @@ export function CreateUserForm({ variant = "create-user", username }) {
                 minLength={3}
                 maxLength={50}
               />
-              {validationErrors.fullName && (
-                <p className="text-sm text-red-500">{validationErrors.fullName}</p>
-              )}
+              {validationErrors.fullName && <p className="text-sm text-red-500">{validationErrors.fullName}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="username">
@@ -309,9 +279,7 @@ export function CreateUserForm({ variant = "create-user", username }) {
                 maxLength={20}
                 disabled={!isCreateUser} // Username cannot be changed on update
               />
-              {validationErrors.username && (
-                <p className="text-sm text-red-500">{validationErrors.username}</p>
-              )}
+              {validationErrors.username && <p className="text-sm text-red-500">{validationErrors.username}</p>}
             </div>
           </div>
 
@@ -334,9 +302,7 @@ export function CreateUserForm({ variant = "create-user", username }) {
               }}
               required
             />
-            {validationErrors.email && (
-              <p className="text-sm text-red-500">{validationErrors.email}</p>
-            )}
+            {validationErrors.email && <p className="text-sm text-red-500">{validationErrors.email}</p>}
           </div>
 
           {/* Role */}
@@ -362,29 +328,21 @@ export function CreateUserForm({ variant = "create-user", username }) {
               <SelectContent>
                 <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="client">Client</SelectItem>
-                <SelectItem value="requirements_engineer">
-                  Requirements Engineer
-                </SelectItem>
+                <SelectItem value="requirements_engineer">Requirements Engineer</SelectItem>
               </SelectContent>
             </Select>
-            {validationErrors.role && (
-              <p className="text-sm text-red-500">{validationErrors.role}</p>
-            )}
+            {validationErrors.role && <p className="text-sm text-red-500">{validationErrors.role}</p>}
           </div>
 
           {/* Password */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="password">
-                Password {isCreateUser && <span className="text-red-500">*</span>}
-              </Label>
+              <Label htmlFor="password">Password {isCreateUser && <span className="text-red-500">*</span>}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder={
-                    isCreateUser ? "••••••••" : "Leave blank to keep current"
-                  }
+                  placeholder={isCreateUser ? "••••••••" : "Leave blank to keep current"}
                   value={formData.password}
                   onChange={(e) => {
                     setFormData({ ...formData, password: e.target.value });
@@ -401,41 +359,22 @@ export function CreateUserForm({ variant = "create-user", username }) {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="absolute right-0 top-0 h-full px-3"
+                  className="absolute top-0 right-0 h-full px-3"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                  <span className="sr-only">
-                    {showPassword ? "Hide password" : "Show password"}
-                  </span>
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
                 </Button>
               </div>
-              {validationErrors.password && (
-                <p className="text-sm text-red-500">{validationErrors.password}</p>
-              )}
+              {validationErrors.password && <p className="text-sm text-red-500">{validationErrors.password}</p>}
             </div>
           </div>
 
           {/* Profile picture */}
-          <div className="space-y-2 mt-6">
+          <div className="mt-6 space-y-2">
             <Label htmlFor="profilePic">Profile Picture (Optional)</Label>
-            <Input
-              id="profilePic"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-            {preview && (
-              <img
-                src={preview}
-                alt="Preview"
-                className="mt-2 h-16 w-16 rounded-full object-cover border"
-              />
-            )}
+            <Input id="profilePic" type="file" accept="image/*" onChange={handleImageChange} />
+            {preview && <img src={preview} alt="Preview" className="mt-2 h-16 w-16 rounded-full border object-cover" />}
           </div>
         </CardContent>
       </Card>
@@ -444,50 +383,39 @@ export function CreateUserForm({ variant = "create-user", username }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">Permissions</CardTitle>
-          <CardDescription>
-            Configure what this user can access and modify
-          </CardDescription>
+          <CardDescription>Configure what this user can access and modify</CardDescription>
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
-            {Object.entries(permissions).map(
-              ([category, categoryPermissions]) => (
-                <AccordionItem key={category} value={category}>
-                  <AccordionTrigger className="cursor-pointer text-base capitalize hover:no-underline">
-                    {category} Permissions
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4 pt-4">
-                      {categoryPermissions.map((permission) => (
-                        <div
-                          key={permission.id}
-                          className="flex items-center justify-between gap-4 rounded-lg border p-4 hover:bg-accent hover:text-accent-foreground"
-                        >
-                          <div className="flex-1 space-y-1">
-                            <Label
-                              htmlFor={permission.id}
-                              className="cursor-pointer font-medium"
-                            >
-                              {permission.label}
-                            </Label>
-                            <p className="text-sm text-muted-foreground">
-                              {permission.description}
-                            </p>
-                          </div>
-                          <Switch
-                            id={permission.id}
-                            checked={permission.enabled}
-                            onCheckedChange={() =>
-                              handlePermissionToggle(category, permission.id)
-                            }
-                          />
+            {Object.entries(permissions).map(([category, categoryPermissions]) => (
+              <AccordionItem key={category} value={category}>
+                <AccordionTrigger className="cursor-pointer text-base capitalize hover:no-underline">
+                  {category} Permissions
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-4 pt-4">
+                    {categoryPermissions.map((permission) => (
+                      <div
+                        key={permission.id}
+                        className="hover:bg-accent hover:text-accent-foreground flex items-center justify-between gap-4 rounded-lg border p-4"
+                      >
+                        <div className="flex-1 space-y-1">
+                          <Label htmlFor={permission.id} className="cursor-pointer font-medium">
+                            {permission.label}
+                          </Label>
+                          <p className="text-muted-foreground text-sm">{permission.description}</p>
                         </div>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              )
-            )}
+                        <Switch
+                          id={permission.id}
+                          checked={permission.enabled}
+                          onCheckedChange={() => handlePermissionToggle(category, permission.id)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
           </Accordion>
         </CardContent>
       </Card>
@@ -500,23 +428,16 @@ export function CreateUserForm({ variant = "create-user", username }) {
           type="button"
           variant="outline"
           onClick={handleCancel}
-          className="gap-2 bg-transparent cursor-pointer"
+          className="cursor-pointer gap-2 bg-transparent"
           disabled={isSubmitting}
         >
           <X className="h-4 w-4" />
           Cancel
         </Button>
 
-        <Button
-          type="submit"
-          className="gap-2 cursor-pointer"
-          disabled={isSubmitting}
-        >
+        <Button type="submit" className="cursor-pointer gap-2" disabled={isSubmitting}>
           <Save className="h-4 w-4" />
-          {isSubmitting
-            ? (isCreateUser ? "Creating..." : "Updating...")
-            : (isCreateUser ? "Create" : "Update")
-          }
+          {isSubmitting ? (isCreateUser ? "Creating..." : "Updating...") : isCreateUser ? "Create" : "Update"}
         </Button>
       </div>
     </form>

@@ -72,7 +72,7 @@ export function ProjectCard({ project, onClick }) {
 
   return (
     <div
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 dark:border-white/5 bg-card/60 backdrop-blur-xl transition-all duration-500 hover:shadow-md cursor-pointer active:scale-[0.98] shadow-sm"
+      className="group bg-card/60 relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/10 shadow-sm backdrop-blur-xl transition-all duration-500 hover:shadow-md active:scale-[0.98] dark:border-white/5"
       onClick={onClick}
     >
       {/* Thumbnail */}
@@ -84,10 +84,12 @@ export function ProjectCard({ project, onClick }) {
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
-          <div className={`h-full w-full bg-gradient-to-br ${getProjectColor(name)} flex items-center justify-center relative overflow-hidden`}>
+          <div
+            className={`h-full w-full bg-gradient-to-br ${getProjectColor(name)} relative flex items-center justify-center overflow-hidden`}
+          >
             {/* Decorative background shape */}
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_70%)] scale-150"></div>
-            <span className="text-5xl font-bold text-white/95 relative z-10 drop-shadow-2xl italic tracking-tighter">
+            <div className="absolute inset-0 scale-150 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_70%)] opacity-20"></div>
+            <span className="relative z-10 text-5xl font-bold tracking-tighter text-white/95 italic drop-shadow-2xl">
               {name?.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -95,41 +97,40 @@ export function ProjectCard({ project, onClick }) {
 
         {/* Status Badge */}
         <div className="absolute top-4 right-4 z-20">
-          <Badge variant="outline" className={`${currentStatus.className} backdrop-blur-xl border-white/20 shadow-lg px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider`}>
+          <Badge
+            variant="outline"
+            className={`${currentStatus.className} rounded-full border-white/20 px-3 py-1 text-[10px] font-bold tracking-wider uppercase shadow-lg backdrop-blur-xl`}
+          >
             {currentStatus.label}
           </Badge>
         </div>
 
         {/* Glossy Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-4 flex flex-col justify-between relative bg-gradient-to-b from-transparent to-card/50">
+      <div className="to-card/50 relative flex flex-1 flex-col justify-between bg-gradient-to-b from-transparent p-4">
         <div className="space-y-4">
           {/* Floating Icon/Initial */}
           <div className="absolute -top-8 left-4 z-10">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-card shadow-xl ring-4 ring-card border border-border/50 transition-transform duration-500 group-hover:rotate-6 group-hover:scale-105`}>
+            <div
+              className={`bg-card ring-card border-border/50 flex h-12 w-12 items-center justify-center rounded-2xl border shadow-xl ring-4 transition-transform duration-500 group-hover:scale-105 group-hover:rotate-6`}
+            >
               {icon_url ? (
-                <img
-                  src={icon_url}
-                  alt={`${name} icon`}
-                  className="h-8 w-8 object-contain"
-                />
+                <img src={icon_url} alt={`${name} icon`} className="h-8 w-8 object-contain" />
               ) : (
-                <span className="text-white text-xl font-bold">
-                  {name?.charAt(0).toUpperCase()}
-                </span>
+                <span className="text-xl font-bold text-white">{name?.charAt(0).toUpperCase()}</span>
               )}
             </div>
           </div>
 
           {/* Header */}
-          <div className="pt-4 space-y-1">
-            <h3 className="text-lg font-bold text-card-foreground line-clamp-1 group-hover:text-primary transition-colors tracking-tight">
+          <div className="space-y-1 pt-4">
+            <h3 className="text-card-foreground group-hover:text-primary line-clamp-1 text-lg font-bold tracking-tight transition-colors">
               {name}
             </h3>
-            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed h-8">
+            <p className="text-muted-foreground line-clamp-2 h-8 text-xs leading-relaxed">
               {description || "No description provided."}
             </p>
           </div>
@@ -140,13 +141,13 @@ export function ProjectCard({ project, onClick }) {
               {tags.slice(0, 5).map((tag, i) => (
                 <span
                   key={i}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border backdrop-blur-md transition-all duration-300 group-hover:scale-110 ${getTagStyle(tag)}`}
+                  className={`rounded-md border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase backdrop-blur-md transition-all duration-300 group-hover:scale-110 ${getTagStyle(tag)}`}
                 >
                   {tag}
                 </span>
               ))}
               {tags.length > 5 && (
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-muted/50 text-muted-foreground border border-border/50">
+                <span className="bg-muted/50 text-muted-foreground border-border/50 rounded-md border px-2 py-0.5 text-[10px] font-bold">
                   +{tags.length - 5}
                 </span>
               )}
@@ -155,24 +156,26 @@ export function ProjectCard({ project, onClick }) {
         </div>
 
         {/* Footer Meta info */}
-        <div className="flex flex-col gap-3 pt-3 mt-3 border-t border-white/10 dark:border-white/5">
+        <div className="mt-3 flex flex-col gap-3 border-t border-white/10 pt-3 dark:border-white/5">
           {/* Duration Section */}
-          <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest gap-4">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Calendar className="h-3 w-3 text-primary/70 shrink-0" />
-              <span className="truncate">{formatDate(start_date)} — {formatDate(end_date)}</span>
+          <div className="text-muted-foreground/60 flex items-center justify-between gap-4 text-[10px] font-bold tracking-widest uppercase">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <Calendar className="text-primary/70 h-3 w-3 shrink-0" />
+              <span className="truncate">
+                {formatDate(start_date)} — {formatDate(end_date)}
+              </span>
             </div>
-            
-            <div className="flex items-center gap-3 shrink-0">
+
+            <div className="flex shrink-0 items-center gap-3">
               <div className="flex items-center gap-1">
-                <Users className="h-3 w-3 text-primary/70" />
+                <Users className="text-primary/70 h-3 w-3" />
                 <span>{members?.length || 0}</span>
               </div>
             </div>
           </div>
 
           {/* timestamps */}
-          <div className="flex flex-col gap-0.5 text-[9px] font-medium text-muted-foreground/50 uppercase tracking-tight">
+          <div className="text-muted-foreground/50 flex flex-col gap-0.5 text-[9px] font-medium tracking-tight uppercase">
             <div className="flex items-center gap-1">
               <span>Created: {formatDate(created_at)}</span>
             </div>
@@ -186,7 +189,7 @@ export function ProjectCard({ project, onClick }) {
       </div>
 
       {/* Decorative hover sparkle */}
-      <div className="absolute bottom-0 right-0 h-24 w-24 bg-primary/10 blur-[50px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+      <div className="bg-primary/10 pointer-events-none absolute right-0 bottom-0 h-24 w-24 rounded-full opacity-0 blur-[50px] transition-opacity duration-700 group-hover:opacity-100" />
     </div>
   );
 }

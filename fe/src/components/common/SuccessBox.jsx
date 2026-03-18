@@ -14,14 +14,11 @@ export default function SuccessBox({ message, dismissible = false, onDismiss }) 
   };
 
   return (
-    <div className="flex items-start gap-3 p-4 rounded-lg bg-success/10 border border-success/20 text-success animate-fade-in">
-      <CheckCircle className="h-5 w-5 shrink-0 mt-0.5" />
-      <p className="text-sm flex-1">{message}</p>
+    <div className="bg-success/10 border-success/20 text-success animate-fade-in flex items-start gap-3 rounded-lg border p-4">
+      <CheckCircle className="mt-0.5 h-5 w-5 shrink-0" />
+      <p className="flex-1 text-sm">{message}</p>
       {dismissible && (
-        <button
-          onClick={handleDismiss}
-          className="shrink-0 text-success/70 hover:text-success transition-colors"
-        >
+        <button onClick={handleDismiss} className="text-success/70 hover:text-success shrink-0 transition-colors">
           <X className="h-4 w-4" />
         </button>
       )}

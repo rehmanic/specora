@@ -38,9 +38,7 @@ export default function ConfirmationDialog({
             }}
             disabled={loading}
             className={
-              variant === "destructive"
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                : ""
+              variant === "destructive" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""
             }
           >
             {loading ? "Processing..." : confirmText}

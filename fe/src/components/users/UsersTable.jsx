@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -32,11 +25,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-        <Users className="h-8 w-8 text-primary" />
+      <div className="bg-primary/10 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl">
+        <Users className="text-primary h-8 w-8" />
       </div>
-      <h3 className="text-lg font-semibold font-display mb-1">No users found</h3>
-      <p className="text-sm text-muted-foreground max-w-xs">
+      <h3 className="font-display mb-1 text-lg font-semibold">No users found</h3>
+      <p className="text-muted-foreground max-w-xs text-sm">
         Create your first user to start managing access and permissions.
       </p>
     </div>
@@ -46,9 +39,7 @@ function EmptyState() {
 export function UsersTable({ users: initialUsers = [] }) {
   const router = useRouter();
 
-  const [users, setUsers] = useState(
-    Array.isArray(initialUsers) ? initialUsers : []
-  );
+  const [users, setUsers] = useState(Array.isArray(initialUsers) ? initialUsers : []);
   const [deleteError, setDeleteError] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -63,10 +54,7 @@ export function UsersTable({ users: initialUsers = [] }) {
   }, [initialUsers]);
 
   const totalPages = Math.ceil(users.length / pageSize);
-  const paginatedUsers = users.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const paginatedUsers = users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleDelete = async (username) => {
     setUserToDelete(username);
@@ -136,7 +124,7 @@ export function UsersTable({ users: initialUsers = [] }) {
         description={
           <span>
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-foreground">
+            <span className="text-foreground font-semibold">
               {userBeingDeleted?.display_name || userBeingDeleted?.username || userToDelete}
             </span>
             ? This action cannot be undone.
@@ -147,13 +135,13 @@ export function UsersTable({ users: initialUsers = [] }) {
         disabled={isDeleting}
       />
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="border-border bg-card overflow-hidden rounded-xl border">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent bg-muted/30">
+              <TableRow className="bg-muted/30 hover:bg-transparent">
                 <TableHead className="w-[300px] text-xs font-bold uppercase">User</TableHead>
-                <TableHead className="hidden md:table-cell text-xs font-bold uppercase">Email</TableHead>
+                <TableHead className="hidden text-xs font-bold uppercase md:table-cell">Email</TableHead>
                 <TableHead className="text-xs font-bold uppercase">Role</TableHead>
                 <TableHead className="text-center text-xs font-bold uppercase">Projects</TableHead>
                 <TableHead className="w-[100px] text-right text-xs font-bold uppercase">Actions</TableHead>
@@ -168,9 +156,11 @@ export function UsersTable({ users: initialUsers = [] }) {
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border-2 border-card">
+                      <Avatar className="border-card h-10 w-10 border-2">
                         <AvatarImage
-                          src={user.profile_pic_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`}
+                          src={
+                            user.profile_pic_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
+                          }
                           alt={user.display_name || user.username || "User"}
                         />
                         <AvatarFallback className="bg-primary/10 text-primary">
@@ -182,29 +172,30 @@ export function UsersTable({ users: initialUsers = [] }) {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium text-sm">
+                        <p className="text-sm font-medium">
                           {user.display_name?.trim() || user.username?.trim() || "Unknown User"}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          @{user.username?.trim() || "unknown"}
-                        </p>
+                        <p className="text-muted-foreground text-xs">@{user.username?.trim() || "unknown"}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground flex items-center gap-2 text-xs">
                       <Mail className="h-4 w-4" />
                       {user.email}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={`${getRoleBadgeClass(user.role)} text-[10px] items-center gap-1 py-0.5 px-2`}>
+                    <Badge
+                      variant="outline"
+                      className={`${getRoleBadgeClass(user.role)} items-center gap-1 px-2 py-0.5 text-[10px]`}
+                    >
                       {getRoleLabel(user.role)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center font-medium">
                     <div className="flex items-center justify-center gap-1.5 text-xs">
-                      <FolderKanban className="h-3.5 w-3.5 text-muted-foreground" />
+                      <FolderKanban className="text-muted-foreground h-3.5 w-3.5" />
                       {user.projects_count || 0}
                     </div>
                   </TableCell>
@@ -216,7 +207,7 @@ export function UsersTable({ users: initialUsers = [] }) {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors"
+                              className="text-muted-foreground hover:text-primary h-8 w-8 transition-colors"
                               onClick={() => handleEdit(user.username)}
                             >
                               <Pencil className="h-4 w-4" />
@@ -230,7 +221,7 @@ export function UsersTable({ users: initialUsers = [] }) {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                              className="text-muted-foreground hover:text-destructive h-8 w-8 transition-colors"
                               onClick={() => handleDelete(user.username)}
                             >
                               <Trash2 className="h-4 w-4" />

@@ -4,11 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useUserStore from "@/store/authStore";
 
-export default function ProtectedRoute({
-  children,
-  allowedRoles = [],
-  requiredPermissions = [],
-}) {
+export default function ProtectedRoute({ children, allowedRoles = [], requiredPermissions = [] }) {
   const { user } = useUserStore();
   const router = useRouter();
 
@@ -30,10 +26,7 @@ export default function ProtectedRoute({
     }
 
     // If required permissions are missing
-    if (
-      requiredPermissions.length > 0 &&
-      !requiredPermissions.every((perm) => user.permissions.includes(perm))
-    ) {
+    if (requiredPermissions.length > 0 && !requiredPermissions.every((perm) => user.permissions.includes(perm))) {
       router.replace("/unauthorized");
       return;
     }
@@ -43,8 +36,7 @@ export default function ProtectedRoute({
   if (
     !user ||
     (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) ||
-    (requiredPermissions.length > 0 &&
-      !requiredPermissions.every((perm) => user.permissions.includes(perm)))
+    (requiredPermissions.length > 0 && !requiredPermissions.every((perm) => user.permissions.includes(perm)))
   ) {
     return null;
   }

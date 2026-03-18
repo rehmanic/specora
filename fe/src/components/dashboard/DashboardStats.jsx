@@ -11,13 +11,15 @@ function StatCard({ icon: Icon, label, value, color = "primary" }) {
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-2xl bg-card/60 backdrop-blur-xl border border-border/50 hover-lift cursor-default card-interactive transition-all group shadow-sm hover:shadow-md">
-      <div className={`p-2 rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 ${colorClasses[color]} border shadow-inner`}>
+    <div className="bg-card/60 border-border/50 hover-lift card-interactive group flex cursor-default items-center gap-3 rounded-2xl border p-3 shadow-sm backdrop-blur-xl transition-all hover:shadow-md">
+      <div
+        className={`rounded-xl p-2 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 ${colorClasses[color]} border shadow-inner`}
+      >
         <Icon className="h-5 w-5" />
       </div>
       <div>
-        <p className="text-2xl font-bold font-display tracking-tight">{value}</p>
-        <p className="text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider">{label}</p>
+        <p className="font-display text-2xl font-bold tracking-tight">{value}</p>
+        <p className="text-muted-foreground/80 text-[10px] font-medium tracking-wider uppercase">{label}</p>
       </div>
     </div>
   );
@@ -26,50 +28,30 @@ function StatCard({ icon: Icon, label, value, color = "primary" }) {
 export default function DashboardStats({ projects }) {
   // Aggregate stats from projects array
   const totalProjects = projects.length;
-  const activeProjects = projects.filter(p => p.status === 'active' || !p.status).length;
+  const activeProjects = projects.filter((p) => p.status === "active" || !p.status).length;
 
   // Calculate total unique members across all projects
   const uniqueMembers = new Set();
-  projects.forEach(p => {
-    p.members?.forEach(m => uniqueMembers.add(m.user_id || m.id));
+  projects.forEach((p) => {
+    p.members?.forEach((m) => uniqueMembers.add(m.user_id || m.id));
   });
   const totalCollaborators = uniqueMembers.size;
 
   // Calculate projects started this month
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
-  const newProjectsThisMonth = projects.filter(p => {
+  const newProjectsThisMonth = projects.filter((p) => {
     if (!p.created_at) return false;
     const date = new Date(p.created_at);
     return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
   }).length;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-      <StatCard
-        icon={FolderOpen}
-        label="Total Projects"
-        value={totalProjects}
-        color="primary"
-      />
-      <StatCard
-        icon={Activity}
-        label="Active Projects"
-        value={activeProjects}
-        color="success"
-      />
-      <StatCard
-        icon={Users}
-        label="Total Collaborators"
-        value={totalCollaborators}
-        color="accent"
-      />
-      <StatCard
-        icon={Tags}
-        label="New This Month"
-        value={newProjectsThisMonth}
-        color="warning"
-      />
+    <div className="animate-fade-in grid grid-cols-2 gap-6 lg:grid-cols-4" style={{ animationDelay: "0.1s" }}>
+      <StatCard icon={FolderOpen} label="Total Projects" value={totalProjects} color="primary" />
+      <StatCard icon={Activity} label="Active Projects" value={activeProjects} color="success" />
+      <StatCard icon={Users} label="Total Collaborators" value={totalCollaborators} color="accent" />
+      <StatCard icon={Tags} label="New This Month" value={newProjectsThisMonth} color="warning" />
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default function SearchCreateHeader({
   const ActionButtonContent = (
     <Button
       onClick={!linkTo ? onAction : undefined}
-      className="gap-2 h-14 px-5 gradient-primary border-0 shadow-lg shadow-primary/20 rounded-xl hover:scale-105 transition-transform active:scale-95 whitespace-nowrap"
+      className="gradient-primary shadow-primary/20 h-14 gap-2 rounded-xl border-0 px-5 whitespace-nowrap shadow-lg transition-transform hover:scale-105 active:scale-95"
     >
       <Plus className="h-4 w-4" />
       <span className="hidden sm:inline">{buttonText}</span>
@@ -23,29 +23,24 @@ export default function SearchCreateHeader({
   );
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in w-full" style={{ animationDelay: '0.15s' }}>
+    <div
+      className="animate-fade-in flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      style={{ animationDelay: "0.15s" }}
+    >
       {/* Search Input */}
-      <div className="relative group w-full flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+      <div className="group relative w-full flex-1">
+        <Search className="text-muted-foreground group-focus-within:text-primary absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transition-colors" />
         <Input
           placeholder={searchPlaceholder}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 w-full h-14 focus:ring-primary/20 transition-all rounded-xl"
+          className="focus:ring-primary/20 h-14 w-full rounded-xl pl-9 transition-all"
         />
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 justify-end">
-        {showButton && (
-          linkTo ? (
-            <Link href={linkTo}>
-              {ActionButtonContent}
-            </Link>
-          ) : (
-            ActionButtonContent
-          )
-        )}
+      <div className="mt-2 flex flex-wrap items-center justify-end gap-2 sm:mt-0">
+        {showButton && (linkTo ? <Link href={linkTo}>{ActionButtonContent}</Link> : ActionButtonContent)}
       </div>
     </div>
   );

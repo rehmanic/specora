@@ -19,13 +19,7 @@ import { Edit2, Check, X, Tag } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 
-export function ExtractedRequirementsModal({
-  isOpen,
-  onClose,
-  requirements = [],
-  onImport,
-  isImporting = false
-}) {
+export function ExtractedRequirementsModal({ isOpen, onClose, requirements = [], onImport, isImporting = false }) {
   const [localReqs, setLocalReqs] = useState([]);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
@@ -37,10 +31,10 @@ export function ExtractedRequirementsModal({
       // Initialize with temporary IDs for selection and editing
       const initReqs = requirements.map((req, i) => ({
         ...req,
-        _tempId: `req-${i}-${Date.now()}`
+        _tempId: `req-${i}-${Date.now()}`,
       }));
       setLocalReqs(initReqs);
-      setSelectedIds(new Set(initReqs.map(r => r._tempId)));
+      setSelectedIds(new Set(initReqs.map((r) => r._tempId)));
       setEditingId(null);
     } else if (!isOpen) {
       setLocalReqs([]);
@@ -50,7 +44,7 @@ export function ExtractedRequirementsModal({
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedIds(new Set(localReqs.map(r => r._tempId)));
+      setSelectedIds(new Set(localReqs.map((r) => r._tempId)));
     } else {
       setSelectedIds(new Set());
     }
@@ -72,23 +66,28 @@ export function ExtractedRequirementsModal({
       title: req.title,
       description: req.description,
       priority: req.priority || "mid",
-      tags: req.tags ? req.tags.join(", ") : ""
+      tags: req.tags ? req.tags.join(", ") : "",
     });
   };
 
   const saveEdit = (id) => {
-    setLocalReqs(prev => prev.map(req => {
-      if (req._tempId === id) {
-        return {
-          ...req,
-          title: editForm.title,
-          description: editForm.description,
-          priority: editForm.priority,
-          tags: editForm.tags.split(",").map(t => t.trim()).filter(Boolean)
-        };
-      }
-      return req;
-    }));
+    setLocalReqs((prev) =>
+      prev.map((req) => {
+        if (req._tempId === id) {
+          return {
+            ...req,
+            title: editForm.title,
+            description: editForm.description,
+            priority: editForm.priority,
+            tags: editForm.tags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean),
+          };
+        }
+        return req;
+      })
+    );
     setEditingId(null);
   };
 
@@ -101,96 +100,100 @@ export function ExtractedRequirementsModal({
   };
 
   const confirmImport = () => {
-    const toImport = localReqs.filter(r => selectedIds.has(r._tempId)).map(r => {
-      // Remove temp id
-      const { _tempId, ...rest } = r;
-      return {
-        ...rest,
-        status: "draft" // Enforce draft status for imported AI requirements
-      };
-    });
+    const toImport = localReqs
+      .filter((r) => selectedIds.has(r._tempId))
+      .map((r) => {
+        // Remove temp id
+        const { _tempId, ...rest } = r;
+        return {
+          ...rest,
+          status: "draft", // Enforce draft status for imported AI requirements
+        };
+      });
     onImport(toImport);
     setConfirmImportOpen(false);
   };
 
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
-      case "high": return "bg-red-500/10 text-red-500 border-red-500/20";
-      case "mid": return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
-      case "low": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-      default: return "bg-gray-500/10 text-gray-500 border-gray-500/20";
+      case "high":
+        return "bg-red-500/10 text-red-500 border-red-500/20";
+      case "mid":
+        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+      case "low":
+        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      default:
+        return "bg-gray-500/10 text-gray-500 border-gray-500/20";
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !isImporting && !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-6">
+      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col p-6">
         <DialogHeader className="shrink-0">
           <DialogTitle>Review Extracted Requirements</DialogTitle>
           <DialogDescription>
-            AI extracted {requirements.length} requirements. Review, edit, and select which ones to import into the project as drafts.
+            AI extracted {requirements.length} requirements. Review, edit, and select which ones to import into the
+            project as drafts.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center space-x-2 py-4 shrink-0">
-          <Checkbox 
-            id="select-all" 
+        <div className="flex shrink-0 items-center space-x-2 py-4">
+          <Checkbox
+            id="select-all"
             checked={localReqs.length > 0 && selectedIds.size === localReqs.length}
             onCheckedChange={handleSelectAll}
           />
           <label
             htmlFor="select-all"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Select All ({selectedIds.size} / {localReqs.length})
           </label>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 -mx-6 min-h-0">
+        <div className="-mx-6 min-h-0 flex-1 overflow-y-auto px-6">
           <div className="space-y-4 pb-4">
             {localReqs.map((req) => {
               const isEditing = editingId === req._tempId;
               const isSelected = selectedIds.has(req._tempId);
 
               return (
-                <div 
-                  key={req._tempId} 
-                  className={`flex items-start gap-4 p-4 rounded-lg border transition-colors ${isSelected ? 'bg-primary/5 border-primary/20' : 'bg-background hover:bg-muted/50'}`}
+                <div
+                  key={req._tempId}
+                  className={`flex items-start gap-4 rounded-lg border p-4 transition-colors ${isSelected ? "bg-primary/5 border-primary/20" : "bg-background hover:bg-muted/50"}`}
                 >
                   <div className="pt-1">
-                    <Checkbox 
-                      checked={isSelected}
-                      onCheckedChange={() => handleToggleSelect(req._tempId)}
-                    />
+                    <Checkbox checked={isSelected} onCheckedChange={() => handleToggleSelect(req._tempId)} />
                   </div>
 
                   <div className="flex-1 space-y-2 overflow-hidden">
                     {isEditing ? (
                       <div className="space-y-3">
-                        <Input 
-                          value={editForm.title} 
-                          onChange={(e) => setEditForm(f => ({ ...f, title: e.target.value }))}
+                        <Input
+                          value={editForm.title}
+                          onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
                           placeholder="Requirement Title"
                           className="font-semibold"
                         />
-                        <Textarea 
-                          value={editForm.description} 
-                          onChange={(e) => setEditForm(f => ({ ...f, description: e.target.value }))}
+                        <Textarea
+                          value={editForm.description}
+                          onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
                           placeholder="Detailed description..."
                           rows={3}
                         />
                         <div className="flex gap-4">
                           <div className="flex-1">
-                            <Input 
-                              value={editForm.tags} 
-                              onChange={(e) => setEditForm(f => ({ ...f, tags: e.target.value }))}
+                            <Input
+                              value={editForm.tags}
+                              onChange={(e) => setEditForm((f) => ({ ...f, tags: e.target.value }))}
                               placeholder="Tags (comma separated)..."
                             />
                           </div>
                           <div className="w-[150px]">
-                            <Select 
-                              value={editForm.priority} 
-                              onValueChange={(val) => setEditForm(f => ({ ...f, priority: val }))}
+                            <Select
+                              value={editForm.priority}
+                              onValueChange={(val) => setEditForm((f) => ({ ...f, priority: val }))}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Priority" />
@@ -205,35 +208,45 @@ export function ExtractedRequirementsModal({
                         </div>
                         <div className="flex justify-end gap-2 pt-2">
                           <Button size="sm" variant="ghost" onClick={cancelEdit}>
-                            <X className="h-4 w-4 mr-2" /> Cancel
+                            <X className="mr-2 h-4 w-4" /> Cancel
                           </Button>
                           <Button size="sm" onClick={() => saveEdit(req._tempId)}>
-                            <Check className="h-4 w-4 mr-2" /> Save
+                            <Check className="mr-2 h-4 w-4" /> Save
                           </Button>
                         </div>
                       </div>
                     ) : (
                       <>
-                        <div className="flex justify-between items-start gap-4">
+                        <div className="flex items-start justify-between gap-4">
                           <div>
-                            <h4 className="font-semibold text-base flex items-center gap-2">
+                            <h4 className="flex items-center gap-2 text-base font-semibold">
                               {req.title}
-                              <Badge variant="outline" className={`${getPriorityColor(req.priority)} text-[10px] uppercase`}>
+                              <Badge
+                                variant="outline"
+                                className={`${getPriorityColor(req.priority)} text-[10px] uppercase`}
+                              >
                                 {req.priority}
                               </Badge>
                             </h4>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => startEdit(req)}>
-                            <Edit2 className="h-4 w-4 text-muted-foreground" />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => startEdit(req)}
+                          >
+                            <Edit2 className="text-muted-foreground h-4 w-4" />
                           </Button>
                         </div>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {req.description}
-                        </p>
+                        <p className="text-muted-foreground text-sm whitespace-pre-wrap">{req.description}</p>
                         {req.tags && req.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-1">
                             {req.tags.map((tag, i) => (
-                              <Badge key={i} variant="secondary" className="text-[10px] font-normal flex items-center gap-1">
+                              <Badge
+                                key={i}
+                                variant="secondary"
+                                className="flex items-center gap-1 text-[10px] font-normal"
+                              >
                                 <Tag className="h-3 w-3" /> {tag}
                               </Badge>
                             ))}
@@ -245,9 +258,9 @@ export function ExtractedRequirementsModal({
                 </div>
               );
             })}
-            
+
             {localReqs.length === 0 && (
-              <div className="p-8 text-center text-muted-foreground border border-dashed rounded-xl">
+              <div className="text-muted-foreground rounded-xl border border-dashed p-8 text-center">
                 No requirements were extracted.
               </div>
             )}
@@ -258,8 +271,8 @@ export function ExtractedRequirementsModal({
           <Button variant="outline" onClick={onClose} disabled={isImporting}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleImportClick} 
+          <Button
+            onClick={handleImportClick}
             disabled={isImporting || selectedIds.size === 0 || localReqs.length === 0}
           >
             {isImporting ? "Importing..." : `Import ${selectedIds.size} Requirements`}

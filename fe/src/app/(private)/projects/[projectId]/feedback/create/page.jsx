@@ -7,7 +7,9 @@ export default function CreateFeedbackPage() {
   const { projectId } = useParams();
 
   return (
-    <div className="bg-white h-full"> {/* Ensure white background for SurveyJS */}
+    <div className="h-full bg-white">
+      {" "}
+      {/* Ensure white background for SurveyJS */}
       <FeedbackBuilder projectId={projectId} />
     </div>
   );

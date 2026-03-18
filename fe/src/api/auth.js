@@ -19,15 +19,11 @@ export async function loginRequest(credentials) {
     try {
       data = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        data?.message || `Login failed${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(data?.message || `Login failed${res.status ? ` (${res.status})` : ""}`);
     }
 
     return data; // { user, token }
@@ -37,9 +33,7 @@ export async function loginRequest(credentials) {
       throw err;
     }
     // Handle network errors and other unexpected errors
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
 
@@ -55,15 +49,11 @@ export async function signupRequest(credentials) {
     try {
       data = await res.json();
     } catch (parseError) {
-      throw new Error(
-        "Server response is invalid. Please try again later."
-      );
+      throw new Error("Server response is invalid. Please try again later.");
     }
 
     if (!res.ok) {
-      throw new Error(
-        data?.message || `Signup failed${res.status ? ` (${res.status})` : ""}`
-      );
+      throw new Error(data?.message || `Signup failed${res.status ? ` (${res.status})` : ""}`);
     }
 
     return data; // { user, token }
@@ -73,9 +63,7 @@ export async function signupRequest(credentials) {
       throw err;
     }
     // Handle network errors and other unexpected errors
-    throw new Error(
-      err?.message || "Network error. Please check your connection and try again."
-    );
+    throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
 

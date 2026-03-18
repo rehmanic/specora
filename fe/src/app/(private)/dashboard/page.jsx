@@ -38,29 +38,36 @@ export default function DashboardPage() {
   }, [user, token]);
 
   // Filter projects based on search
-  const filteredProjects = projects.filter((project) =>
-    project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    project.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProjects = projects.filter(
+    (project) =>
+      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="relative -m-6 p-6 min-h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="relative -m-6 min-h-[calc(100vh-4rem)] overflow-hidden p-6">
       {/* Dynamic Background Pattern */}
-      <div className="absolute inset-0 bg-primary/5 dark:bg-primary/5 hero-grid opacity-30 pointer-events-none -z-10 transition-opacity"></div>
+      <div className="bg-primary/5 dark:bg-primary/5 hero-grid pointer-events-none absolute inset-0 -z-10 opacity-30 transition-opacity"></div>
       <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
-        <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-accent opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" style={{ clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)' }}></div>
+        <div
+          className="from-primary to-accent relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+          style={{
+            clipPath:
+              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+          }}
+        ></div>
       </div>
 
-      <div className="max-w-7xl mx-auto space-y-6 relative z-10 w-full">
+      <div className="relative z-10 mx-auto w-full max-w-7xl space-y-6">
         {/* 1. Greeting Component */}
         <GreetingHeader user={user} />
 
         {/* 2. Stats Component */}
         {!loading && projects.length > 0 && <DashboardStats projects={projects} />}
 
-        <SearchCreateHeader 
-          searchQuery={searchQuery} 
-          setSearchQuery={setSearchQuery} 
+        <SearchCreateHeader
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
           searchPlaceholder="Search projects by name or description..."
           buttonText="New Project"
           linkTo="/projects/create"
@@ -68,11 +75,7 @@ export default function DashboardPage() {
         />
 
         {/* 4. Project List Component */}
-        <ProjectList 
-          projects={filteredProjects} 
-          loading={loading} 
-          isSearching={searchQuery.length > 0} 
-        />
+        <ProjectList projects={filteredProjects} loading={loading} isSearching={searchQuery.length > 0} />
       </div>
     </div>
   );

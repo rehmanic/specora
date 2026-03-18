@@ -52,7 +52,7 @@ export default function ChatInputField({
         const uploaded = await uploadFile(file);
         newAttachments.push(uploaded);
       }
-      setAttachments(prev => [...prev, ...newAttachments]);
+      setAttachments((prev) => [...prev, ...newAttachments]);
       // Focus back
       setTimeout(() => textareaRef.current?.focus(), 0);
     } catch (err) {
@@ -65,7 +65,7 @@ export default function ChatInputField({
   };
 
   const removeAttachment = (index) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleKeyDown = (e) => {
@@ -101,21 +101,15 @@ export default function ChatInputField({
   };
 
   return (
-    <div  
+    <div
       className={cn(
-        "flex items-end gap-2 px-4 py-3 bg-transparent transition-all duration-200 relative",
+        "relative flex items-end gap-2 bg-transparent px-4 py-3 transition-all duration-200",
         disabled && "opacity-60"
       )}
     >
       {/* Attachment button */}
       {showAttachments && (
-        <input
-          type="file"
-          multiple
-          className="hidden"
-          ref={fileInputRef}
-          onChange={handleFileSelect}
-        />
+        <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
       )}
       {/* Attachment button */}
       {showAttachments && (
@@ -124,9 +118,9 @@ export default function ChatInputField({
           variant="outline"
           size="icon"
           className={cn(
-            "h-9 w-9 rounded-lg shrink-0 transition-all border-border/50",
+            "border-border/50 h-9 w-9 shrink-0 rounded-lg transition-all",
             showAttachments && !uploading
-              ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
+              ? "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
               : "bg-muted text-muted-foreground"
           )}
           disabled={disabled || uploading}
@@ -138,34 +132,50 @@ export default function ChatInputField({
 
       {/* Text input */}
       {/* Text input & Previews */}
-      <div className="flex-1 min-w-0 flex flex-col gap-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
         {/* Attachment Previews */}
         {showAttachments && (attachments.length > 0 || uploading) && (
           <div className="flex flex-wrap gap-2 px-1">
             {attachments.map((file, i) => (
-              <div key={i} className="relative group/att bg-muted rounded-md p-1 pr-6 flex items-center gap-2 text-xs border">
+              <div
+                key={i}
+                className="group/att bg-muted relative flex items-center gap-2 rounded-md border p-1 pr-6 text-xs"
+              >
                 {file.mimeType?.startsWith("image/") ? (
-                  <div className="h-8 w-8 rounded overflow-hidden">
+                  <div className="h-8 w-8 overflow-hidden rounded">
                     <img src={file.url} alt={file.originalName} className="h-full w-full object-cover" />
                   </div>
                 ) : (
-                  <div className="h-8 w-8 bg-background flex items-center justify-center rounded">
-                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                  <div className="bg-background flex h-8 w-8 items-center justify-center rounded">
+                    <Paperclip className="text-muted-foreground h-4 w-4" />
                   </div>
                 )}
                 <span className="max-w-[100px] truncate">{file.originalName}</span>
                 <button
                   onClick={() => removeAttachment(i)}
-                  className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover/att:opacity-100 transition-opacity"
+                  className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 rounded-full p-0.5 opacity-0 transition-opacity group-hover/att:opacity-100"
                 >
                   <span className="sr-only">Remove</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
                 </button>
               </div>
             ))}
             {uploading && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground p-2">
-                <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
+              <div className="text-muted-foreground flex items-center gap-2 p-2 text-xs">
+                <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
                 Uploading...
               </div>
             )}
@@ -182,27 +192,19 @@ export default function ChatInputField({
           placeholder={placeholder}
           disabled={disabled}
           rows={1}
-          className="w-full resize-none bg-transparent text-sm focus:outline-none focus:ring-0 focus:border-0 border-0 placeholder:text-muted-foreground disabled:cursor-not-allowed max-h-[120px] py-2"
+          className="placeholder:text-muted-foreground max-h-[120px] w-full resize-none border-0 bg-transparent py-2 text-sm focus:border-0 focus:ring-0 focus:outline-none disabled:cursor-not-allowed"
           style={{ minHeight: "36px", boxShadow: "none" }}
         />
       </div>
 
       {/* Right actions */}
-      <div className="flex items-center gap-1 shrink-0 relative">
+      <div className="relative flex shrink-0 items-center gap-1">
         <div className="relative">
           {showEmojiPicker && (
             <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setShowEmojiPicker(false)}
-              />
-              <div className="absolute bottom-12 right-0 z-50 shadow-xl rounded-xl border bg-background">
-                <EmojiPicker
-                  onEmojiClick={onEmojiClick}
-                  theme="auto"
-                  width={300}
-                  height={400}
-                />
+              <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
+              <div className="bg-background absolute right-0 bottom-12 z-50 rounded-xl border shadow-xl">
+                <EmojiPicker onEmojiClick={onEmojiClick} theme="auto" width={300} height={400} />
               </div>
             </>
           )}
@@ -211,10 +213,10 @@ export default function ChatInputField({
             variant="outline"
             size="icon"
             className={cn(
-              "h-9 w-9 rounded-lg transition-all border-border/50",
-              showEmojiPicker 
-                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
+              "border-border/50 h-9 w-9 rounded-lg transition-all",
+              showEmojiPicker
+                ? "border-amber-200 bg-amber-100 text-amber-600 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
             )}
             disabled={disabled}
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -222,7 +224,6 @@ export default function ChatInputField({
             <Smile className="h-[18px] w-[18px]" />
           </Button>
         </div>
-
 
         {/* Send button */}
         <Button
@@ -232,9 +233,7 @@ export default function ChatInputField({
           size="icon"
           className={cn(
             "h-9 w-9 rounded-lg transition-all",
-            currentValue.trim()
-              ? "gradient-primary border-0 hover:opacity-90"
-              : "bg-muted text-muted-foreground"
+            currentValue.trim() ? "gradient-primary border-0 hover:opacity-90" : "bg-muted text-muted-foreground"
           )}
         >
           <Send className="h-[18px] w-[18px]" />

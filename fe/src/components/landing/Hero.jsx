@@ -10,32 +10,31 @@ import DashboardMockup from "./DashboardMockup";
  */
 export default function Hero() {
   return (
-    <section className="pt-32 pb-20 px-4 md:px-6">
-      <div className="max-w-7xl mx-auto">
+    <section className="px-4 pt-32 pb-20 md:px-6">
+      <div className="mx-auto max-w-7xl">
         {/* Dark Container with Grid */}
-        <div className="bg-[oklch(0.15_0.02_285)] rounded-[2.5rem] pt-20 pb-48 md:pb-64 lg:pb-80 px-6 text-center relative hero-grid">
+        <div className="hero-grid relative rounded-[2.5rem] bg-[oklch(0.15_0.02_285)] px-6 pt-20 pb-48 text-center md:pb-64 lg:pb-80">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-[11px] font-medium text-slate-300 mb-10 backdrop-blur-sm shadow-sm hover:bg-white/10 transition-colors cursor-pointer group">
-            <Sparkles className="w-3 h-3 text-[oklch(0.85_0.20_130)]" />
+          <div className="group mb-10 inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-medium text-slate-300 shadow-sm backdrop-blur-sm transition-colors hover:bg-white/10">
+            <Sparkles className="h-3 w-3 text-[oklch(0.85_0.20_130)]" />
             <span className="opacity-80">AI-Powered Platform</span>
           </div>
 
           {/* Headline */}
-          <h1 className="text-5xl md:text-6xl lg:text-[4.5rem] font-medium text-white tracking-tight leading-[1.1] mb-6 max-w-5xl mx-auto relative z-10">
+          <h1 className="relative z-10 mx-auto mb-6 max-w-5xl text-5xl leading-[1.1] font-medium tracking-tight text-white md:text-6xl lg:text-[4.5rem]">
             Transform Ideas into <br className="hidden md:block" />
             <span className="relative inline-block">Clear Specifications</span>
           </h1>
 
           {/* Subtext */}
-          <p className="text-sm md:text-lg text-slate-300/80 max-w-2xl mx-auto mb-8 md:mb-12 leading-relaxed font-light relative z-10">
-            Specora streamlines requirements gathering with AI. Collaborate with
-            stakeholders, generate precise specs, and bridge the gap between
-            vision and development.
+          <p className="relative z-10 mx-auto mb-8 max-w-2xl text-sm leading-relaxed font-light text-slate-300/80 md:mb-12 md:text-lg">
+            Specora streamlines requirements gathering with AI. Collaborate with stakeholders, generate precise specs,
+            and bridge the gap between vision and development.
           </p>
 
           {/* Dashboard Mockup (Overlapping - Half In, Half Out) */}
-          <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1/2 w-[90%] md:w-full max-w-[75rem] px-4 z-20 transition-all duration-500">
-            <div className="bg-white rounded-2xl border border-slate-200/60 overflow-hidden group hover:shadow-[0_48px_80px_-24px_rgba(0,0,0,0.35),0_0_120px_-20px_rgba(20,184,166,0.2)] transition-shadow duration-500">
+          <div className="absolute bottom-0 left-1/2 z-20 w-[90%] max-w-[75rem] -translate-x-1/2 translate-y-1/2 transform px-4 transition-all duration-500 md:w-full">
+            <div className="group overflow-hidden rounded-2xl border border-slate-200/60 bg-white transition-shadow duration-500 hover:shadow-[0_48px_80px_-24px_rgba(0,0,0,0.35),0_0_120px_-20px_rgba(20,184,166,0.2)]">
               <DashboardMockup />
             </div>
           </div>

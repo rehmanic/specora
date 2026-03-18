@@ -73,8 +73,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
         router.push("/dashboard");
       }
     } catch (err) {
-      const errorMessage =
-        err?.message || "An unexpected error occurred. Please try again.";
+      const errorMessage = err?.message || "An unexpected error occurred. Please try again.";
       setLocalError(errorMessage);
       notify.error(isLogin ? "Login failed" : "Signup failed", {
         description: errorMessage,
@@ -85,23 +84,19 @@ export default function AuthForm({ className, variant = "login", ...props }) {
   const inputWrapperClass = (fieldName) =>
     cn(
       "relative flex items-center rounded-lg border transition-all duration-200 bg-slate-50",
-      focusedField === fieldName
-        ? "border-primary ring-2 ring-primary/10"
-        : "border-slate-200 hover:border-slate-300"
+      focusedField === fieldName ? "border-primary ring-2 ring-primary/10" : "border-slate-200 hover:border-slate-300"
     );
 
   return (
-    <div className={cn("flex flex-col gap-6 animate-fade-in", className)} {...props}>
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-xl p-8">
+    <div className={cn("animate-fade-in flex flex-col gap-6", className)} {...props}>
+      <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-xl">
         {/* Header */}
-        <div className="space-y-2 mb-8">
-          <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">
+        <div className="mb-8 space-y-2">
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
             {isLogin ? "Welcome back" : "Create your account"}
           </h2>
           <p className="text-sm text-slate-500">
-            {isLogin
-              ? "Enter your credentials to access your account"
-              : "Get started with Specora in seconds"}
+            {isLogin ? "Enter your credentials to access your account" : "Get started with Specora in seconds"}
           </p>
         </div>
 
@@ -127,7 +122,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                   maxLength={20}
                   pattern="(?=.*[A-Za-z]{3,})[A-Za-z\d]+"
                   placeholder="Enter your username"
-                  className="border-0 pl-10 focus-visible:ring-0 bg-transparent text-slate-900 placeholder-slate-400"
+                  className="border-0 bg-transparent pl-10 text-slate-900 placeholder-slate-400 focus-visible:ring-0"
                 />
               </div>
             </div>
@@ -150,7 +145,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                     onBlur={() => setFocusedField(null)}
                     required
                     placeholder="you@example.com"
-                    className="border-0 pl-10 focus-visible:ring-0 bg-transparent text-slate-900 placeholder-slate-400"
+                    className="border-0 bg-transparent pl-10 text-slate-900 placeholder-slate-400 focus-visible:ring-0"
                   />
                 </div>
               </div>
@@ -163,10 +158,7 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                   Password
                 </Label>
                 {isLogin && (
-                  <Link
-                    href="#"
-                    className="text-xs text-slate-500 hover:text-slate-900 transition-colors"
-                  >
+                  <Link href="#" className="text-xs text-slate-500 transition-colors hover:text-slate-900">
                     Forgot password?
                   </Link>
                 )}
@@ -185,32 +177,26 @@ export default function AuthForm({ className, variant = "login", ...props }) {
                   minLength={6}
                   maxLength={32}
                   placeholder="Enter your password"
-                  className="border-0 pl-10 pr-10 focus-visible:ring-0 bg-transparent text-slate-900 placeholder-slate-400"
+                  className="border-0 bg-transparent pr-10 pl-10 text-slate-900 placeholder-slate-400 focus-visible:ring-0"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-3 text-slate-400 transition-colors hover:text-slate-600"
                   tabIndex={-1}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
             {/* Error display */}
-            {(localError || error) && (
-              <ErrorBox message={localError || error} />
-            )}
+            {(localError || error) && <ErrorBox message={localError || error} />}
 
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full h-11 mt-2 font-bold text-sm rounded-full bg-primary text-primary-foreground hover:brightness-110 transition-all group flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-primary text-primary-foreground group mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-full text-sm font-bold transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={loading}
             >
               {loading ? (
@@ -228,16 +214,11 @@ export default function AuthForm({ className, variant = "login", ...props }) {
 
             {/* Divider element and registration link removed as it's frozen */}
             {isLogin ? (
-              <p className="text-center text-xs text-slate-400 mt-2">
-                Need an account? Contact an administrator.
-              </p>
+              <p className="mt-2 text-center text-xs text-slate-400">Need an account? Contact an administrator.</p>
             ) : (
               <p className="text-center text-sm text-slate-500">
                 Already have an account?{" "}
-                <Link
-                  href="/login"
-                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
-                >
+                <Link href="/login" className="text-primary hover:text-primary/80 font-semibold transition-colors">
                   Sign in
                 </Link>
               </p>

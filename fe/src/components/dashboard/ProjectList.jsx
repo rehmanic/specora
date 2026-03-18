@@ -9,21 +9,19 @@ import useProjectsStore from "@/store/projectsStore";
 function EmptyState({ isSearching }) {
   if (isSearching) {
     return (
-      <div className="py-12 text-center border border-dashed border-border/50 rounded-2xl bg-card/40 backdrop-blur-xl animate-fade-in">
-        <p className="text-muted-foreground">
-          No projects found matching your search.
-        </p>
+      <div className="border-border/50 bg-card/40 animate-fade-in rounded-2xl border border-dashed py-12 text-center backdrop-blur-xl">
+        <p className="text-muted-foreground">No projects found matching your search.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-20 animate-fade-in border border-dashed border-border/50 rounded-2xl bg-card/40 backdrop-blur-xl hover:bg-card/60 transition-colors">
-      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-        <FolderOpen className="h-8 w-8 text-primary" />
+    <div className="animate-fade-in border-border/50 bg-card/40 hover:bg-card/60 flex flex-col items-center justify-center rounded-2xl border border-dashed py-20 backdrop-blur-xl transition-colors">
+      <div className="bg-primary/10 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl">
+        <FolderOpen className="text-primary h-8 w-8" />
       </div>
-      <h3 className="text-lg font-semibold font-display mb-1">No projects yet</h3>
-      <p className="text-muted-foreground text-center max-w-sm mb-6 text-sm">
+      <h3 className="font-display mb-1 text-lg font-semibold">No projects yet</h3>
+      <p className="text-muted-foreground mb-6 max-w-sm text-center text-sm">
         Create your first project to start collaborating with your team and gathering requirements.
       </p>
     </div>
@@ -33,19 +31,22 @@ function EmptyState({ isSearching }) {
 // Loading Skeleton
 function LoadingSkeleton() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-xl overflow-hidden shadow-sm">
-          <div className="aspect-[16/10] skeleton-shimmer" />
-          <div className="p-6 space-y-4">
-            <div className="pt-2 space-y-2">
-              <div className="h-5 w-3/4 rounded skeleton-shimmer" />
-              <div className="h-3 w-full rounded skeleton-shimmer" />
-              <div className="h-3 w-2/3 rounded skeleton-shimmer" />
+        <div
+          key={i}
+          className="border-border/50 bg-card/60 overflow-hidden rounded-2xl border shadow-sm backdrop-blur-xl"
+        >
+          <div className="skeleton-shimmer aspect-[16/10]" />
+          <div className="space-y-4 p-6">
+            <div className="space-y-2 pt-2">
+              <div className="skeleton-shimmer h-5 w-3/4 rounded" />
+              <div className="skeleton-shimmer h-3 w-full rounded" />
+              <div className="skeleton-shimmer h-3 w-2/3 rounded" />
             </div>
-            <div className="pt-4 border-t border-white/5 flex gap-4">
-              <div className="h-3 w-16 rounded skeleton-shimmer" />
-              <div className="h-3 w-20 rounded skeleton-shimmer" />
+            <div className="flex gap-4 border-t border-white/5 pt-4">
+              <div className="skeleton-shimmer h-3 w-16 rounded" />
+              <div className="skeleton-shimmer h-3 w-20 rounded" />
             </div>
           </div>
         </div>
@@ -78,21 +79,20 @@ export default function ProjectList({ projects, loading, isSearching }) {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentProjects = projects.slice(indexOfFirstItem, indexOfLastItem);
 
-  const nextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
-  const prevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+  const nextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   return (
-    <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-      <div className="flex items-center justify-between gap-4">
-      </div>
+    <div className="animate-fade-in space-y-6" style={{ animationDelay: "0.2s" }}>
+      <div className="flex items-center justify-between gap-4"></div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {currentProjects.map((project, index) => (
           <Link
             key={project.id}
             href={`/projects/${project.slug}/settings`}
             onClick={() => setSelectedProject(project)}
-            className="animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both"
+            className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-500"
             style={{ animationDelay: `${index * 0.1}s` }}
           >
             <ProjectCard project={project} />
@@ -101,21 +101,17 @@ export default function ProjectList({ projects, loading, isSearching }) {
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex items-center justify-between px-5 py-3 border border-border/50 bg-card/60 backdrop-blur-xl rounded-2xl shadow-sm mt-4">
-        <p className="text-xs text-muted-foreground">
-          Showing{" "}
-          <span className="font-semibold">{indexOfFirstItem + 1}</span>{" "}
-          to{" "}
-          <span className="font-semibold">{Math.min(indexOfLastItem, projects.length)}</span>{" "}
-          of{" "}
-          <span className="font-semibold">{projects.length}</span>{" "}
-          results
+      <div className="border-border/50 bg-card/60 mt-4 flex items-center justify-between rounded-2xl border px-5 py-3 shadow-sm backdrop-blur-xl">
+        <p className="text-muted-foreground text-xs">
+          Showing <span className="font-semibold">{indexOfFirstItem + 1}</span> to{" "}
+          <span className="font-semibold">{Math.min(indexOfLastItem, projects.length)}</span> of{" "}
+          <span className="font-semibold">{projects.length}</span> results
         </p>
         <div className="flex items-center gap-1">
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 border-border/50 bg-background/50 backdrop-blur-sm hover:bg-background transition-colors"
+            className="border-border/50 bg-background/50 hover:bg-background h-8 w-8 backdrop-blur-sm transition-colors"
             onClick={prevPage}
             disabled={currentPage === 1}
           >
@@ -127,10 +123,11 @@ export default function ProjectList({ projects, loading, isSearching }) {
               key={page}
               variant={currentPage === page ? "default" : "outline"}
               size="icon"
-              className={`h-8 w-8 text-xs transition-all duration-300 ${currentPage === page
-                  ? "gradient-primary border-0 shadow-lg shadow-primary/25 scale-105"
-                  : "border-border/50 bg-background/50 backdrop-blur-sm hover:bg-background"
-                }`}
+              className={`h-8 w-8 text-xs transition-all duration-300 ${
+                currentPage === page
+                  ? "gradient-primary shadow-primary/25 scale-105 border-0 shadow-lg"
+                  : "border-border/50 bg-background/50 hover:bg-background backdrop-blur-sm"
+              }`}
               onClick={() => setCurrentPage(page)}
             >
               {page}
@@ -140,7 +137,7 @@ export default function ProjectList({ projects, loading, isSearching }) {
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 border-border/50 bg-background/50 backdrop-blur-sm hover:bg-background transition-colors"
+            className="border-border/50 bg-background/50 hover:bg-background h-8 w-8 backdrop-blur-sm transition-colors"
             onClick={nextPage}
             disabled={currentPage === totalPages}
           >

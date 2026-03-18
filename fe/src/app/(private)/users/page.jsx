@@ -18,11 +18,11 @@ function LoadingSkeleton() {
   return (
     <div className="space-y-3">
       {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="flex items-center gap-4 p-4 rounded-lg border">
-          <div className="h-10 w-10 rounded-full skeleton-shimmer" />
+        <div key={i} className="flex items-center gap-4 rounded-lg border p-4">
+          <div className="skeleton-shimmer h-10 w-10 rounded-full" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 w-1/4 rounded skeleton-shimmer" />
-            <div className="h-3 w-1/3 rounded skeleton-shimmer" />
+            <div className="skeleton-shimmer h-4 w-1/4 rounded" />
+            <div className="skeleton-shimmer h-3 w-1/3 rounded" />
           </div>
         </div>
       ))}
@@ -41,17 +41,10 @@ export default function UsersPage() {
       try {
         const response = await getAllUsersRequest();
 
-        const userData = Array.isArray(response)
-          ? response
-          : response.users || response.data || [];
+        const userData = Array.isArray(response) ? response : response.users || response.data || [];
 
         const validUsers = userData.filter(
-          (user) =>
-            user &&
-            typeof user === "object" &&
-            user.id &&
-            user.username &&
-            user.email
+          (user) => user && typeof user === "object" && user.id && user.username && user.email
         );
 
         setUsers(validUsers);
@@ -72,19 +65,18 @@ export default function UsersPage() {
     return acc;
   }, {});
 
-  const filteredUsers = users.filter((u) =>
-    u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUsers = users.filter(
+    (u) =>
+      u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <ProtectedRoute allowedRoles={["manager"]}>
-      <div className="min-h-screen bg-background">
-
+      <div className="bg-background min-h-screen">
         {/* Main Content */}
         <main className="p-6 lg:p-8">
-          <div className="max-w-6xl mx-auto space-y-8">
-
+          <div className="mx-auto max-w-6xl space-y-8">
             {/* Header */}
             <PageBanner
               title="User Management"
@@ -93,31 +85,11 @@ export default function UsersPage() {
             />
 
             {/* Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <StatsCard
-                icon={Users}
-                label="Total Users"
-                value={users.length}
-                color="primary"
-              />
-              <StatsCard
-                icon={Shield}
-                label="Managers"
-                value={roleCounts.manager || 0}
-                color="accent"
-              />
-              <StatsCard
-                icon={Code}
-                label="Engineers"
-                value={roleCounts.requirements_engineer || 0}
-                color="success"
-              />
-              <StatsCard
-                icon={Briefcase}
-                label="Clients"
-                value={roleCounts.client || 0}
-                color="warning"
-              />
+            <div className="animate-fade-in grid grid-cols-2 gap-4 lg:grid-cols-4" style={{ animationDelay: "0.1s" }}>
+              <StatsCard icon={Users} label="Total Users" value={users.length} color="primary" />
+              <StatsCard icon={Shield} label="Managers" value={roleCounts.manager || 0} color="accent" />
+              <StatsCard icon={Code} label="Engineers" value={roleCounts.requirements_engineer || 0} color="success" />
+              <StatsCard icon={Briefcase} label="Clients" value={roleCounts.client || 0} color="warning" />
             </div>
 
             <SearchCreateHeader
@@ -132,7 +104,10 @@ export default function UsersPage() {
             {error && <ErrorBox message={`Error loading users: ${error}`} dismissible />}
 
             {/* Users Table */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div
+              className="border-border bg-card animate-fade-in overflow-hidden rounded-xl border"
+              style={{ animationDelay: "0.2s" }}
+            >
               {loading ? (
                 <div className="p-6">
                   <LoadingSkeleton />

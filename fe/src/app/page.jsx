@@ -16,7 +16,7 @@ export default function Home() {
   const [activeModal, setActiveModal] = useState(null); // 'terms' | 'privacy' | null
 
   return (
-    <div className="flex min-h-screen flex-col font-sans bg-white text-slate-600">
+    <div className="flex min-h-screen flex-col bg-white font-sans text-slate-600">
       <Header />
 
       <main className="flex-1">
@@ -28,14 +28,8 @@ export default function Home() {
       <Footer setActiveModal={setActiveModal} />
 
       {/* Modals */}
-      <TermsModal
-        isOpen={activeModal === "terms"}
-        onClose={() => setActiveModal(null)}
-      />
-      <PrivacyModal
-        isOpen={activeModal === "privacy"}
-        onClose={() => setActiveModal(null)}
-      />
+      <TermsModal isOpen={activeModal === "terms"} onClose={() => setActiveModal(null)} />
+      <PrivacyModal isOpen={activeModal === "privacy"} onClose={() => setActiveModal(null)} />
     </div>
   );
 }

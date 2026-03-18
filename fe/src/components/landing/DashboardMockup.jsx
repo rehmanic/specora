@@ -6,14 +6,14 @@
  */
 export default function DashboardMockup() {
   return (
-    <div className="relative w-full max-h-[400px] md:max-h-[550px] lg:max-h-[650px] overflow-hidden bg-slate-50">
+    <div className="relative max-h-[400px] w-full overflow-hidden bg-slate-50 md:max-h-[550px] lg:max-h-[650px]">
       <img
         src="/app_preview.png"
         alt="Specora Dashboard Preview"
-        className="w-full h-auto min-h-full object-cover object-top block hover:scale-[1.01] transition-transform duration-700"
+        className="block h-auto min-h-full w-full object-cover object-top transition-transform duration-700 hover:scale-[1.01]"
       />
       {/* Subtle Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/[0.05] to-transparent pointer-events-none" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-900/[0.05] to-transparent" />
     </div>
   );
 }

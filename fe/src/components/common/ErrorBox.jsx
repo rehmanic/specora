@@ -14,13 +14,13 @@ export default function ErrorBox({ message, dismissible = false, onDismiss }) {
   };
 
   return (
-    <div className="flex items-start gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive animate-fade-in">
-      <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-      <p className="text-sm flex-1">{message}</p>
+    <div className="bg-destructive/10 border-destructive/20 text-destructive animate-fade-in flex items-start gap-3 rounded-lg border p-4">
+      <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+      <p className="flex-1 text-sm">{message}</p>
       {dismissible && (
         <button
           onClick={handleDismiss}
-          className="shrink-0 text-destructive/70 hover:text-destructive transition-colors"
+          className="text-destructive/70 hover:text-destructive shrink-0 transition-colors"
         >
           <X className="h-4 w-4" />
         </button>

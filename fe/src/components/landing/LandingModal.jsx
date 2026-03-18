@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 
 /**
  * A reusable modal component for the landing page.
- * 
+ *
  * @param {Object} props
  * @param {boolean} props.isOpen - Whether the modal is visible.
  * @param {Function} props.onClose - Function to call when closing the modal.
@@ -18,35 +18,31 @@ export default function LandingModal({ isOpen, onClose, title, children }) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-300"
+        className="animate-in fade-in absolute inset-0 bg-slate-950/80 backdrop-blur-sm duration-300"
         onClick={onClose}
       />
 
       {/* Modal Content */}
-      <div className="bg-[oklch(0.20_0.02_285)] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+      <div className="animate-in zoom-in-95 fade-in relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[oklch(0.20_0.02_285)] shadow-2xl duration-300">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white tracking-tight">
-            {title}
-          </h3>
+        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+          <h3 className="text-lg font-semibold tracking-tight text-white">{title}</h3>
           <button
             onClick={onClose}
-            className="p-1 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-all flex items-center justify-center"
+            className="flex items-center justify-center rounded-full p-1 text-slate-400 transition-all hover:bg-white/10 hover:text-white"
           >
-            <X className="w-5 h-5" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="px-6 py-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
-          {children}
-        </div>
+        <div className="custom-scrollbar max-h-[70vh] overflow-y-auto px-6 py-8">{children}</div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-white/5 border-t border-white/10 flex justify-end">
+        <div className="flex justify-end border-t border-white/10 bg-white/5 px-6 py-4">
           <button
             onClick={onClose}
-            className="bg-[oklch(0.85_0.20_130)] text-[oklch(0.15_0.02_285)] px-6 py-2 rounded-full text-xs font-bold hover:brightness-95 transition-all shadow-sm"
+            className="rounded-full bg-[oklch(0.85_0.20_130)] px-6 py-2 text-xs font-bold text-[oklch(0.15_0.02_285)] shadow-sm transition-all hover:brightness-95"
           >
             I understand
           </button>

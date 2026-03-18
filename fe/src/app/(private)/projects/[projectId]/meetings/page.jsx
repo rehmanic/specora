@@ -3,7 +3,14 @@
 import React, { useState, useEffect } from "react";
 import useSWR from "swr";
 import { useParams, useRouter } from "next/navigation";
-import { getProjectMeetings, createMeeting, updateMeeting, transcribeMeeting, deleteMeeting, extractMeetingRequirements } from "@/api/meetings";
+import {
+  getProjectMeetings,
+  createMeeting,
+  updateMeeting,
+  transcribeMeeting,
+  deleteMeeting,
+  extractMeetingRequirements,
+} from "@/api/meetings";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -23,18 +30,19 @@ import { Label } from "@/components/ui/label";
 export default function MeetingsPage() {
   const { projectId } = useParams();
   const router = useRouter();
-  const { data: meetings, error, mutate } = useSWR(
-    projectId ? `/meetings/project/${projectId}` : null,
-    () => getProjectMeetings(projectId)
-  );
+  const {
+    data: meetings,
+    error,
+    mutate,
+  } = useSWR(projectId ? `/meetings/project/${projectId}` : null, () => getProjectMeetings(projectId));
 
   const [isCreating, setIsCreating] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState(null);
-  const [formData, setFormData] = useState({ 
-    title: "", 
-    description: "", 
-    scheduled_date: new Date().toISOString().split('T')[0], 
-    scheduled_time: "10:00" 
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    scheduled_date: new Date().toISOString().split("T")[0],
+    scheduled_time: "10:00",
   });
   const [meetingToDelete, setMeetingToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -44,21 +52,19 @@ export default function MeetingsPage() {
 
   const stats = {
     total: meetings?.length || 0,
-    recorded: meetings?.filter(m => !!m.recording_url).length || 0,
-    transcribed: meetings?.filter(m => (m.transcript || m.transcripts?.length > 0)).length || 0
+    recorded: meetings?.filter((m) => !!m.recording_url).length || 0,
+    transcribed: meetings?.filter((m) => m.transcript || m.transcripts?.length > 0).length || 0,
   };
 
   // Filtered meetings
-  const filteredMeetings = (meetings || []).filter(m => 
-    m.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    m.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredMeetings = (meetings || []).filter(
+    (m) =>
+      m.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredMeetings.length / pageSize);
-  const paginatedMeetings = filteredMeetings.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const paginatedMeetings = filteredMeetings.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Reset to first page when search query changes
   useEffect(() => {
@@ -67,19 +73,19 @@ export default function MeetingsPage() {
   const handleCreate = async () => {
     try {
       const startTime = new Date(`${formData.scheduled_date}T${formData.scheduled_time}`).toISOString();
-      await createMeeting({ 
+      await createMeeting({
         title: formData.title,
         description: formData.description,
         start_time: startTime,
-        project_id: projectId
+        project_id: projectId,
       });
       mutate();
       setIsCreating(false);
-      setFormData({ 
-        title: "", 
-        description: "", 
-        scheduled_date: new Date().toISOString().split('T')[0], 
-        scheduled_time: "10:00" 
+      setFormData({
+        title: "",
+        description: "",
+        scheduled_date: new Date().toISOString().split("T")[0],
+        scheduled_time: "10:00",
       });
     } catch (err) {
       alert("Failed to create meeting");
@@ -89,16 +95,16 @@ export default function MeetingsPage() {
   const handleEdit = (meeting) => {
     const d = new Date(meeting.start_time);
     // Pad local components
-    const pad = (n) => n.toString().padStart(2, '0');
+    const pad = (n) => n.toString().padStart(2, "0");
     const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    
+
     setEditingMeeting(meeting);
-    setFormData({ 
-      title: meeting.title, 
+    setFormData({
+      title: meeting.title,
       description: meeting.description || "",
       scheduled_date: dateStr,
-      scheduled_time: timeStr
+      scheduled_time: timeStr,
     });
   };
 
@@ -108,15 +114,15 @@ export default function MeetingsPage() {
       await updateMeeting(editingMeeting.id, {
         title: formData.title,
         description: formData.description,
-        start_time: startTime
+        start_time: startTime,
       });
       mutate();
       setEditingMeeting(null);
-      setFormData({ 
-        title: "", 
-        description: "", 
-        scheduled_date: new Date().toISOString().split('T')[0], 
-        scheduled_time: "10:00" 
+      setFormData({
+        title: "",
+        description: "",
+        scheduled_date: new Date().toISOString().split("T")[0],
+        scheduled_time: "10:00",
       });
     } catch (err) {
       alert("Failed to update meeting");
@@ -179,40 +185,21 @@ export default function MeetingsPage() {
     return !!(meeting.transcript || (meeting.transcripts && meeting.transcripts.length > 0));
   };
 
-  if (error) return <div className="p-6 text-destructive">Failed to load meetings</div>;
-  if (!meetings) return <div className="p-6 text-muted-foreground">Loading...</div>;
+  if (error) return <div className="text-destructive p-6">Failed to load meetings</div>;
+  if (!meetings) return <div className="text-muted-foreground p-6">Loading...</div>;
 
   return (
     <TooltipProvider>
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
-        <PageBanner
-          title="Meetings"
-          description="Schedule, manage, and review project meetings."
-          icon={CalendarDays}
-        />
+        <PageBanner title="Meetings" description="Schedule, manage, and review project meetings." icon={CalendarDays} />
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <StatsCard 
-            icon={Video} 
-            label="Total Meetings" 
-            value={stats.total} 
-            color="primary" 
-          />
-          <StatsCard 
-            icon={Play} 
-            label="Recorded" 
-            value={stats.recorded} 
-            color="success" 
-          />
-          <StatsCard 
-            icon={FileText} 
-            label="Transcribed" 
-            value={stats.transcribed} 
-            color="info" 
-          />
+        <div className="animate-fade-in grid grid-cols-2 gap-4 lg:grid-cols-3" style={{ animationDelay: "0.1s" }}>
+          <StatsCard icon={Video} label="Total Meetings" value={stats.total} color="primary" />
+          <StatsCard icon={Play} label="Recorded" value={stats.recorded} color="success" />
+          <StatsCard icon={FileText} label="Transcribed" value={stats.transcribed} color="info" />
         </div>
 
-        <SearchCreateHeader 
+        <SearchCreateHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           searchPlaceholder="Search meetings by title or description..."
@@ -227,107 +214,115 @@ export default function MeetingsPage() {
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
-                <Label htmlFor="title">Meeting Title <span className="text-destructive">*</span></Label>
-                        <Input
-                            id="title"
-                            placeholder="e.g., Weekly Sync"
-                            value={formData.title || ""}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="date">Scheduled Date <span className="text-destructive">*</span></Label>
-                            <Input
-                                id="date"
-                                type="date"
-                                value={formData.scheduled_date || ""}
-                                onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="time">Scheduled Time <span className="text-destructive">*</span></Label>
-                            <Input
-                                id="time"
-                                type="time"
-                                value={formData.scheduled_time || ""}
-                                onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
-                                required
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                            id="description"
-                            placeholder="What is this meeting about?"
-                            value={formData.description || ""}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        />
-                    </div>
-                    <Button 
-                        onClick={handleCreate} 
-                        className="w-full"
-                        disabled={!formData.title || !formData.start_time}
-                    >
-                        Create Meeting
-                    </Button>
+                <Label htmlFor="title">
+                  Meeting Title <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="title"
+                  placeholder="e.g., Weekly Sync"
+                  value={formData.title || ""}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">
+                    Scheduled Date <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={formData.scheduled_date || ""}
+                    onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
+                    required
+                  />
                 </div>
-            </DialogContent>
+                <div className="space-y-2">
+                  <Label htmlFor="time">
+                    Scheduled Time <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="time"
+                    type="time"
+                    value={formData.scheduled_time || ""}
+                    onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder="What is this meeting about?"
+                  value={formData.description || ""}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+              </div>
+              <Button onClick={handleCreate} className="w-full" disabled={!formData.title || !formData.start_time}>
+                Create Meeting
+              </Button>
+            </div>
+          </DialogContent>
         </Dialog>
 
         {/* Edit Dialog */}
         <Dialog open={!!editingMeeting} onOpenChange={(open) => !open && setEditingMeeting(null)}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Edit Meeting</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-2">
-                    <div className="space-y-2">
-                        <Label htmlFor="edit-title">Meeting Title <span className="text-destructive">*</span></Label>
-                        <Input
-                            id="edit-title"
-                            placeholder="Meeting title"
-                            value={formData.title || ""}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-date">Scheduled Date <span className="text-destructive">*</span></Label>
-                            <Input
-                                id="edit-date"
-                                type="date"
-                                value={formData.scheduled_date || ""}
-                                onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-time">Scheduled Time <span className="text-destructive">*</span></Label>
-                            <Input
-                                id="edit-time"
-                                type="time"
-                                value={formData.scheduled_time || ""}
-                                onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
-                                required
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="edit-description">Description</Label>
-                        <Textarea
-                            id="edit-description"
-                            placeholder="Description (optional)"
-                            value={formData.description || ""}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        />
-                    </div>
-              <Button 
-                onClick={handleUpdate} 
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Meeting</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">
+                  Meeting Title <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="edit-title"
+                  placeholder="Meeting title"
+                  value={formData.title || ""}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-date">
+                    Scheduled Date <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="edit-date"
+                    type="date"
+                    value={formData.scheduled_date || ""}
+                    onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-time">
+                    Scheduled Time <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="edit-time"
+                    type="time"
+                    value={formData.scheduled_time || ""}
+                    onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  placeholder="Description (optional)"
+                  value={formData.description || ""}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+              </div>
+              <Button
+                onClick={handleUpdate}
                 className="w-full"
                 disabled={!formData.title || !formData.scheduled_date || !formData.scheduled_time}
               >
@@ -337,16 +332,14 @@ export default function MeetingsPage() {
           </DialogContent>
         </Dialog>
 
-
-
         {meetings.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <div className="text-muted-foreground py-12 text-center">
+            <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
             <p>No meetings scheduled yet.</p>
-            <p className="text-sm mt-1">Click "Schedule Meeting" to create one.</p>
+            <p className="mt-1 text-sm">Click "Schedule Meeting" to create one.</p>
           </div>
         ) : (
-          <div className="border rounded-lg">
+          <div className="rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -367,13 +360,13 @@ export default function MeetingsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5 text-sm">
-                        <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                        <Calendar className="text-muted-foreground h-3.5 w-3.5" />
                         {formatDate(meeting.start_time)}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5 text-sm">
-                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                        <Clock className="text-muted-foreground h-3.5 w-3.5" />
                         {formatTime(meeting.start_time)}
                       </div>
                     </TableCell>
@@ -381,13 +374,13 @@ export default function MeetingsPage() {
                       <div className="flex gap-1">
                         {meeting.recording_url && (
                           <Badge variant="outline" className="text-xs">
-                            <Video className="w-3 h-3 mr-1" />
+                            <Video className="mr-1 h-3 w-3" />
                             Recorded
                           </Badge>
                         )}
                         {hasTranscript(meeting) && (
                           <Badge variant="outline" className="text-xs">
-                            <FileText className="w-3 h-3 mr-1" />
+                            <FileText className="mr-1 h-3 w-3" />
                             Transcript
                           </Badge>
                         )}
@@ -403,33 +396,28 @@ export default function MeetingsPage() {
                               className="h-8 w-8"
                               onClick={() => handleJoin(meeting.id)}
                             >
-                              <Video className="w-4 h-4" />
+                              <Video className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Join Meeting</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                             <Button
-                               variant="ghost"
-                               size="icon"
-                               className={`h-8 w-8 ${meeting.recording_url ? 'text-green-600 hover:text-green-600' : ''}`}
-                               onClick={() => handleViewDetails(meeting.id)}
-                             >
-                               <Play className="w-4 h-4" />
-                             </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>{meeting.recording_url ? 'View Recording' : 'View Details'}</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
-                              onClick={() => handleEdit(meeting)}
+                              className={`h-8 w-8 ${meeting.recording_url ? "text-green-600 hover:text-green-600" : ""}`}
+                              onClick={() => handleViewDetails(meeting.id)}
                             >
-                              <Pencil className="w-4 h-4" />
+                              <Play className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{meeting.recording_url ? "View Recording" : "View Details"}</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(meeting)}>
+                              <Pencil className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Edit</TooltipContent>
@@ -439,10 +427,10 @@ export default function MeetingsPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              className="text-destructive hover:text-destructive h-8 w-8"
                               onClick={() => handleDelete(meeting.id)}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Delete</TooltipContent>
