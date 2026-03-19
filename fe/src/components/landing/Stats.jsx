@@ -11,8 +11,8 @@ export default function Stats() {
       <div className="mx-auto grid max-w-7xl grid-cols-1 items-center justify-items-center gap-x-8 gap-y-16 sm:grid-cols-2 md:gap-x-16 lg:grid-cols-4">
         <StatItem value="10x Faster" label="Time to Specification" />
         <StatItem value="99.2%" label="AI Consistency" />
-        <StatItem value="1.5M+" label="Reqs Extracted" />
-        <StatItem value="50K+" label="Specs Validated" />
+        <StatItem value="85%" label="Less Rework" />
+        <StatItem value="60%" label="Faster Discovery" />
       </div>
     </section>
   );

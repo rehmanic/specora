@@ -2,30 +2,9 @@
 
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
-  Mic,
-  Video,
-  ClipboardCheck,
-  Zap,
-  ShieldCheck,
-  FileJson,
-  GitGraph,
-  Sparkles,
-  ArrowRight,
-  Terminal,
-  Search,
-  Layout,
-  MessageCircle,
-  FileText,
-  ShieldAlert,
-  Coins,
-  Scale,
-  Network,
-  BadgeCheck,
-  ScrollText,
-  Workflow,
-  Wand2,
-  Layers,
-  CheckCircle2,
+  Video, ClipboardCheck, ShieldCheck, GitGraph, Sparkles, Search,
+  Layout, MessageCircle, FileText, CircleDollarSign, Scale, Network,
+  BadgeCheck, ScrollText, Users, Layers, MessageCircleWarning, ArrowRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,79 +12,71 @@ const modules = [
   {
     id: "elicitation",
     label: "Elicitation",
-    eyebrow: "Capture intent",
-    tagline: "Chat-to-requirement pipeline with AI",
+    tagline: "Gather & Extract Requirements",
     accent: "from-amber-400/25 via-emerald-400/15 to-cyan-400/15",
     dot: "bg-amber-400",
     glyph: <MessageCircle className="h-5 w-5" />,
     description:
-      "Perfect for Clients and Requirements Engineers to collaborate. Use guided chats and meeting transcripts to extract structured requirements automatically.",
+      "Use AI features to elicit and extract requirements quickly.",
     bullets: [
       {
         icon: <MessageCircle className="h-4 w-4" />,
-        title: "AI-Guided Elicitation",
-        desc: "Clients can walk through structured chats to define their vision without technical jargon.",
+        title: "Specbot",
+        desc: "An AI chatbot that can talk with clients and understand their needs.",
       },
       {
-        icon: <Mic className="h-4 w-4" />,
-        title: "Transcript Extraction",
-        desc: "Engineers can convert stakeholder meeting recordings into actionable requirement drafts.",
+        icon: <Video className="h-4 w-4" />,
+        title: "Meetings",
+        desc: "Record, transcribe and extract requirements from meetings with stakehoders.",
       },
       {
-        icon: <Wand2 className="h-4 w-4" />,
-        title: "AI Feature Extraction",
-        desc: "Identify core functionalities from raw text with smart context-aware suggestions.",
+        icon: <FileText className="h-4 w-4" />,
+        title: "Feedbacks",
+        desc: "Gather and organize feedback from multiple stakeholders to clarify requirements and ensure everyone is on the same page.",
       },
-    ],
-    tiles: [
-      { icon: <Layout className="h-4 w-4" />, k: "Stakeholder", v: "Client • Engineer" },
-      { icon: <Sparkles className="h-4 w-4" />, k: "Tool", v: "Specbot • Meetings" },
-      { icon: <MessageCircle className="h-4 w-4" />, k: "Output", v: "Draft Requirements" },
+      {
+        icon: <Users className="h-4 w-4" />,
+        title: "Group chat",
+        desc: "A group chat for all stakeholders for general discussions.",
+      },
     ],
   },
   {
     id: "feasibility",
     label: "Feasibility",
-    eyebrow: "De-risk early",
-    tagline: "Technical, economic, and legal validation",
+    tagline: "Technical, Economic, and Legal Feasibility",
     accent: "from-emerald-400/25 via-teal-400/15 to-cyan-400/15",
     dot: "bg-emerald-400",
     glyph: <ShieldCheck className="h-5 w-5" />,
     description:
-      "Enables Managers and Engineers to assess project viability through simulations, automated legal checks, and technical research.",
+      "Check project feasibility through simulations, automated legal checks, and technical research, before moving forward.",
     bullets: [
       {
-        icon: <Coins className="h-4 w-4" />,
+        icon: <CircleDollarSign className="h-4 w-4" />,
         title: "Economic Simulation",
         desc: "Run Monte Carlo simulations to predict cost and schedule risks before code is written.",
+      },
+      {
+        icon: <Scale className="h-4 w-4" />,
+        title: "Legal Engine",
+        desc: "Check requirements against legal frameworks for instant compliance feedback.",
       },
       {
         icon: <Search className="h-4 w-4" />,
         title: "Technical Validation",
         desc: "Deep-dive into tech stacks with AI research agents to find constraints early.",
       },
-      {
-        icon: <Scale className="h-4 w-4" />,
-        title: "Norma Legal Engine",
-        desc: "Batch check requirements against legal frameworks for instant compliance feedback.",
-      },
-    ],
-    tiles: [
-      { icon: <ShieldCheck className="h-4 w-4" />, k: "Stakeholder", v: "Manager • Engineer" },
-      { icon: <Coins className="h-4 w-4" />, k: "Risk", v: "Monte Carlo" },
-      { icon: <Scale className="h-4 w-4" />, k: "Compliance", v: "Automated Legal" },
     ],
   },
   {
     id: "prototyping",
     label: "Prototyping",
-    eyebrow: "Visualize success",
-    tagline: "Link UI screens directly to requirements",
+    tagline: "Visualize and Validate",
     accent: "from-violet-400/25 via-fuchsia-400/15 to-rose-400/15",
     dot: "bg-violet-400",
     glyph: <Layout className="h-5 w-5" />,
     description:
-      "Bridge the gap between Clients and Engineers. Build visual flows that map to specific requirements for crystal clear alignment.",
+      "Build visual flows that map to specific requirements for crystal clear alignment.",
     bullets: [
       {
         icon: <Layout className="h-4 w-4" />,
@@ -115,84 +86,52 @@ const modules = [
       {
         icon: <Network className="h-4 w-4" />,
         title: "Requirement Mapping",
-        desc: "Tag UI components to specific requirements to ensure 100% implementation coverage.",
+        desc: "Tag screens to specific requirements for traceability.",
       },
-      {
-        icon: <Video className="h-4 w-4" />,
-        title: "Stakeholder Demos",
-        desc: "Present interactive flows to Clients for immediate validation and feedback loops.",
-      },
-    ],
-    tiles: [
-      { icon: <Layout className="h-4 w-4" />, k: "Stakeholder", v: "Client • Engineer" },
-      { icon: <Network className="h-4 w-4" />, k: "Traceability", v: "Component Links" },
-      { icon: <Video className="h-4 w-4" />, k: "Validation", v: "Interactive" },
     ],
   },
   {
     id: "verification",
     label: "Verification",
-    eyebrow: "Quality gates",
-    tagline: "IEEE analysis and ambiguity detection",
+    tagline: "IEEE Analysis and Ambiguity Detection",
     accent: "from-sky-400/20 via-indigo-500/15 to-emerald-400/10",
     dot: "bg-sky-500",
     glyph: <ClipboardCheck className="h-5 w-5" />,
     description:
-      "Help Engineers and Managers maintain high standards. Use AI to score requirements against global IEEE benchmarks and ARM metrics.",
+      "Use AI to score requirements against global IEEE benchmarks and ARM metrics.",
     bullets: [
       {
         icon: <BadgeCheck className="h-4 w-4" />,
         title: "IEEE AI Analysis",
-        desc: "Check for clarity, completeness, and consistency using fine-tuned models.",
+        desc: "Check requirements against IEEE requirements standards instantly, using AI.",
       },
       {
-        icon: <Sparkles className="h-4 w-4" />,
+        icon: <MessageCircleWarning className="h-4 w-4" />,
         title: "Ambiguity Scoring",
         desc: "Identify weak language and hidden complexity with Specora's ARM engine.",
       },
-      {
-        icon: <CheckCircle2 className="h-4 w-4" />,
-        title: "Project Oversight",
-        desc: "Managers can track overall requirement quality through health dashboards.",
-      },
-    ],
-    tiles: [
-      { icon: <ClipboardCheck className="h-4 w-4" />, k: "Stakeholder", v: "Engineer • Manager" },
-      { icon: <BadgeCheck className="h-4 w-4" />, k: "Benchmark", v: "IEEE 830/29148" },
-      { icon: <Zap className="h-4 w-4" />, k: "Engine", v: "ARM Metrics" },
     ],
   },
   {
     id: "specification",
     label: "Specification",
-    eyebrow: "The source of truth",
-    tagline: "SRS documents, Mermaid diagrams, and Traceability",
+    tagline: "Diagram & Document",
     accent: "from-slate-400/15 via-emerald-400/10 to-indigo-500/10",
     dot: "bg-slate-700",
     glyph: <ScrollText className="h-5 w-5" />,
     description:
-      "The ultimate workspace for Managers to oversee and export the final project scope. Maintain logic, diagrams, and hierarchy in one place.",
+      "Generate project documents and diagrams with AI.",
     bullets: [
       {
         icon: <ScrollText className="h-4 w-4" />,
-        title: "SRS Generation",
-        desc: "Automatically compile requirements into professional, industry-standard documents.",
+        title: "Documentation",
+        desc: "Automatically compile requirements into professional, industry-standard documents such as SRS, Textual Use Case, etc.",
       },
       {
         icon: <GitGraph className="h-4 w-4" />,
-        title: "Mermaid Integration",
+        title: "Diagrams",
         desc: "Generate and edit system diagrams with AI to visualize complex logic.",
-      },
-      {
-        icon: <Layers className="h-4 w-4" />,
-        title: "Traceability Matrix",
-        desc: "Full parent-child hierarchy and relationship graph for total scope control.",
-      },
-    ],
-    tiles: [
-      { icon: <ScrollText className="h-4 w-4" />, k: "Stakeholder", v: "Manager • Engineer" },
-      { icon: <GitGraph className="h-4 w-4" />, k: "Diagrams", v: "AI Mermaid" },
-      { icon: <Layers className="h-4 w-4" />, k: "Trace", v: "Full Matrix" },
+      }
     ],
   },
 ];
@@ -227,7 +166,7 @@ export default function Features() {
   // Auto-advance
   useEffect(() => {
     if (prefersReducedMotion || isPaused) return;
-    const t = setInterval(() => setActiveModule((v) => (v + 1) % modules.length), 1700);
+    const t = setInterval(() => setActiveModule((v) => (v + 1) % modules.length), 1800);
     return () => clearInterval(t);
   }, [isPaused, prefersReducedMotion]);
 
@@ -259,29 +198,21 @@ export default function Features() {
     >
       {/* Background */}
       <div className="hero-grid pointer-events-none absolute inset-0 opacity-[0.03]" />
-      <div className="pointer-events-none absolute -top-24 -left-24 h-[520px] w-[520px] rounded-full bg-gradient-to-br from-[oklch(0.85_0.20_130)]/25 via-sky-400/10 to-transparent blur-[90px]" />
-      <div className="pointer-events-none absolute -right-24 -bottom-28 h-[620px] w-[620px] rounded-full bg-gradient-to-tr from-violet-400/15 via-emerald-400/10 to-transparent blur-[110px]" />
+      <div className="pointer-events-none absolute -top-24 -left-24 h-[620px] w-[620px] rounded-full bg-gradient-to-br from-[oklch(0.85_0.20_130)]/35 via-sky-400/20 to-transparent blur-[90px]" />
+      <div className="pointer-events-none absolute -right-24 -bottom-28 h-[720px] w-[720px] rounded-full bg-gradient-to-tr from-violet-400/25 via-emerald-400/15 to-transparent blur-[110px]" />
 
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6">
         <div className="flex flex-col gap-12 pt-24 pb-10">
           {/* Heading */}
           <div className="flex items-end justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-[oklch(0.85_0.20_130)]/10 px-3 py-1 text-[10px] font-bold tracking-widest text-[oklch(0.55_0.15_130)] uppercase">
-                <Sparkles className="h-3 w-3" />
-                Feature Theater
-              </div>
               <h2 className="mt-5 text-3xl leading-[1.05] font-semibold tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
-                One platform.
-                <span className="text-[oklch(0.55_0.15_130)]"> Five modules.</span>
+                Core Modules
+                <span className="text-[oklch(0.55_0.15_130)]"> & Features</span>
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-relaxed font-light text-slate-500 md:text-base">
-                Experience the complete requirements lifecycle with purpose-built modules for every stakeholder.
+                Experience the complete requirements lifecycle with purpose-built modules.
               </p>
-            </div>
-            <div className="hidden items-center gap-2 text-[10px] font-black tracking-widest text-slate-500 uppercase lg:flex">
-              <span className="h-2 w-2 rounded-full bg-emerald-400/70" />
-              Live transitions
             </div>
           </div>
 
@@ -291,13 +222,6 @@ export default function Features() {
             <div className="relative min-h-0 overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-slate-50/60 p-4 sm:p-5">
               <div className="pointer-events-none absolute inset-0 opacity-[0.7]">
                 <div className="absolute -top-20 -right-24 h-72 w-72 rounded-full bg-gradient-to-br from-[oklch(0.85_0.20_130)]/25 to-transparent blur-[70px]" />
-              </div>
-
-              <div className="relative mb-4 flex items-center justify-between">
-                <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Modules</span>
-                <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  {String(activeModule + 1).padStart(2, "0")}/{String(modules.length).padStart(2, "0")}
-                </span>
               </div>
 
               <div className="relative space-y-2 pr-1">
@@ -341,14 +265,6 @@ export default function Features() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
-                            <div
-                              className={cn(
-                                "text-[10px] font-black tracking-[0.2em] uppercase",
-                                isActive ? "text-emerald-300/90" : "text-slate-400"
-                              )}
-                            >
-                              {m.eyebrow}
-                            </div>
                             <div className="mt-1 truncate text-base font-semibold tracking-tight">{m.label}</div>
                           </div>
                           <ArrowRight
@@ -367,31 +283,6 @@ export default function Features() {
                     </button>
                   );
                 })}
-              </div>
-
-              {/* Progress bar */}
-              <div className="relative mt-6 rounded-2xl border border-slate-200/70 bg-white/50 px-4 py-3 text-xs text-slate-500">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">Lifecycle Loop</span>
-                  <span
-                    className={cn(
-                      "text-[10px] font-black tracking-widest uppercase",
-                      isPaused ? "text-slate-400" : "text-emerald-600"
-                    )}
-                  >
-                    {prefersReducedMotion ? "OFF" : isPaused ? "PAUSED" : "ACTIVE"}
-                  </span>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200/70">
-                  <div
-                    key={`${activeModule}-${isPaused}`}
-                    className={cn(
-                      "h-full w-full origin-left bg-gradient-to-r from-[oklch(0.55_0.15_130)] to-emerald-400",
-                      prefersReducedMotion || isPaused ? "scale-x-0" : "scale-x-100",
-                      prefersReducedMotion ? "" : "transition-transform duration-[1700ms] ease-linear"
-                    )}
-                  />
-                </div>
               </div>
             </div>
 
@@ -447,27 +338,6 @@ export default function Features() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Mini tiles */}
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    {mod.tiles.map((t, i) => (
-                      <div
-                        key={i}
-                        className="rounded-[1.6rem] border border-white/30 bg-white/70 px-4 py-4 shadow-[0_18px_50px_-34px_rgba(0,0,0,0.35)] backdrop-blur-sm"
-                      >
-                        <div className="flex items-center gap-2 text-slate-700">
-                          <span className="flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-900/10 bg-slate-900/5">
-                            {t.icon}
-                          </span>
-                          <div className="min-w-0">
-                            <div className="text-[10px] font-black tracking-widest text-slate-500 uppercase">{t.k}</div>
-                            <div className="truncate text-sm font-semibold tracking-tight text-slate-900">{t.v}</div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
                   {/* Bullet cards */}
                   <div className="min-h-0 pb-10">
                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -492,30 +362,11 @@ export default function Features() {
                     </div>
 
                     <div className="mt-6 flex items-center justify-between text-[10px] font-black tracking-widest text-slate-600 uppercase">
-                      <span className="opacity-70">Tip: Click tabs or press arrow keys</span>
-                      <div className="flex items-center gap-4">
-                        <span className="text-slate-400">1s Loop</span>
-                        <button
-                          type="button"
-                          onClick={() => setActiveModule((v) => (v + 1) % modules.length)}
-                          className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-2 text-white transition-all hover:brightness-110"
-                        >
-                          Next <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Bottom hint */}
-          <div className="flex items-center justify-between text-[10px] text-slate-500">
-            <span className="font-light">
-              Designed for <span className="font-medium text-slate-700">Premium Precision</span>
-            </span>
-            <span className="hidden font-light sm:inline">Hover to pause exploration</span>
           </div>
         </div>
       </div>
