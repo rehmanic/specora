@@ -54,7 +54,8 @@
   --font-display: "Outfit", "Inter", sans-serif;
 }
 
-:root {
+:root,
+.light {
   --radius: 0.75rem;
 
   /* Primary: Vibrant Lime Green - energy, call to actions */

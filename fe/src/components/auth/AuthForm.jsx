@@ -8,17 +8,15 @@ import useAuthStore from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import ErrorBox from "@/components/common/ErrorBox";
 import { notify } from "@/components/common/Notification";
-import { Eye, EyeOff, ArrowRight, Loader2, Mail, User, Lock } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Loader2, User, Lock } from "lucide-react";
 import Link from "next/link";
 
-export default function AuthForm({ className, variant = "login", ...props }) {
-  const isLogin = variant === "login";
-  const { login, signup, loading, error } = useAuthStore();
+export default function AuthForm({ className, ...props }) {
+  const { login, loading, error } = useAuthStore();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
     username: "",
-    email: "",
     password: "",
   });
 
@@ -26,11 +24,11 @@ export default function AuthForm({ className, variant = "login", ...props }) {
   const [localError, setLocalError] = useState(null);
   const [focusedField, setFocusedField] = useState(null);
 
-  // Clear errors when variant changes
+  // Clear errors on mount
   useEffect(() => {
     setLocalError(null);
     useAuthStore.setState({ error: null });
-  }, [variant]);
+  }, []);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -50,32 +48,19 @@ export default function AuthForm({ className, variant = "login", ...props }) {
     useAuthStore.setState({ error: null });
 
     try {
-      if (isLogin) {
-        await login({
-          username: formData.username,
-          password: formData.password,
-        });
+      await login({
+        username: formData.username,
+        password: formData.password,
+      });
 
-        notify.success("Welcome back!", {
-          description: `Logged in as ${formData.username}`,
-        });
-        router.push("/dashboard");
-      } else {
-        await signup({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-        });
-
-        notify.success("Account created successfully!", {
-          description: "Welcome to Specora",
-        });
-        router.push("/dashboard");
-      }
+      notify.success("Welcome back!", {
+        description: `Logged in as ${formData.username}`,
+      });
+      router.push("/dashboard");
     } catch (err) {
       const errorMessage = err?.message || "An unexpected error occurred. Please try again.";
       setLocalError(errorMessage);
-      notify.error(isLogin ? "Login failed" : "Signup failed", {
+      notify.error("Login failed", {
         description: errorMessage,
       });
     }
@@ -93,10 +78,10 @@ export default function AuthForm({ className, variant = "login", ...props }) {
         {/* Header */}
         <div className="mb-8 space-y-2">
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
-            {isLogin ? "Welcome back" : "Create your account"}
+            Login
           </h2>
           <p className="text-sm text-slate-500">
-            {isLogin ? "Enter your credentials to access your account" : "Get started with Specora in seconds"}
+            Enter your credentials to access your account
           </p>
         </div>
 
@@ -127,41 +112,12 @@ export default function AuthForm({ className, variant = "login", ...props }) {
               </div>
             </div>
 
-            {/* Email only for signup */}
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-slate-700">
-                  Email
-                </Label>
-                <div className={inputWrapperClass("email")}>
-                  <Mail className="absolute left-3 h-4 w-4 text-slate-400" />
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    onFocus={() => setFocusedField("email")}
-                    onBlur={() => setFocusedField(null)}
-                    required
-                    placeholder="you@example.com"
-                    className="border-0 bg-transparent pl-10 text-slate-900 placeholder-slate-400 focus-visible:ring-0"
-                  />
-                </div>
-              </div>
-            )}
-
             {/* Password */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-sm font-medium text-slate-700">
                   Password
                 </Label>
-                {isLogin && (
-                  <Link href="#" className="text-xs text-slate-500 transition-colors hover:text-slate-900">
-                    Forgot password?
-                  </Link>
-                )}
               </div>
               <div className={inputWrapperClass("password")}>
                 <Lock className="absolute left-3 h-4 w-4 text-slate-400" />
@@ -202,27 +158,20 @@ export default function AuthForm({ className, variant = "login", ...props }) {
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  {isLogin ? "Signing in..." : "Creating account..."}
+                  Hold on...
                 </>
               ) : (
                 <>
-                  {isLogin ? "Sign in" : "Create account"}
+                  Let's go
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </>
               )}
             </button>
 
-            {/* Divider element and registration link removed as it's frozen */}
-            {isLogin ? (
-              <p className="mt-2 text-center text-xs text-slate-400">Need an account? Contact an administrator.</p>
-            ) : (
-              <p className="text-center text-sm text-slate-500">
-                Already have an account?{" "}
-                <Link href="/login" className="text-primary hover:text-primary/80 font-semibold transition-colors">
-                  Sign in
-                </Link>
-              </p>
-            )}
+            {/* Footer */}
+            <p className="mt-2 text-center text-xs text-slate-400">
+              Forgot password? Contact <a className="text-black/60 hover:text-black/80 font-semibold transition-colors" href="https://mail.google.com/mail/?view=cm&to=admin@specora.com">admin@specora.com</a>
+            </p>
           </div>
         </form>
       </div>

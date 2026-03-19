@@ -1,6 +1,7 @@
 import Logo from "@/components/common/Logo";
 import AuthForm from "@/components/auth/AuthForm";
-import { Layers } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function Login() {
   return (
@@ -24,8 +25,10 @@ export default function Login() {
         <div className="relative z-10 flex w-full flex-col justify-between p-12 text-white">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[oklch(0.85_0.20_130)] text-[oklch(0.15_0.02_285)]">
-              <Layers className="h-5 w-5" />
+            <div className="flex h-8 w-8 items-center justify-center">
+              <Link href="/">
+                <Image src="/specora-logo.svg" alt="Specora Logo" width={32} height={32} />
+              </Link>
             </div>
             <span className="text-lg font-bold tracking-tight">Specora</span>
           </div>
@@ -40,8 +43,8 @@ export default function Login() {
               <span className="text-[oklch(0.85_0.20_130)]">Create.</span>
             </h1>
             <p className="text-lg leading-relaxed font-light text-slate-300/80">
-              Streamline your requirements engineering process with AI-powered collaboration tools. Connect
-              stakeholders, gather insights, and build better software together.
+              Streamline your requirements engineering process with AI-powered features. Connect
+              with stakeholders, gather insights, and build better software together.
             </p>
           </div>
 
@@ -60,19 +63,7 @@ export default function Login() {
             <Logo size="lg" />
           </div>
 
-          <AuthForm variant="login" />
-
-          {/* Additional info */}
-          <p className="mt-8 text-center text-xs text-slate-400">
-            By logging in, you agree to our{" "}
-            <a href="#" className="underline underline-offset-4 transition-colors hover:text-slate-900">
-              Terms of Service
-            </a>{" "}
-            and{" "}
-            <a href="#" className="underline underline-offset-4 transition-colors hover:text-slate-900">
-              Privacy Policy
-            </a>
-          </p>
+          <AuthForm />
         </div>
       </div>
     </div>
