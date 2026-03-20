@@ -3,7 +3,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function CreateUserPage() {
   return (
-    <ProtectedRoute allowedRoles={["manager"]}>
+    <ProtectedRoute requiredPermissions={["add_user"]}>
       <UserInfo variant="create-user" />
     </ProtectedRoute>
   );

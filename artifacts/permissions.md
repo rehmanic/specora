@@ -21,18 +21,16 @@ This document outlines the granular permissions available within each module.
 ## 📁 Project Module
 *Permissions related to the creation and configuration of projects.*
 
-- `view_projects` 
-- `create_project`
-- `delete_project`
-- `update_project_name`
-- `update_project_description`
-- `update_project_status`
-- `update_project_start_date`
-- `update_project_end_date`
-- `update_project_cover_image`
-- `update_project_icon`
-- `update_project_members`
-- `update_project_tags`
+1. `view_projects` 
+2. `create_project`
+3. `delete_project`
+4. `add_project_member`
+5. `remove_project_member`
+6. `view_project_members`
+7. `view_project_tags`
+8. `remove_project_tag`
+9. `add_project_tag`
+10. `update_project`
 
 ---
 

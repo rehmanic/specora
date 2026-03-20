@@ -72,7 +72,7 @@ export default function UsersPage() {
   );
 
   return (
-    <ProtectedRoute allowedRoles={["manager"]}>
+    <ProtectedRoute requiredPermissions={["view_users"]}>
       <div className="bg-background min-h-screen">
         {/* Main Content */}
         <main className="p-6 lg:p-8">

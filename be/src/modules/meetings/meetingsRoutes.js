@@ -13,22 +13,23 @@ import {
     extractMeetingRequirements
 } from "./meetingsController.js";
 import { verifyToken } from "../../middlewares/common/verifyToken.js";
+import { requirePermissions } from "../../middlewares/common/requirePermissions.js";
 
 const router = express.Router();
 
-// Webhook must be public or validated differently (signature)
+// Webhook must be public (validated by signature)
 router.post("/webhook", express.raw({ type: 'application/webhook+json' }), webhookHandler);
 
 router.use(verifyToken);
 
-router.post("/create", createMeeting);
-router.get("/project/:projectId", getProjectMeetings);
-router.get("/:meetingId", getMeeting);
-router.post("/:meetingId/join", joinMeeting);
-router.put("/:meetingId", updateMeeting);
-router.post("/:meetingId/transcribe", transcribeMeeting);
-router.post("/:meetingId/extract-requirements", extractMeetingRequirements);
-router.delete("/:meetingId", deleteMeeting);
-router.post("/:meetingId/upload-recording", recordingUpload.single('recording'), uploadRecording);
+router.post("/create", requirePermissions("create_meeting"), createMeeting);
+router.get("/project/:projectId", requirePermissions("join_meeting"), getProjectMeetings);
+router.get("/:meetingId", requirePermissions("join_meeting"), getMeeting);
+router.post("/:meetingId/join", requirePermissions("join_meeting"), joinMeeting);
+router.put("/:meetingId", requirePermissions("update_meeting"), updateMeeting);
+router.post("/:meetingId/transcribe", requirePermissions("generate_meeting_transcript"), transcribeMeeting);
+router.post("/:meetingId/extract-requirements", requirePermissions("generate_meeting_transcript"), extractMeetingRequirements);
+router.delete("/:meetingId", requirePermissions("delete_meeting"), deleteMeeting);
+router.post("/:meetingId/upload-recording", requirePermissions("record_meeting"), recordingUpload.single('recording'), uploadRecording);
 
 export default router;

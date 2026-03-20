@@ -25,7 +25,29 @@ function StatCard({ icon: Icon, label, value, color = "primary" }) {
   );
 }
 
-export default function DashboardStats({ projects }) {
+function StatCardSkeleton() {
+  return (
+    <div className="bg-card/60 border-border/50 flex items-center gap-3 rounded-2xl border p-3 shadow-sm backdrop-blur-xl">
+      <div className="skeleton-shimmer h-10 w-10 shrink-0 rounded-xl" />
+      <div className="w-full space-y-1.5">
+        <div className="skeleton-shimmer h-6 w-12 rounded" />
+        <div className="skeleton-shimmer h-2 w-20 rounded" />
+      </div>
+    </div>
+  );
+}
+
+export default function DashboardStats({ projects, loading }) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <StatCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
   // Aggregate stats from projects array
   const totalProjects = projects.length;
   const activeProjects = projects.filter((p) => p.status === "active" || !p.status).length;

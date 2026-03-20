@@ -8,18 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import {
-  Shield,
-  ShieldCheck,
-  Users,
-  FileText,
-  Layout,
-  BarChart,
-  CheckCircle,
-  MessageSquare,
-  Lock,
-  ChevronRight,
-} from "lucide-react";
+import { Shield, ShieldCheck, Users, FileText, Layout, BarChart, CheckCircle, MessageSquare, Lock, } from "lucide-react";
 import { cn } from "@/lib/utils";
 import useRbacStore from "@/store/rbacStore";
 

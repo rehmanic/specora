@@ -23,7 +23,7 @@ import useAuthStore from "@/store/authStore";
 export function Sidebar({ ...props }) {
   const pathname = usePathname();
   const { user } = useAuthStore();
-  const isManager = user?.role === "manager";
+  const hasPermission = (perm) => user?.permissions?.includes(perm);
 
   return (
     <ShadcnSidebar collapsible="icon" {...props} className="border-r-0">
@@ -49,7 +49,7 @@ export function Sidebar({ ...props }) {
               <ProjectNavigation />
 
               {/* Users */}
-              {isManager && (
+              {hasPermission("view_users") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname.startsWith("/users")} tooltip="Users">
                     <Link href="/users">
@@ -60,7 +60,7 @@ export function Sidebar({ ...props }) {
                 </SidebarMenuItem>
               )}
 
-              {isManager && (
+              {hasPermission("view_roles") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname === "/controls/rbac"} tooltip="RBAC">
                     <Link href="/controls/rbac">
@@ -82,3 +82,4 @@ export function Sidebar({ ...props }) {
     </ShadcnSidebar>
   );
 }
+

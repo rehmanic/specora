@@ -11,45 +11,23 @@ import {
     getUserResponse
 } from "./feedbacksController.js";
 import { verifyToken } from "../../middlewares/common/verifyToken.js";
-import { requireRoles } from "../../middlewares/common/roleCheck.js";
+import { requirePermissions } from "../../middlewares/common/requirePermissions.js";
 
 const router = express.Router();
 
-// Public/Common routes (Protected by Token)
-router.get("/project/:projectId", verifyToken, getProjectFeedbacks);
-router.get("/:feedbackId", verifyToken, getFeedback);
-// Using POST for create/update logic (Upsert)
-router.post("/:feedbackId/responses", verifyToken, requireRoles("client"), submitResponse);
-router.get("/:feedbackId/my-response", verifyToken, requireRoles("client"), getUserResponse);
-router.delete("/responses/:responseId", verifyToken, deleteResponse); // Shared delete (Owner or Manager)
+// Common routes (token-protected)
+router.get("/project/:projectId", verifyToken, requirePermissions("view_feedback_forms"), getProjectFeedbacks);
+router.get("/:feedbackId", verifyToken, requirePermissions("view_feedback_forms"), getFeedback);
+
+// Client response routes
+router.post("/:feedbackId/responses", verifyToken, requirePermissions("submit_feedback_response"), submitResponse);
+router.get("/:feedbackId/my-response", verifyToken, requirePermissions("view_own_feedback_response"), getUserResponse);
+router.delete("/responses/:responseId", verifyToken, requirePermissions("delete_feedback_form"), deleteResponse);
 
 // Manager / Req Engineer routes
-router.post(
-    "/",
-    verifyToken,
-    requireRoles("manager", "requirements_engineer"),
-    createFeedback
-);
-
-router.put(
-    "/:feedbackId",
-    verifyToken,
-    requireRoles("manager", "requirements_engineer"),
-    updateFeedback
-);
-
-router.delete(
-    "/:feedbackId",
-    verifyToken,
-    requireRoles("manager", "requirements_engineer"),
-    deleteFeedback
-);
-
-router.get(
-    "/:feedbackId/responses",
-    verifyToken,
-    requireRoles("manager", "requirements_engineer"),
-    getResponses
-);
+router.post("/", verifyToken, requirePermissions("create_feedback_form"), createFeedback);
+router.put("/:feedbackId", verifyToken, requirePermissions("update_feedback_form"), updateFeedback);
+router.delete("/:feedbackId", verifyToken, requirePermissions("delete_feedback_form"), deleteFeedback);
+router.get("/:feedbackId/responses", verifyToken, requirePermissions("view_feedback_form_responses"), getResponses);
 
 export default router;

@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Users, Tags, Trash2, Plus, X, Calendar, Layers, ShieldAlert, Layout, UserPlus } from "lucide-react";
 import useProjectsStore from "@/store/projectsStore";
 import useAuthStore from "@/store/authStore";
+import { usePermission } from "@/hooks/usePermission";
 import { deleteProject, updateProject, createProject } from "@/api/projects";
 import { getSingleUserDataRequest, getUsersByIds } from "@/api/users";
 import { uploadFileRequest } from "@/api/upload";
@@ -42,6 +43,22 @@ export default function ProjectInfo({ variant }) {
   const { selectedProject, clearSelectedProject, setSelectedProject, fetchProjects } = useProjectsStore();
   const { user } = useAuthStore();
   const router = useRouter();
+
+  // Permission checks
+  const canCreateProject = usePermission("create_project");
+  const canUpdateProject = usePermission("update_project");
+  const canDeleteProject = usePermission("delete_project");
+  const canViewMembers = usePermission("view_project_members");
+  const canAddMember = usePermission("add_project_member");
+  const canRemoveMember = usePermission("remove_project_member");
+  const canViewTags = usePermission("view_project_tags");
+  const canAddTag = usePermission("add_project_tag");
+  const canRemoveTag = usePermission("remove_project_tag");
+
+  // Determine if the user can save/submit based on mode
+  const canSave = isSettings ? canUpdateProject : canCreateProject;
+  // Determine if project fields should be editable
+  const canEditFields = isSettings ? canUpdateProject : canCreateProject;
 
   const [coverPreview, setCoverPreview] = useState(null);
   const [iconPreview, setIconPreview] = useState(null);
@@ -529,21 +546,25 @@ export default function ProjectInfo({ variant }) {
               <Settings className="size-4" />
               General Info
             </TabsTrigger>
-            <TabsTrigger
-              value="members"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
-            >
-              <Users className="size-4" />
-              Team Members
-            </TabsTrigger>
-            <TabsTrigger
-              value="tags"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
-            >
-              <Tags className="size-4" />
-              Tags & Categories
-            </TabsTrigger>
-            {isSettings && (
+            {(canViewMembers || !isSettings) && (
+              <TabsTrigger
+                value="members"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+              >
+                <Users className="size-4" />
+                Team Members
+              </TabsTrigger>
+            )}
+            {(canViewTags || !isSettings) && (
+              <TabsTrigger
+                value="tags"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+              >
+                <Tags className="size-4" />
+                Tags & Categories
+              </TabsTrigger>
+            )}
+            {isSettings && canDeleteProject && (
               <TabsTrigger
                 value="danger"
                 className="text-destructive data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
@@ -555,9 +576,11 @@ export default function ProjectInfo({ variant }) {
           </TabsList>
 
           <div className="space-y-3 px-1">
-            <Button onClick={handleSaveChanges} disabled={isSaving} className="w-full text-xs font-bold">
-              {isSaving ? "Processing..." : isSettings ? "Save Changes" : "Create Project"}
-            </Button>
+            {canSave && (
+              <Button onClick={handleSaveChanges} disabled={isSaving} className="w-full text-xs font-bold">
+                {isSaving ? "Processing..." : isSettings ? "Save Changes" : "Create Project"}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -584,13 +607,14 @@ export default function ProjectInfo({ variant }) {
                       value={project.name}
                       onChange={(e) => handleProjectUpdate("name", e.target.value)}
                       className="h-10"
+                      disabled={!canEditFields}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="p-status" className="text-xs font-bold">
                       Current Status
                     </Label>
-                    <Select value={project.status} onValueChange={(v) => handleProjectUpdate("status", v)}>
+                    <Select value={project.status} onValueChange={(v) => handleProjectUpdate("status", v)} disabled={!canEditFields}>
                       <SelectTrigger id="p-status" className="h-10 capitalize">
                         <SelectValue />
                       </SelectTrigger>
@@ -615,6 +639,7 @@ export default function ProjectInfo({ variant }) {
                     value={project.description}
                     onChange={(e) => handleProjectUpdate("description", e.target.value)}
                     className="min-h-[100px] resize-none"
+                    disabled={!canEditFields}
                   />
                 </div>
 
@@ -630,6 +655,7 @@ export default function ProjectInfo({ variant }) {
                         value={project.startDate}
                         onChange={(e) => handleProjectUpdate("startDate", e.target.value)}
                         className="h-10 pl-10"
+                        disabled={!canEditFields}
                       />
                       <Calendar className="text-muted-foreground absolute top-3 left-3 size-4" />
                     </div>
@@ -645,6 +671,7 @@ export default function ProjectInfo({ variant }) {
                         value={project.endDate}
                         onChange={(e) => handleProjectUpdate("endDate", e.target.value)}
                         className="h-10 pl-10"
+                        disabled={!canEditFields}
                       />
                       <Calendar className="text-muted-foreground absolute top-3 left-3 size-4" />
                     </div>
@@ -711,24 +738,26 @@ export default function ProjectInfo({ variant }) {
                 <CardDescription>Manage who can access and edit this project.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="bg-muted/20 flex items-center gap-2 rounded-lg border p-1.5">
-                  <UserPlus className="text-muted-foreground ml-2 size-4" />
-                  <Input
-                    placeholder="Search by username..."
-                    value={newMemberEmail}
-                    onChange={(e) => setNewMemberEmail(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
-                    className="h-9 border-none bg-transparent text-sm shadow-none focus-visible:ring-0"
-                  />
-                  <Button
-                    onClick={handleAddMember}
-                    disabled={isAddingMember}
-                    size="sm"
-                    className="h-8 px-3 text-xs font-bold"
-                  >
-                    {isAddingMember ? "..." : "Add User"}
-                  </Button>
-                </div>
+                {canAddMember && (
+                  <div className="bg-muted/20 flex items-center gap-2 rounded-lg border p-1.5">
+                    <UserPlus className="text-muted-foreground ml-2 size-4" />
+                    <Input
+                      placeholder="Search by username..."
+                      value={newMemberEmail}
+                      onChange={(e) => setNewMemberEmail(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
+                      className="h-9 border-none bg-transparent text-sm shadow-none focus-visible:ring-0"
+                    />
+                    <Button
+                      onClick={handleAddMember}
+                      disabled={isAddingMember}
+                      size="sm"
+                      className="h-8 px-3 text-xs font-bold"
+                    >
+                      {isAddingMember ? "..." : "Add User"}
+                    </Button>
+                  </div>
+                )}
 
                 <div className="custom-scrollbar max-h-[400px] space-y-2 overflow-y-auto pr-2">
                   {project.Members.length > 0 ? (
@@ -759,7 +788,7 @@ export default function ProjectInfo({ variant }) {
                               ? `Project Owner (${member.role?.replace(/_/g, " ") || "Manager"})`
                               : member.role?.replace(/_/g, " ") || "Member"}
                           </Badge>
-                          {!member.isOwner && (
+                          {!member.isOwner && canRemoveMember && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -802,12 +831,14 @@ export default function ProjectInfo({ variant }) {
                         className="hover-lift gap-2 rounded-lg py-1 pr-1 pl-3 text-xs font-semibold"
                       >
                         {tag}
-                        <button
-                          onClick={() => removeTag(tag)}
-                          className="hover:bg-destructive rounded-full p-0.5 transition-all hover:text-white"
-                        >
-                          <X className="size-3" />
-                        </button>
+                        {canRemoveTag && (
+                          <button
+                            onClick={() => removeTag(tag)}
+                            className="hover:bg-destructive rounded-full p-0.5 transition-all hover:text-white"
+                          >
+                            <X className="size-3" />
+                          </button>
+                        )}
                       </Badge>
                     ))
                   ) : (
@@ -818,24 +849,26 @@ export default function ProjectInfo({ variant }) {
                   )}
                 </div>
 
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Input
-                    placeholder="Add a new keyword..."
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addTag()}
-                    className="h-10 text-sm"
-                    disabled={project.tags.length >= 10}
-                  />
-                  <Button
-                    onClick={addTag}
-                    disabled={project.tags.length >= 10}
-                    size="sm"
-                    className="h-10 px-6 font-bold"
-                  >
-                    Add Tag
-                  </Button>
-                </div>
+                {canAddTag && (
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      placeholder="Add a new keyword..."
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && addTag()}
+                      className="h-10 text-sm"
+                      disabled={project.tags.length >= 10}
+                    />
+                    <Button
+                      onClick={addTag}
+                      disabled={project.tags.length >= 10}
+                      size="sm"
+                      className="h-10 px-6 font-bold"
+                    >
+                      Add Tag
+                    </Button>
+                  </div>
+                )}
                 {project.tags.length >= 10 && (
                   <p className="text-muted-foreground text-center text-[11px] italic">Limit of 10 tags reached.</p>
                 )}

@@ -36,7 +36,7 @@ export default function RbacPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["manager"]}>
+    <>
       <div className="bg-background min-h-screen p-6 lg:p-8">
         <div className="animate-fade-in mx-auto max-w-6xl space-y-8">
           <PageBanner
@@ -70,6 +70,6 @@ export default function RbacPage() {
       </div>
 
       <RoleDialog role={selectedRole} open={isDialogOpen} onOpenChange={setIsDialogOpen} />
-    </ProtectedRoute>
+    </>
   );
 }

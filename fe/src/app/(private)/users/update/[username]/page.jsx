@@ -5,7 +5,7 @@ export default async function UpdateUserPage({ params }) {
   const { username } = await params;
 
   return (
-    <ProtectedRoute allowedRoles={["manager"]}>
+    <ProtectedRoute requiredPermissions={["update_user"]}>
       <UserInfo variant="update-user" username={username} />
     </ProtectedRoute>
   );

@@ -4,7 +4,7 @@ import { DefaultPageLayout } from "@/components/layout/DefaultPageLayout";
 
 export default function CreateProjectPage() {
   return (
-    <ProtectedRoute allowedRoles={["manager"]}>
+    <ProtectedRoute requiredPermissions={["create_project"]}>
       <DefaultPageLayout>
         <ProjectInfo variant="create-project" />
       </DefaultPageLayout>

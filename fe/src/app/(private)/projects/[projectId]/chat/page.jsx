@@ -68,7 +68,7 @@ export default function ChatPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["manager", "client", "requirements_engineer"]}>
+    <ProtectedRoute requiredPermissions={["view_group_chat_messages"]}>
       <div className="bg-background relative z-0 flex h-full flex-col">
         {/* Dynamic Background Pattern */}
         <div className="hero-grid pointer-events-none absolute inset-0 -z-10 opacity-40 transition-opacity dark:opacity-20"></div>

@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import useAuthStore from "@/store/authStore";
+import { usePermission } from "@/hooks/usePermission";
 import { getUserProjects, getAllProjects } from "@/api/projects";
 import GreetingHeader from "@/components/dashboard/GreetingHeader";
 import DashboardStats from "@/components/dashboard/DashboardStats";
@@ -9,61 +10,74 @@ import ProjectList from "@/components/dashboard/ProjectList";
 
 export default function DashboardPage() {
   const { user, token } = useAuthStore();
+  const canCreateProject = usePermission("create_project");
+  const canViewAllProjects = usePermission("view_projects");
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchProjects = async () => {
-      if (!user) return;
+      if (!user || !token) return;
+      
       try {
+        setLoading(true);
         let data;
 
-        if (user.role === "manager") {
+        if (canViewAllProjects) {
           data = await getAllProjects(token);
-          setProjects(data?.projects || []);
         } else {
           data = await getUserProjects(user.id);
+        }
+        
+        if (isMounted) {
           setProjects(data?.projects || []);
         }
       } catch (error) {
         console.error("Error fetching projects:", error);
-        setProjects([]);
+        if (isMounted) {
+          setProjects([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchProjects();
-  }, [user, token]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [user, token, canViewAllProjects]);
 
   // Filter projects based on search
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProjects = useMemo(() => {
+    return projects.filter(
+      (project) =>
+        project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [projects, searchQuery]);
 
   return (
     <div className="relative -m-6 min-h-[calc(100vh-4rem)] overflow-hidden p-6">
-      {/* Dynamic Background Pattern */}
-      <div className="bg-primary/5 dark:bg-primary/5 hero-grid pointer-events-none absolute inset-0 -z-10 opacity-30 transition-opacity"></div>
-      <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
-        <div
-          className="from-primary to-accent relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-          style={{
-            clipPath:
-              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-          }}
-        ></div>
-      </div>
+      {/* Dynamic Background Pattern - Optimized */}
+      <div className="bg-primary/5 hero-grid pointer-events-none absolute inset-0 -z-10 opacity-30"></div>
+      
+      {/* Soft background glow - Lighter than before */}
+      <div className="bg-primary/5 absolute -top-24 right-0 -z-10 h-96 w-96 rounded-full blur-[120px]"></div>
+      <div className="bg-accent/5 absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full blur-[120px]"></div>
 
       <div className="relative z-10 mx-auto w-full max-w-7xl space-y-6">
         {/* 1. Greeting Component */}
         <GreetingHeader user={user} />
 
-        {/* 2. Stats Component */}
-        {!loading && projects.length > 0 && <DashboardStats projects={projects} />}
+        {/* 2. Stats Component - Always rendered to prevent shift */}
+        <DashboardStats projects={projects} loading={loading} />
 
         <SearchCreateHeader
           searchQuery={searchQuery}
@@ -71,7 +85,7 @@ export default function DashboardPage() {
           searchPlaceholder="Search projects by name or description..."
           buttonText="New Project"
           linkTo="/projects/create"
-          showButton={user?.role === "manager"}
+          showButton={canCreateProject}
         />
 
         {/* 4. Project List Component */}
@@ -80,3 +94,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

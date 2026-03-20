@@ -104,7 +104,7 @@ export default function Page() {
   // Handlers removed search filter from here as it's now handled with pagination above
 
   return (
-    <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer"]}>
+    <ProtectedRoute requiredPermissions={["view_diagrams"]}>
       <main className="w-full overflow-y-auto p-6 lg:p-8">
         <div className="animate-fade-in mx-auto max-w-6xl space-y-8">
           <PageBanner

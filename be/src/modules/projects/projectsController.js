@@ -290,3 +290,189 @@ export const deleteProject = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// ======================
+// GET PROJECT MEMBERS
+// ======================
+export const getProjectMembers = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    const members = await prisma.project_member.findMany({
+      where: { project_id: projectId },
+      include: {
+        app_user: {
+          select: {
+            id: true,
+            display_name: true,
+            username: true,
+            email: true,
+            profile_pic_url: true,
+          },
+        },
+      },
+    });
+
+    const formatted = members.map((m) => ({
+      id: m.app_user.id,
+      name: m.app_user.display_name || m.app_user.username,
+      email: m.app_user.email,
+      profile_pic_url: m.app_user.profile_pic_url,
+      isOwner: m.app_user.id === project.created_by,
+    }));
+
+    return res.status(200).json({ message: "Project members fetched", members: formatted });
+  } catch (error) {
+    console.error("Error fetching project members:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ======================
+// ADD PROJECT MEMBER
+// ======================
+export const addProjectMember = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { memberId } = req.body;
+
+    if (!memberId) return res.status(400).json({ message: "memberId is required" });
+
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    // Check if already a member
+    const existing = await prisma.project_member.findFirst({
+      where: { project_id: projectId, member_id: memberId },
+    });
+    if (existing) return res.status(409).json({ message: "User is already a project member" });
+
+    await prisma.project_member.create({
+      data: { project_id: projectId, member_id: memberId },
+    });
+
+    return res.status(201).json({ message: "Member added successfully" });
+  } catch (error) {
+    console.error("Error adding project member:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ======================
+// REMOVE PROJECT MEMBER
+// ======================
+export const removeProjectMember = async (req, res) => {
+  try {
+    const { projectId, memberId } = req.params;
+
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    // Prevent removing the project creator
+    if (memberId === project.created_by) {
+      return res.status(403).json({ message: "Cannot remove the project creator" });
+    }
+
+    const deleted = await prisma.project_member.deleteMany({
+      where: { project_id: projectId, member_id: memberId },
+    });
+
+    if (deleted.count === 0) return res.status(404).json({ message: "Member not found in project" });
+
+    return res.status(200).json({ message: "Member removed successfully" });
+  } catch (error) {
+    console.error("Error removing project member:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ======================
+// GET PROJECT TAGS
+// ======================
+export const getProjectTags = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { tags: true },
+    });
+
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    return res.status(200).json({ message: "Project tags fetched", tags: project.tags });
+  } catch (error) {
+    console.error("Error fetching project tags:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ======================
+// ADD PROJECT TAG
+// ======================
+export const addProjectTag = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { tag } = req.body;
+
+    if (!tag || typeof tag !== "string" || tag.trim().length < 3 || tag.trim().length > 30) {
+      return res.status(400).json({ message: "Tag must be between 3 and 30 characters" });
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { tags: true },
+    });
+
+    if (!project) return res.status(404).json({ message: "Project not found" });
+    if (project.tags.length >= 10) return res.status(400).json({ message: "Maximum of 10 tags allowed" });
+    if (project.tags.includes(tag.trim())) return res.status(409).json({ message: "Tag already exists" });
+
+    const updated = await prisma.project.update({
+      where: { id: projectId },
+      data: { tags: { push: tag.trim() } },
+      select: { tags: true },
+    });
+
+    return res.status(201).json({ message: "Tag added successfully", tags: updated.tags });
+  } catch (error) {
+    console.error("Error adding project tag:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ======================
+// REMOVE PROJECT TAG
+// ======================
+export const removeProjectTag = async (req, res) => {
+  try {
+    const { projectId, tag } = req.params;
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { tags: true },
+    });
+
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    const decodedTag = decodeURIComponent(tag);
+    if (!project.tags.includes(decodedTag)) {
+      return res.status(404).json({ message: "Tag not found on project" });
+    }
+
+    const updatedTags = project.tags.filter((t) => t !== decodedTag);
+
+    await prisma.project.update({
+      where: { id: projectId },
+      data: { tags: updatedTags },
+    });
+
+    return res.status(200).json({ message: "Tag removed successfully", tags: updatedTags });
+  } catch (error) {
+    console.error("Error removing project tag:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

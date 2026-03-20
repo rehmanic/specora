@@ -71,8 +71,20 @@ npx prisma db pull
 npx prisma generate
 ```
 
+#### Docker Operations
+If running via Docker, use these commands to sync the Prisma client and restart the service:
+
+```bash
+# Regenerate Prisma Client inside the container
+docker exec specora-be npx prisma generate --schema=config/db/schema.prisma
+
+# Restart the backend container to apply changes
+docker restart specora-be
+```
+
 > [!NOTE]
 > Database commands must be run from the directory containing `schema.prisma` if not in the default location, but the `package.json` setup handles generating client.
+
 
 ## 📜 Available Scripts
 

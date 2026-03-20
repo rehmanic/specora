@@ -6,13 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import useAuthStore from "@/store/authStore";
 import { useRouter } from "next/navigation";
-import ErrorBox from "@/components/common/ErrorBox";
 import { notify } from "@/components/common/Notification";
 import { Eye, EyeOff, ArrowRight, Loader2, User, Lock } from "lucide-react";
-import Link from "next/link";
 
 export default function AuthForm({ className, ...props }) {
-  const { login, loading, error } = useAuthStore();
+  const { login, loading } = useAuthStore();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -21,12 +19,10 @@ export default function AuthForm({ className, ...props }) {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [localError, setLocalError] = useState(null);
   const [focusedField, setFocusedField] = useState(null);
 
   // Clear errors on mount
   useEffect(() => {
-    setLocalError(null);
     useAuthStore.setState({ error: null });
   }, []);
 
@@ -35,16 +31,10 @@ export default function AuthForm({ className, ...props }) {
       ...prev,
       [e.target.name]: e.target.value,
     }));
-    // Clear errors when user starts typing
-    if (localError || error) {
-      setLocalError(null);
-      useAuthStore.setState({ error: null });
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLocalError(null);
     useAuthStore.setState({ error: null });
 
     try {
@@ -59,7 +49,6 @@ export default function AuthForm({ className, ...props }) {
       router.push("/dashboard");
     } catch (err) {
       const errorMessage = err?.message || "An unexpected error occurred. Please try again.";
-      setLocalError(errorMessage);
       notify.error("Login failed", {
         description: errorMessage,
       });
@@ -145,9 +134,6 @@ export default function AuthForm({ className, ...props }) {
                 </button>
               </div>
             </div>
-
-            {/* Error display */}
-            {(localError || error) && <ErrorBox message={localError || error} />}
 
             {/* Submit Button */}
             <button

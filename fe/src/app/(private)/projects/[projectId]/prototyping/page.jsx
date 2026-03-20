@@ -122,7 +122,7 @@ export default function Page() {
 
   // ─── Render ───────────────────────────────────────
   return (
-    <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer", "designer"]}>
+    <ProtectedRoute requiredPermissions={["view_prototypes"]}>
       <main className="w-full overflow-y-auto p-6 lg:p-8">
         <div className="animate-fade-in mx-auto max-w-6xl space-y-8">
           <PageBanner

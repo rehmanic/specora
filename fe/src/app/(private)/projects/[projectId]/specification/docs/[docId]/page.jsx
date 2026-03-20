@@ -132,7 +132,7 @@ export default function DocEditorPage() {
   }
 
   return (
-    <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer"]}>
+    <ProtectedRoute requiredPermissions={["view_documents"]}>
       <div className="flex h-[calc(100vh-4rem)] flex-col">
         {/* Header Navbar */}
         <header className="border-border/50 bg-background/95 supports-[backdrop-filter]:bg-background/60 z-10 flex shrink-0 items-center justify-between border-b px-4 py-2 backdrop-blur">

@@ -247,7 +247,7 @@ export default function DiagramEditorPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer"]}>
+    <ProtectedRoute requiredPermissions={["view_diagrams"]}>
       <div className="animate-fade-in flex h-full min-h-0 flex-col overflow-hidden p-6 lg:p-8">
         <div className="flex shrink-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">

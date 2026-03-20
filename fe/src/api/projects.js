@@ -73,7 +73,7 @@ export async function createProject(projectData) {
   try {
     const { token } = useAuthStore.getState();
 
-    const res = await fetch(`${API_BASE}/projects/create`, {
+    const res = await fetch(`${API_BASE}/projects/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -109,7 +109,7 @@ export async function updateProject(projectId, updateData) {
   try {
     const { token } = useAuthStore.getState();
 
-    const res = await fetch(`${API_BASE}/projects/update/${projectId}`, {
+    const res = await fetch(`${API_BASE}/projects/${projectId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -145,7 +145,7 @@ export async function deleteProject(projectId) {
   try {
     const { token } = useAuthStore.getState();
 
-    const res = await fetch(`${API_BASE}/projects/delete/${projectId}`, {
+    const res = await fetch(`${API_BASE}/projects/${projectId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -169,3 +169,84 @@ export async function deleteProject(projectId) {
     throw new Error(err?.message || "Network error. Please check your connection and try again.");
   }
 }
+
+// ======================
+// Member Management
+// ======================
+
+/** Fetch all members for a project */
+export async function getProjectMembers(projectId) {
+  const { token } = useAuthStore.getState();
+  const res = await fetch(`${API_BASE}/projects/${projectId}/members`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to fetch project members");
+  return data;
+}
+
+/** Add a member to a project */
+export async function addProjectMember(projectId, memberId) {
+  const { token } = useAuthStore.getState();
+  const res = await fetch(`${API_BASE}/projects/${projectId}/members`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ memberId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to add member");
+  return data;
+}
+
+/** Remove a member from a project */
+export async function removeProjectMember(projectId, memberId) {
+  const { token } = useAuthStore.getState();
+  const res = await fetch(`${API_BASE}/projects/${projectId}/members/${memberId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to remove member");
+  return data;
+}
+
+// ======================
+// Tag Management
+// ======================
+
+/** Fetch all tags for a project */
+export async function getProjectTags(projectId) {
+  const { token } = useAuthStore.getState();
+  const res = await fetch(`${API_BASE}/projects/${projectId}/tags`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to fetch project tags");
+  return data;
+}
+
+/** Add a tag to a project */
+export async function addProjectTag(projectId, tag) {
+  const { token } = useAuthStore.getState();
+  const res = await fetch(`${API_BASE}/projects/${projectId}/tags`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ tag }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to add tag");
+  return data;
+}
+
+/** Remove a tag from a project */
+export async function removeProjectTag(projectId, tag) {
+  const { token } = useAuthStore.getState();
+  const res = await fetch(`${API_BASE}/projects/${projectId}/tags/${encodeURIComponent(tag)}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to remove tag");
+  return data;
+}
+

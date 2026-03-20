@@ -194,7 +194,7 @@ export default function MeetingRoomPage() {
   }
 
   return (
-    <ProtectedRoute allowedRoles={["manager", "client", "requirements_engineer"]}>
+    <ProtectedRoute requiredPermissions={["join_meeting"]}>
       <div className="h-full overflow-hidden bg-neutral-900 pb-2 text-white">
         <LiveKitRoom
           video={true}

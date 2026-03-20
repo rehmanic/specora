@@ -228,7 +228,7 @@ export default function Page() {
   const totalAiPages = Math.ceil(requirements.length / PAGE_SIZE);
 
   return (
-    <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer", "qa"]}>
+    <ProtectedRoute requiredPermissions={["view_verification_results"]}>
       <main className="w-full overflow-y-auto p-6 lg:p-8">
         <div className="animate-fade-in mx-auto max-w-6xl space-y-8">
           <PageBanner

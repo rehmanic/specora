@@ -388,7 +388,7 @@ export default function Page() {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requiredPermissions={["view_requirements"]}>
       <main className="h-full w-full overflow-y-auto p-6 lg:p-8">
         <div className="mx-auto max-w-6xl space-y-8 pb-20">
           {/* Hidden file input for import */}

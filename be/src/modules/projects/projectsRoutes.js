@@ -1,47 +1,31 @@
 import express from "express";
-import {
-  createProject,
-  getAllProjects,
-  updateProject,
-  deleteProject,
-  getSingleUserProjects,
-} from "./projectsController.js";
+import * as projectsController from "./projectsController.js";
 import { verifyToken } from "../../middlewares/common/verifyToken.js";
-import { requireManager } from "../../middlewares/common/roleCheck.js";
-import checkUserExists from "../../middlewares/common/checkUserExists.js";
-import checkProjectExists from "../../middlewares/projects/checkProjectExists.js";
-import requireFeilds from "../../middlewares/common/requireFields.js";
+import { requirePermissions } from "../../middlewares/common/requirePermissions.js";
+import requireFields from "../../middlewares/common/requireFields.js";
 import { validateProjectDataInput } from "../../middlewares/projects/inputValidation.js";
+import checkProjectExists from "../../middlewares/projects/checkProjectExists.js";
 
 const router = express.Router();
+const projectWriteChain = [requireFields(["name", "start_date", "end_date"]),validateProjectDataInput];
 
 router.use(verifyToken);
 
-// CREATE - Manager only
-router.post(
-  "/create",
-  requireManager,
-  requireFeilds(["name", "start_date", "end_date"]),
-  validateProjectDataInput,
-  checkProjectExists("create"),
-  createProject
-);
+// --- Core Project CRUD ---
+router.post("/",requirePermissions("create_project"), ...projectWriteChain,checkProjectExists("create"),projectsController.createProject);
+router.get("/all", requirePermissions("view_projects"), projectsController.getAllProjects);
+router.get("/:userId", requirePermissions("view_projects"), projectsController.getSingleUserProjects);
+router.put("/:projectId",requirePermissions("update_project"), ...projectWriteChain,checkProjectExists("update"),projectsController.updateProject);
+router.delete("/:projectId", requirePermissions("delete_project"), projectsController.deleteProject);
 
-// READ
-router.get("/all", requireManager, getAllProjects); // Manager only - all projects
-router.get("/:userId", getSingleUserProjects); // All authenticated users - their projects
+// --- Member Management ---
+router.get("/:projectId/members", requirePermissions("view_project_members"), projectsController.getProjectMembers);
+router.post("/:projectId/members", requirePermissions("add_project_member"), projectsController.addProjectMember);
+router.delete("/:projectId/members/:memberId", requirePermissions("remove_project_member"), projectsController.removeProjectMember);
 
-// UPDATE - Manager only
-router.put(
-  "/update/:projectId",
-  requireManager,
-  requireFeilds(["name", "start_date", "end_date"]),
-  validateProjectDataInput,
-  checkProjectExists("update"),
-  updateProject
-);
-
-// DELETE - Manager only
-router.delete("/delete/:projectId", requireManager, deleteProject);
+// --- Tag Management ---
+router.get("/:projectId/tags", requirePermissions("view_project_tags"), projectsController.getProjectTags);
+router.post("/:projectId/tags", requirePermissions("add_project_tag"), projectsController.addProjectTag);
+router.delete("/:projectId/tags/:tag", requirePermissions("remove_project_tag"), projectsController.removeProjectTag);
 
 export default router;

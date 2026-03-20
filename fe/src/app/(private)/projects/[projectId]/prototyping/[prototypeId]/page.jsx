@@ -205,7 +205,7 @@ export default function Page() {
 
   // ─── Render ───────────────────────────────────────
   return (
-    <ProtectedRoute allowedRoles={["manager", "requirements_engineer", "developer", "designer"]}>
+    <ProtectedRoute requiredPermissions={["view_prototypes"]}>
       <main className="flex h-full w-full flex-col overflow-hidden">
         {/* Top bar */}
         <div className="border-border bg-card flex shrink-0 items-center justify-between border-b px-4 py-2.5">

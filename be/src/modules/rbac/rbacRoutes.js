@@ -14,31 +14,29 @@ import {
   removePermissionFromRole,
 } from "./rbacController.js";
 import { verifyToken } from "../../middlewares/common/verifyToken.js";
-import { requireManager } from "../../middlewares/common/roleCheck.js";
+import { requirePermissions } from "../../middlewares/common/requirePermissions.js";
 import requireField from "../../middlewares/common/requireFields.js";
 
 const router = express.Router();
 
-// All RBAC routes require manager access
 router.use(verifyToken);
-router.use(requireManager);
 
 // Role routes
-router.get("/roles", getAllRoles);
-router.get("/roles/:id", getRoleById);
-router.post("/roles", requireField(["name"]), createRole);
-router.put("/roles/:id", requireField(["name"]), updateRole);
-router.delete("/roles/:id", deleteRole);
+router.get("/roles", requirePermissions("view_roles"), getAllRoles);
+router.get("/roles/:id", requirePermissions("view_roles"), getRoleById);
+router.post("/roles", requirePermissions("create_role"), requireField(["name"]), createRole);
+router.put("/roles/:id", requirePermissions("update_role"), requireField(["name"]), updateRole);
+router.delete("/roles/:id", requirePermissions("delete_role"), deleteRole);
 
 // Permission routes
 router.get("/permissions", getAllPermissions);
-router.get("/permissions/:id", getPermissionById);
-router.post("/permissions", requireField(["name"]), createPermission);
-router.put("/permissions/:id", requireField(["name"]), updatePermission);
-router.delete("/permissions/:id", deletePermission);
+router.get("/permissions/:id", requirePermissions("view_roles"), getPermissionById);
+router.post("/permissions", requirePermissions("create_role"), requireField(["name"]), createPermission);
+router.put("/permissions/:id", requirePermissions("update_role"), requireField(["name"]), updatePermission);
+router.delete("/permissions/:id", requirePermissions("delete_role"), deletePermission);
 
 // Role-Permission Assignment
-router.post("/roles/:roleId/permissions", requireField(["permissionId"]), assignPermissionToRole);
-router.delete("/roles/:roleId/permissions/:permissionId", removePermissionFromRole);
+router.post("/roles/:roleId/permissions", requirePermissions("update_role"), requireField(["permissionId"]), assignPermissionToRole);
+router.delete("/roles/:roleId/permissions/:permissionId", requirePermissions("update_role"), removePermissionFromRole);
 
 export default router;
