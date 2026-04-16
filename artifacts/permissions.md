@@ -31,6 +31,7 @@ This document outlines the granular permissions available within each module.
 8. `remove_project_tag`
 9. `add_project_tag`
 10. `update_project`
+11. `project_settings`
 
 ---
 

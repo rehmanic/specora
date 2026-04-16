@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getFeedback } from "@/api/feedback";
 import useAuthStore from "@/store/authStore";
+import { usePermission } from "@/hooks/usePermission";
 import FeedbackViewer from "@/components/feedback/FeedbackViewer";
 import FeedbackResults from "@/components/feedback/FeedbackResults";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,10 @@ export default function FeedbackDetailsPage() {
   const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const canEdit = usePermission("update_feedback_form");
+  const canViewResults = usePermission("view_feedback_form_responses");
+  const canSubmit = usePermission("submit_feedback_response");
 
   useEffect(() => {
     const fetchFeedback = async () => {
@@ -45,15 +50,13 @@ export default function FeedbackDetailsPage() {
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
   if (!feedback) return <div className="p-8">Feedback not found</div>;
 
-  const isManager = ["manager", "requirements_engineer"].includes(user?.role);
-
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <div className="flex items-center space-x-2">
           <h2 className="truncate text-3xl font-bold tracking-tight">{feedback.title}</h2>
         </div>
-        {isManager && (
+        {canEdit && (
           <Button asChild>
             <Link href={`/projects/${projectId}/feedback/${feedbackId}/edit`}>
               <Edit className="mr-2 h-4 w-4" /> Edit Form
@@ -62,13 +65,17 @@ export default function FeedbackDetailsPage() {
         )}
       </div>
 
-      {isManager ? (
+      {canViewResults ? (
         <div className="space-y-4">
           <FeedbackResults feedbackId={feedbackId} formStructure={feedback.form_structure} />
         </div>
-      ) : (
+      ) : canSubmit ? (
         <div className="mt-6">
           <FeedbackViewer feedback={feedback} projectId={projectId} />
+        </div>
+      ) : (
+        <div className="p-8 text-center text-muted-foreground">
+          You do not have permission to respond to this feedback or view its results.
         </div>
       )}
     </div>

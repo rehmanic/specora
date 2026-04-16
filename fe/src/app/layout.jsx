@@ -2,6 +2,7 @@ import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/common/ThemeProvider";
+import { ClientErrorHandler } from "@/components/common/ClientErrorHandler";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -36,6 +37,7 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${outfit.variable} antialiased`} style={{ fontFamily: "var(--font-sans)" }}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ClientErrorHandler />
           {children}
           <Toaster
             richColors

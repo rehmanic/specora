@@ -11,12 +11,13 @@ import {
   deleteMeeting,
   extractMeetingRequirements,
 } from "@/api/meetings";
+import { usePermission } from "@/hooks/usePermission";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Video, Trash2, Pencil, Calendar, Clock, Play, FileText, CalendarDays } from "lucide-react";
+import { Video, Trash2, Pencil, Calendar, Clock, Play, FileText, CalendarDays, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import PageBanner from "@/components/layout/PageBanner";
@@ -30,11 +31,22 @@ import { Label } from "@/components/ui/label";
 export default function MeetingsPage() {
   const { projectId } = useParams();
   const router = useRouter();
+
+  // Permissions
+  const canViewMeetings = usePermission("view_meetings");
+  const canViewMeetingDetails = usePermission("view_meeting_details");
+  const canCreate = usePermission("create_meeting");
+  const canUpdate = usePermission("update_meeting");
+  const canDelete = usePermission("delete_meeting");
+  const canJoin = usePermission("join_meeting");
+  const canViewRecording = usePermission("view_meeting_recording");
+
   const {
     data: meetings,
     error,
     mutate,
   } = useSWR(projectId ? `/meetings/project/${projectId}` : null, () => getProjectMeetings(projectId));
+
 
   const [isCreating, setIsCreating] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState(null);
@@ -188,6 +200,25 @@ export default function MeetingsPage() {
   if (error) return <div className="text-destructive p-6">Failed to load meetings</div>;
   if (!meetings) return <div className="text-muted-foreground p-6">Loading...</div>;
 
+  if (!canViewMeetings) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="max-w-md space-y-4 text-center">
+          <div className="bg-destructive/10 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+            <AlertCircle className="text-destructive h-8 w-8" />
+          </div>
+          <h2 className="text-2xl font-bold">Access Denied</h2>
+          <p className="text-muted-foreground">
+            You do not have permission to view meetings. Please contact your project administrator.
+          </p>
+          <Button variant="outline" onClick={() => router.push(`/projects/${projectId}/dashboard`)}>
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <TooltipProvider>
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
@@ -205,6 +236,7 @@ export default function MeetingsPage() {
           searchPlaceholder="Search meetings by title or description..."
           buttonText="Schedule Meeting"
           onAction={() => setIsCreating(true)}
+          showButton={canCreate}
         />
 
         <Dialog open={isCreating} onOpenChange={setIsCreating}>
@@ -260,7 +292,11 @@ export default function MeetingsPage() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
-              <Button onClick={handleCreate} className="w-full" disabled={!formData.title || !formData.start_time}>
+              <Button
+                onClick={handleCreate}
+                className="w-full"
+                disabled={!formData.title || !formData.scheduled_date || !formData.scheduled_time}
+              >
                 Create Meeting
               </Button>
             </div>
@@ -388,53 +424,61 @@ export default function MeetingsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => handleJoin(meeting.id)}
-                            >
-                              <Video className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Join Meeting</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className={`h-8 w-8 ${meeting.recording_url ? "text-green-600 hover:text-green-600" : ""}`}
-                              onClick={() => handleViewDetails(meeting.id)}
-                            >
-                              <Play className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>{meeting.recording_url ? "View Recording" : "View Details"}</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(meeting)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive h-8 w-8"
-                              onClick={() => handleDelete(meeting.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Delete</TooltipContent>
-                        </Tooltip>
+                        {canJoin && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleJoin(meeting.id)}
+                              >
+                                <Video className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Join Meeting</TooltipContent>
+                          </Tooltip>
+                        )}
+                        {canViewMeetingDetails && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className={`h-8 w-8 ${meeting.recording_url && canViewRecording ? "text-green-600 hover:text-green-600" : ""}`}
+                                onClick={() => handleViewDetails(meeting.id)}
+                              >
+                                <Play className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{meeting.recording_url && canViewRecording ? "View Recording" : "View Details"}</TooltipContent>
+                          </Tooltip>
+                        )}
+                        {canUpdate && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(meeting)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit</TooltipContent>
+                          </Tooltip>
+                        )}
+                        {canDelete && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive h-8 w-8"
+                                onClick={() => handleDelete(meeting.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete</TooltipContent>
+                          </Tooltip>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

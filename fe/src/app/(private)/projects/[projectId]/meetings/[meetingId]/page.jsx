@@ -36,6 +36,7 @@ import PageBanner from "@/components/layout/PageBanner";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import notify from "@/components/common/Notification";
 import useProjectsStore from "@/store/projectsStore";
+import { usePermission } from "@/hooks/usePermission";
 
 export default function MeetingReviewPage() {
   const { projectId, meetingId } = useParams();
@@ -55,14 +56,24 @@ export default function MeetingReviewPage() {
     return res;
   });
 
+  // Permissions
+  const canViewMeetingDetails = usePermission("view_meeting_details");
+  const canViewRecording = usePermission("view_meeting_recording");
+  const canTranscribe = usePermission("generate_meeting_transcript");
+  const canExtract = usePermission("extract_requirements_from_meeting");
+  const canImport = usePermission("import_requirement");
+
   const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab) {
+      // Validate tab permission
+      if (tab === "recording" && !canViewRecording) return;
+      if (tab === "requirements" && !canExtract) return;
       setActiveTab(tab);
     }
-  }, [searchParams]);
+  }, [searchParams, canViewRecording, canExtract]);
   const [isGeneratingTranscript, setIsGeneratingTranscript] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -249,6 +260,25 @@ export default function MeetingReviewPage() {
       </div>
     );
 
+  if (!canViewMeetingDetails) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="max-w-md space-y-4 text-center">
+          <div className="bg-destructive/10 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+            <AlertCircle className="text-destructive h-8 w-8" />
+          </div>
+          <h2 className="text-2xl font-bold">Access Denied</h2>
+          <p className="text-muted-foreground">
+            You do not have permission to view meeting details. Please contact your project administrator.
+          </p>
+          <Button variant="outline" onClick={() => router.push(`/projects/${projectId}/dashboard`)}>
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative z-0 mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
       <PageBanner
@@ -274,13 +304,15 @@ export default function MeetingReviewPage() {
               <Info className="size-4" />
               Overview
             </TabsTrigger>
-            <TabsTrigger
-              value="recording"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
-            >
-              <Video className="size-4" />
-              Recording
-            </TabsTrigger>
+            {canViewRecording && (
+              <TabsTrigger
+                value="recording"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+              >
+                <Video className="size-4" />
+                Recording
+              </TabsTrigger>
+            )}
             <TabsTrigger
               value="transcript"
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
@@ -288,13 +320,15 @@ export default function MeetingReviewPage() {
               <FileText className="size-4" />
               Transcript
             </TabsTrigger>
-            <TabsTrigger
-              value="requirements"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
-            >
-              <ListChecks className="size-4" />
-              Extract Requirements
-            </TabsTrigger>
+            {canExtract && (
+              <TabsTrigger
+                value="requirements"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+              >
+                <ListChecks className="size-4" />
+                Extract Requirements
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -405,7 +439,7 @@ export default function MeetingReviewPage() {
                   </div>
                   <CardDescription>Full text conversion of the meeting audio.</CardDescription>
                 </div>
-                {meeting.recording_url && !hasTranscript() && (
+                {meeting.recording_url && !hasTranscript() && canTranscribe && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -489,14 +523,16 @@ export default function MeetingReviewPage() {
                           Select All ({selectedReqIds.size} / {extractedReqs.length})
                         </label>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => setConfirmImportOpen(true)}
-                        disabled={isImporting || selectedReqIds.size === 0}
-                        className="font-bold shadow-sm"
-                      >
-                        {isImporting ? "Importing..." : "Import Selected"}
-                      </Button>
+                      {canImport && (
+                        <Button
+                          size="sm"
+                          onClick={() => setConfirmImportOpen(true)}
+                          disabled={isImporting || selectedReqIds.size === 0}
+                          className="font-bold shadow-sm"
+                        >
+                          {isImporting ? "Importing..." : "Import Selected"}
+                        </Button>
+                      )}
                     </div>
 
                     <div className="space-y-4 p-6">

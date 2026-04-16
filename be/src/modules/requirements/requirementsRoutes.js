@@ -37,7 +37,7 @@ router.get("/:projectId/:requirementId/comments", requirePermissions("view_requi
 router.post("/:projectId/:requirementId/comments", requirePermissions("comment_on_requirements"), addComment);
 
 // Traceability
-router.get("/:projectId/:requirementId/traceability", requirePermissions("manage_requirement_dependencies"), getTraceabilityLinks);
+router.get("/:projectId/:requirementId/traceability", requirePermissions("view_requirements"), getTraceabilityLinks);
 router.post("/:projectId/:requirementId/traceability", requirePermissions("manage_requirement_dependencies"), createTraceabilityLink);
 router.delete("/:projectId/traceability/:linkId", requirePermissions("manage_requirement_dependencies"), deleteTraceabilityLink);
 router.get("/:projectId/traceability/graph", requirePermissions("view_requirement_graph"), getProjectTraceabilityGraph);

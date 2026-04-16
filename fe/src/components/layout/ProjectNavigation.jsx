@@ -49,7 +49,7 @@ export function ProjectNavigation() {
         { title: "Chat", url: `/projects/${slug}/chat`, icon: MessageSquare, requiredPermission: "view_chat" },
         { title: "SpecBot", url: `/projects/${slug}/specbot`, icon: Bot, requiredPermission: "view_specbot_chat" },
         { title: "Meeting", url: `/projects/${slug}/meetings`, icon: CalendarDays, requiredPermission: "view_meetings" },
-        { title: "Feedbacks", url: `/projects/${slug}/feedback`, icon: MessageCircleQuestion, requiredPermission: "view_feedbacks" },
+        { title: "Feedbacks", url: `/projects/${slug}/feedback`, icon: MessageCircleQuestion, requiredPermission: "view_feedback_forms" },
       ],
     },
     {
@@ -91,7 +91,7 @@ export function ProjectNavigation() {
       title: "Settings",
       icon: Settings,
       url: `/projects/${slug}/settings`,
-      requiredPermission: "update_project",
+      requiredPermission: "project_settings",
     },
   ];
 

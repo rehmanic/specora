@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { usePermission } from "@/hooks/usePermission";
 
 import {
   getRequirementHistory,
@@ -77,6 +78,18 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
   const [selectedTarget, setSelectedTarget] = useState("");
   const [isAddingLink, setIsAddingLink] = useState(false);
 
+  // Permissions
+  const canCreate = usePermission("create_requirement");
+  const canUpdate = usePermission("update_requirement");
+  const canViewHistory = usePermission("view_requirement_history");
+  const canViewComments = usePermission("view_requirement_comments");
+  const canComment = usePermission("comment_on_requirements");
+  const canManageDependencies = usePermission("manage_requirement_dependencies");
+
+  const isEditing = !!initialData?.id;
+  const isChild = !!initialData?.parent_id;
+  const canEditFields = isEditing ? canUpdate : canCreate;
+
   useEffect(() => {
     if (open) {
       setActiveSection("general");
@@ -88,9 +101,10 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
         setTags(initialData.tags || []);
         setCategory(initialData.category || "");
         setChangeReason("");
-        loadHistory();
-        loadComments();
-        loadLinks();
+
+        if (canViewHistory) loadHistory();
+        if (canViewComments) loadComments();
+        if (canManageDependencies) loadLinks();
       } else {
         setTitle("");
         setDescription("");
@@ -226,10 +240,10 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
     });
   };
 
-  const isEditing = !!initialData?.id;
-  const isChild = !!initialData?.parent_id;
   const visibleNavItems = NAV_ITEMS.filter((item) => {
-    if (item.id === "dependency" && isChild) return false;
+    if (item.id === "history" && !canViewHistory) return false;
+    if (item.id === "comments" && !canViewComments) return false;
+    if (item.id === "dependency" && (isChild || !canManageDependencies)) return false;
     return true;
   });
 
@@ -246,6 +260,7 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
+          disabled={!canEditFields}
           className="h-10"
           placeholder="Requirement title"
         />
@@ -259,6 +274,7 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required
+          disabled={!canEditFields}
           rows={4}
           placeholder="Describe the requirement in detail..."
           className="resize-none"
@@ -267,7 +283,7 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Priority</Label>
-          <Select value={priority} onValueChange={setPriority}>
+          <Select value={priority} onValueChange={setPriority} disabled={!canEditFields}>
             <SelectTrigger className="h-10">
               <SelectValue />
             </SelectTrigger>
@@ -282,7 +298,7 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
         </div>
         <div className="space-y-1.5">
           <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Status</Label>
-          <Select value={status} onValueChange={setStatus}>
+          <Select value={status} onValueChange={setStatus} disabled={!canEditFields}>
             <SelectTrigger className="h-10">
               <SelectValue />
             </SelectTrigger>
@@ -302,6 +318,7 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           placeholder="e.g. Functional, UX, Security"
+          disabled={!canEditFields}
           className="h-10"
         />
       </div>
@@ -328,6 +345,7 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
           value={tagInput}
           onChange={(e) => setTagInput(e.target.value)}
           onKeyDown={handleTagInputKeyDown}
+          disabled={!canEditFields}
           className="h-10"
         />
       </div>
@@ -338,6 +356,7 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
             placeholder="Why are you making this change?"
             value={changeReason}
             onChange={(e) => setChangeReason(e.target.value)}
+            disabled={!canEditFields}
             className="h-10"
           />
         </div>
@@ -464,7 +483,7 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
               <ArrowUpRight className="h-4 w-4 text-amber-500" />
               <p className="text-muted-foreground text-sm font-bold tracking-wider uppercase">Dependencies (Fan-out)</p>
             </div>
-            {!isAddingLink && (
+            {!isAddingLink && canManageDependencies && (
               <Button
                 type="button"
                 size="sm"
@@ -562,15 +581,17 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
                               </p>
                             </div>
                           </div>
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            className="text-destructive/60 hover:text-destructive hover:bg-destructive/10 h-7 w-7 font-bold opacity-0 transition-all group-hover:opacity-100"
-                            onClick={() => handleDeleteLink(l.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          {canManageDependencies && (
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="text-destructive/60 hover:text-destructive hover:bg-destructive/10 h-7 w-7 font-bold opacity-0 transition-all group-hover:opacity-100"
+                              onClick={() => handleDeleteLink(l.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          )}
                         </div>
                       );
                     })
@@ -675,11 +696,10 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
                     key={item.id}
                     type="button"
                     onClick={() => setActiveSection(item.id)}
-                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-all duration-150 ${
-                      isActive
+                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-all duration-150 ${isActive
                         ? "bg-primary/10 text-primary shadow-sm"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    } `}
+                      } `}
                   >
                     <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : ""}`} />
                     <span>{item.label}</span>
@@ -695,7 +715,7 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
               </ScrollArea>
 
               {/* Sticky Comment Input */}
-              {activeSection === "comments" && isEditing && (
+              {activeSection === "comments" && isEditing && canComment && (
                 <div className="border-border bg-background shrink-0 border-t px-6 py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
                   <div className="flex gap-2">
                     <Input
@@ -731,14 +751,16 @@ export default function RequirementDialog({ open, onOpenChange, onSubmit, initia
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={!title || !description || loading}
-              className="gradient-primary h-9 border-0 px-5 text-sm"
-            >
-              {loading && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
-              {isEditing ? "Save Changes" : "Create"}
-            </Button>
+            {canEditFields && (
+              <Button
+                type="submit"
+                disabled={!title || !description || loading}
+                className="gradient-primary h-9 border-0 px-5 text-sm"
+              >
+                {loading && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+                {isEditing ? "Save Changes" : "Create"}
+              </Button>
+            )}
           </div>
         </form>
       </DialogContent>

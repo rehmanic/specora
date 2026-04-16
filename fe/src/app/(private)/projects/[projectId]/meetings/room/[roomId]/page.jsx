@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Track } from "livekit-client";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { usePermission } from "@/hooks/usePermission";
 
 // Recording controls component (must be inside the connected LiveKitRoom)
 function RecordingControls({ meetingId }) {
@@ -130,6 +131,8 @@ function RecordingControls({ meetingId }) {
 
 // Custom layout that includes header with recording controls
 function MeetingLayout({ roomId, projectId, router }) {
+  const canRecord = usePermission("record_meeting");
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header with recording controls */}
@@ -138,7 +141,7 @@ function MeetingLayout({ roomId, projectId, router }) {
           <h1 className="font-medium text-white">Meeting Room</h1>
           <p className="text-xs text-white/50">{roomId}</p>
         </div>
-        <RecordingControls meetingId={roomId} />
+        {canRecord && <RecordingControls meetingId={roomId} />}
       </header>
 
       {/* Video Conference - fits remaining space */}

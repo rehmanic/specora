@@ -6,11 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, Video, ExternalLink, Play, Copy, Check } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { usePermission } from "@/hooks/usePermission";
 import { Settings } from "lucide-react";
 
 export default function MeetingCard({ meeting, type }) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  
+  // Permissions
+  const canJoin = usePermission("join_meeting");
+  const canViewRecording = usePermission("view_meeting_recording");
+  const canExtract = usePermission("extract_requirements_from_meeting");
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -163,14 +169,14 @@ export default function MeetingCard({ meeting, type }) {
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2">
-          {type === "upcoming" && (
+          {type === "upcoming" && canJoin && (
             <Button size="sm" className="gradient-primary flex-1 gap-2 border-0" onClick={handleJoinMeeting}>
               <Video className="h-4 w-4" />
               Start Meeting
             </Button>
           )}
 
-          {type === "completed" && meeting.recording_url && (
+          {type === "completed" && meeting.recording_url && canViewRecording && (
             <Button
               variant="outline"
               size="sm"
@@ -182,7 +188,7 @@ export default function MeetingCard({ meeting, type }) {
             </Button>
           )}
 
-          {type === "completed" && (
+          {type === "completed" && canExtract && (
             <Button
               variant="secondary"
               size="sm"

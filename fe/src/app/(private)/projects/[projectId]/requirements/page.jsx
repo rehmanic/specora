@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { usePermission } from "@/hooks/usePermission";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -108,6 +109,15 @@ export default function Page() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [graphOpen, setGraphOpen] = useState(false);
   const [selectedRequirement, setSelectedRequirement] = useState(null);
+
+  // Permissions
+  const canCreate = usePermission("create_requirement");
+  const canUpdate = usePermission("update_requirement");
+  const canDelete = usePermission("delete_requirement");
+  const canImport = usePermission("import_requirement");
+  const canExport = usePermission("export_requirement");
+  const canViewGraph = usePermission("view_requirement_graph");
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -403,35 +413,41 @@ export default function Page() {
           <div className="animate-fade-in flex justify-end">
             <div className="mt-2 flex flex-wrap items-center gap-2 md:mt-0">
               {/* Import */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2" disabled={importLoading}>
-                    {importLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    Import
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleImportClick("json")}>Import JSON</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleImportClick("csv")}>Import CSV</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {canImport && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="gap-2" disabled={importLoading}>
+                      {importLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      Import
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => handleImportClick("json")}>Import JSON</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleImportClick("csv")}>Import CSV</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
               {/* Export */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <Download className="h-4 w-4" /> Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleExport("json")}>As JSON</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport("csv")}>As CSV</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {canExport && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="gap-2">
+                      <Download className="h-4 w-4" /> Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => handleExport("json")}>As JSON</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport("csv")}>As CSV</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
-              <Button variant="outline" className="gap-2" onClick={() => setGraphOpen(true)}>
-                <GitBranch className="h-4 w-4" /> Graph View
-              </Button>
+              {canViewGraph && (
+                <Button variant="outline" className="gap-2" onClick={() => setGraphOpen(true)}>
+                  <GitBranch className="h-4 w-4" /> Graph View
+                </Button>
+              )}
             </div>
           </div>
           {/* Header */}
@@ -457,6 +473,7 @@ export default function Page() {
             searchPlaceholder="Search requirements by ID, title, or description..."
             buttonText="Add Requirement"
             onAction={handleAddClick}
+            showButton={canCreate}
           />
 
           {/* Table Area */}
@@ -553,28 +570,32 @@ export default function Page() {
                                 size="icon"
                                 className="text-muted-foreground hover:text-primary h-8 w-8"
                                 onClick={() => handleEditClick(req)}
-                                title="Edit"
+                                title={canUpdate ? "Edit" : "View Details"}
                               >
-                                <Edit2 className="h-4 w-4" />
+                                {canUpdate ? <Edit2 className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-muted-foreground hover:text-destructive h-8 w-8"
-                                onClick={() => setItemToDelete(req)}
-                                title="Delete"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-muted-foreground hover:text-primary h-8 w-8"
-                                onClick={() => handleAddChildClick(req)}
-                                title="Add Child"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
+                              {canDelete && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-muted-foreground hover:text-destructive h-8 w-8"
+                                  onClick={() => setItemToDelete(req)}
+                                  title="Delete"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {canCreate && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-muted-foreground hover:text-primary h-8 w-8"
+                                  onClick={() => handleAddChildClick(req)}
+                                  title="Add Child"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              )}
                               {req.children && req.children.length > 0 && (
                                 <Button
                                   variant="ghost"
@@ -699,30 +720,32 @@ export default function Page() {
                           <p className="truncate text-sm font-medium">{child.title}</p>
                         </div>
                         <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-primary h-7 w-7"
-                            onClick={() => {
-                              setChildrenDialogOpen(false);
-                              handleEditClick(child);
-                            }}
-                            title="Edit"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-destructive h-7 w-7"
-                            onClick={() => {
-                              setChildrenDialogOpen(false);
-                              setItemToDelete(child);
-                            }}
-                            title="Delete"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-muted-foreground hover:text-primary h-7 w-7"
+                              onClick={() => {
+                                setChildrenDialogOpen(false);
+                                handleEditClick(child);
+                              }}
+                              title={canUpdate ? "Edit" : "View Details"}
+                            >
+                              {canUpdate ? <Edit2 className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
+                            </Button>
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-muted-foreground hover:text-destructive h-7 w-7"
+                              onClick={() => {
+                                setChildrenDialogOpen(false);
+                                setItemToDelete(child);
+                              }}
+                              title="Delete"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

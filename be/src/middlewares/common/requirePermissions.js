@@ -8,12 +8,15 @@
  */
 export const requirePermissions = (...permissions) => (req, res, next) => {
   const userPermissions = req.user.permissions || [];
-  const hasAll = permissions.every((p) => userPermissions.includes(p));
+  const missingPermissions = permissions.filter((p) => !userPermissions.includes(p));
 
-  if (!hasAll) {
+  if (missingPermissions.length > 0) {
     return res
       .status(403)
-      .json({ message: "Access denied: Missing required permissions" });
+      .json({ 
+        message: `Missing required permissions: ${missingPermissions.join(", ")}`,
+        missing: missingPermissions
+      });
   }
 
   next();

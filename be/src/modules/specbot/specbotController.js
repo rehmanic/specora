@@ -115,9 +115,9 @@ export const getAllSpecbotChats = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { projectId } = req.query;
-        const role = req.user.role;
 
         if (!projectId) {
+
             return res.status(400).json({ message: "Project ID is required" });
         }
 
@@ -137,7 +137,7 @@ export const getAllSpecbotChats = async (req, res) => {
 
         const isCreator = project.created_by === userId;
         const isMember = project.project_member.length > 0;
-        if (!isCreator && !isMember && role === "client") {
+        if (!isCreator && !isMember) {
             return res.status(403).json({ message: "Access denied. You don't have access to this project." });
         }
 
@@ -395,7 +395,6 @@ export const getAllMessages = async (req, res) => {
     try {
         const { chatId } = req.params;
         const userId = req.user.userId;
-        const role = req.user.role;
 
         // Check Specbot Chat
         const specbotChat = await prisma.specbot_chat.findUnique({
@@ -418,7 +417,7 @@ export const getAllMessages = async (req, res) => {
         // Check access: user must be creator or project member
         const isCreator = specbotChat.project.created_by === userId;
         const isMember = specbotChat.project.project_member.length > 0;
-        if (!isCreator && !isMember && role === "client") {
+        if (!isCreator && !isMember) {
             return res.status(403).json({ message: "Access denied. You can only view chats in projects you're part of." });
         }
 
@@ -508,7 +507,6 @@ export const downloadSpecbotChat = async (req, res) => {
     try {
         const { chatId } = req.params;
         const userId = req.user.userId;
-        const role = req.user.role;
 
         const chat = await prisma.specbot_chat.findUnique({
             where: { id: chatId },
@@ -537,7 +535,7 @@ export const downloadSpecbotChat = async (req, res) => {
         // Check access: user must be creator or project member
         const isCreator = chat.project.created_by === userId;
         const isMember = chat.project.project_member.length > 0;
-        if (!isCreator && !isMember && role === "client") {
+        if (!isCreator && !isMember) {
             return res
                 .status(403)
                 .json({ message: "Access denied. You can only download chats in projects you're part of." });
@@ -618,7 +616,6 @@ export const summarizeSpecbotChat = async (req, res) => {
     try {
         const { chatId } = req.params;
         const userId = req.user.userId;
-        const role = req.user.role;
 
         const chat = await prisma.specbot_chat.findUnique({
             where: { id: chatId },
@@ -640,7 +637,7 @@ export const summarizeSpecbotChat = async (req, res) => {
         // Check access: user must be creator or project member
         const isCreator = chat.project.created_by === userId;
         const isMember = chat.project.project_member.length > 0;
-        if (!isCreator && !isMember && role === "client") {
+        if (!isCreator && !isMember) {
             return res
                 .status(403)
                 .json({ message: "Access denied. You can only summarize chats in projects you're part of." });
@@ -733,7 +730,6 @@ export const extractRequirementsFromChat = async (req, res) => {
     try {
         const { chatId } = req.params;
         const userId = req.user.userId;
-        const role = req.user.role;
 
         const chat = await prisma.specbot_chat.findUnique({
             where: { id: chatId },
@@ -755,7 +751,7 @@ export const extractRequirementsFromChat = async (req, res) => {
         // Check access: user must be creator or project member
         const isCreator = chat.project.created_by === userId;
         const isMember = chat.project.project_member.length > 0;
-        if (!isCreator && !isMember && role === "client") {
+        if (!isCreator && !isMember) {
             return res.status(403).json({
                 message: "Access denied. You can only extract requirements for chats in projects you're part of.",
             });

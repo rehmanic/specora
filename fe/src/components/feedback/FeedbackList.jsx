@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getProjectFeedbacks } from "@/api/feedback";
 import useAuthStore from "@/store/authStore";
+import { usePermission } from "@/hooks/usePermission";
 import useProjectsStore from "@/store/projectsStore";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -43,8 +44,11 @@ export default function FeedbackList({ projectId }) {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  // Check if user is Manager or Requirements Engineer
-  const canCreate = ["manager", "requirements_engineer"].includes(user?.role);
+  // Permissions
+  const canCreate = usePermission("create_feedback_form");
+  const canUpdate = usePermission("update_feedback_form");
+  const canDelete = usePermission("delete_feedback_form");
+  const canViewResponses = usePermission("view_feedback_form_responses");
 
   useEffect(() => {
     const fetchFeedbacks = async () => {
@@ -164,39 +168,41 @@ export default function FeedbackList({ projectId }) {
                   <TableCell>{item._count?.feedback_response || 0}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      {canCreate && (
-                        <>
-                          <Button variant="ghost" size="icon" asChild onClick={(e) => e.stopPropagation()} title="Edit">
-                            <Link href={`./feedback/${item.id}/edit`}>
-                              <Edit className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setItemToDelete(item);
-                            }}
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
+                      {canUpdate && (
+                        <Button variant="ghost" size="icon" asChild onClick={(e) => e.stopPropagation()} title="Edit">
+                          <Link href={`./feedback/${item.id}/edit`}>
+                            <Edit className="h-4 w-4" />
+                          </Link>
+                        </Button>
                       )}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" asChild onClick={(e) => e.stopPropagation()}>
-                              <Link href={`./feedback/${item.id}`}>
-                                <Eye className="h-4 w-4" />
-                              </Link>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Responses</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      {canDelete && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setItemToDelete(item);
+                          }}
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {canViewResponses && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" asChild onClick={(e) => e.stopPropagation()}>
+                                <Link href={`./feedback/${item.id}`}>
+                                  <Eye className="h-4 w-4" />
+                                </Link>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Responses</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

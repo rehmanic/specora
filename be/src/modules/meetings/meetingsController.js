@@ -403,33 +403,18 @@ const stripMarkdownCodeBlock = (text) => {
 export const extractMeetingRequirements = async (req, res) => {
     try {
         const { meetingId } = req.params;
-        const userId = req.user.userId || req.user.id;
-        const role = req.user.role;
 
+        // Access already enforced by requirePermissions("extract_requirements_from_meeting") on the route
         const meeting = await prisma.meeting.findUnique({
             where: { id: meetingId },
             include: {
-                project: {
-                    include: {
-                        project_member: {
-                            where: { member_id: userId },
-                        },
-                    },
-                },
+                project: { select: { id: true } },
                 transcripts: true
             },
         });
 
         if (!meeting) {
             return res.status(404).json({ message: "Meeting not found" });
-        }
-
-        const isCreator = meeting.project.created_by === userId;
-        const isMember = meeting.project.project_member.length > 0;
-        if (!isCreator && !isMember && role === "client") {
-            return res.status(403).json({
-                message: "Access denied.",
-            });
         }
 
         if (!meeting.transcripts || meeting.transcripts.length === 0) {

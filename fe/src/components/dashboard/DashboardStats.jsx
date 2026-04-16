@@ -1,5 +1,5 @@
 import { ProjectCard } from "@/components/project/ProjectCard";
-import { FolderOpen, Users, Tags, Activity } from "lucide-react";
+import { FolderOpen, Users, Star, Activity } from "lucide-react";
 
 // Stats Card Component
 function StatCard({ icon: Icon, label, value, color = "primary" }) {
@@ -37,7 +37,7 @@ function StatCardSkeleton() {
   );
 }
 
-export default function DashboardStats({ projects, loading }) {
+export default function DashboardStats({ projects, loading, user }) {
   if (loading) {
     return (
       <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
@@ -51,29 +51,31 @@ export default function DashboardStats({ projects, loading }) {
   // Aggregate stats from projects array
   const totalProjects = projects.length;
   const activeProjects = projects.filter((p) => p.status === "active" || !p.status).length;
+  
+  // Projects owned specifically by the current user
+  const ownedProjects = user ? projects.filter((p) => p.created_by === user.id).length : 0;
 
-  // Calculate total unique members across all projects
+  // Calculate total unique collaborators across all projects
   const uniqueMembers = new Set();
   projects.forEach((p) => {
-    p.members?.forEach((m) => uniqueMembers.add(m.user_id || m.id));
+    if (p.created_by) uniqueMembers.add(p.created_by);
+    p.members?.forEach((member) => {
+      uniqueMembers.add(typeof member === "string" ? member : member.id || member.user_id);
+    });
   });
+  
+  // Don't count the active user themselves as a "Collaborator"
+  if (user?.id) {
+    uniqueMembers.delete(user.id);
+  }
   const totalCollaborators = uniqueMembers.size;
-
-  // Calculate projects started this month
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-  const newProjectsThisMonth = projects.filter((p) => {
-    if (!p.created_at) return false;
-    const date = new Date(p.created_at);
-    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-  }).length;
 
   return (
     <div className="animate-fade-in grid grid-cols-2 gap-6 lg:grid-cols-4" style={{ animationDelay: "0.1s" }}>
       <StatCard icon={FolderOpen} label="Total Projects" value={totalProjects} color="primary" />
+      <StatCard icon={Star} label="Owned by You" value={ownedProjects} color="warning" />
       <StatCard icon={Activity} label="Active Projects" value={activeProjects} color="success" />
-      <StatCard icon={Users} label="Total Collaborators" value={totalCollaborators} color="accent" />
-      <StatCard icon={Tags} label="New This Month" value={newProjectsThisMonth} color="warning" />
+      <StatCard icon={Users} label="Collaborators" value={totalCollaborators} color="accent" />
     </div>
   );
 }

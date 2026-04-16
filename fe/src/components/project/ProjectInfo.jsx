@@ -26,8 +26,8 @@ import { Settings, Users, Tags, Trash2, Plus, X, Calendar, Layers, ShieldAlert, 
 import useProjectsStore from "@/store/projectsStore";
 import useAuthStore from "@/store/authStore";
 import { usePermission } from "@/hooks/usePermission";
-import { deleteProject, updateProject, createProject } from "@/api/projects";
-import { getSingleUserDataRequest, getUsersByIds } from "@/api/users";
+import { deleteProject, updateProject, createProject, getProjectMembers } from "@/api/projects";
+import { getSingleUserDataRequest } from "@/api/users";
 import { uploadFileRequest } from "@/api/upload";
 import notify from "@/components/common/Notification";
 import PageBanner from "@/components/layout/PageBanner";
@@ -95,25 +95,39 @@ export default function ProjectInfo({ variant }) {
       if (isSettings && selectedProject) {
         // Fetch member details if members are just IDs
         let members = [];
-        if (Array.isArray(selectedProject.members) && selectedProject.members.length > 0) {
-          // Check if members are objects or just IDs
-          if (typeof selectedProject.members[0] === "string") {
-            // Members are IDs, fetch their details
-            const memberDetails = await getUsersByIds(selectedProject.members);
-            members = memberDetails.map((member) => ({
-              id: member.id,
-              name: member.display_name || member.name || member.username || "",
-              email: member.email || "",
-              role: member.role || "Member",
-              isOwner: member.id === selectedProject.created_by,
-              profile_pic_url: member.profile_pic_url || null,
-            }));
-          } else {
-            // Members are already objects
-            members = selectedProject.members.map((m) => ({
-              ...m,
-              isOwner: m.id === selectedProject.created_by,
-            }));
+        
+        // Fetch members only if we have permission or if we are creating a new project
+        if (canViewMembers || !isSettings) {
+          if (Array.isArray(selectedProject.members) && selectedProject.members.length > 0) {
+            // Check if members are objects or just IDs
+            if (typeof selectedProject.members[0] === "string" && selectedProject.id) {
+              // Fetch proper member details using the project members API
+              try {
+                const response = await getProjectMembers(selectedProject.id);
+                if (response && response.members) {
+                  members = response.members.map(member => ({
+                    ...member,
+                    role: member.role || "Member", // Backend might not provide role explicitly here, add fallback
+                  }));
+                }
+              } catch (e) {
+                console.error("Failed to fetch project members for prefill:", e);
+                // Fallback to minimal data if fetch fails
+                members = selectedProject.members.map(id => ({
+                  id,
+                  name: "Unknown User",
+                  email: "",
+                  role: "Member",
+                  isOwner: id === selectedProject.created_by,
+                }));
+              }
+            } else {
+              // Members are already objects
+              members = selectedProject.members.map((m) => ({
+                ...m,
+                isOwner: m.id === selectedProject.created_by,
+              }));
+            }
           }
         }
 
@@ -196,7 +210,7 @@ export default function ProjectInfo({ variant }) {
     };
 
     prefillProject();
-  }, [isSettings, selectedProject, user]);
+  }, [isSettings, selectedProject, user, canViewMembers]);
 
   const handleCoverImageChange = (e) => {
     const file = e.target.files[0];

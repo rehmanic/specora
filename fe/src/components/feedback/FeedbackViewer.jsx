@@ -9,12 +9,15 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import useAuthStore from "@/store/authStore";
+import { usePermission } from "@/hooks/usePermission";
 
 export default function FeedbackViewer({ feedback, projectId }) {
   const router = useRouter();
   const [survey, setSurvey] = useState(null);
 
   const { user } = useAuthStore();
+  const canSubmit = usePermission("submit_feedback_response");
+  const canViewOwn = usePermission("view_own_feedback_response");
 
   useEffect(() => {
     const initSurvey = async () => {
@@ -22,8 +25,8 @@ export default function FeedbackViewer({ feedback, projectId }) {
 
       const surveyModel = new Model(feedback.form_structure);
 
-      // If user is client, fetch existing response
-      if (user?.role === "client") {
+      // If user has permission to submit/view own, fetch existing response
+      if (canSubmit || canViewOwn) {
         try {
           // Actually better to define import at top. But here is fine.
           const data = await getUserResponse(feedback.id);

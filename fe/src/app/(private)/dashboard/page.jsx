@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo } from "react";
 import useAuthStore from "@/store/authStore";
 import { usePermission } from "@/hooks/usePermission";
-import { getUserProjects, getAllProjects } from "@/api/projects";
+import { getUserProjects } from "@/api/projects";
 import GreetingHeader from "@/components/dashboard/GreetingHeader";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
@@ -11,7 +11,6 @@ import ProjectList from "@/components/dashboard/ProjectList";
 export default function DashboardPage() {
   const { user, token } = useAuthStore();
   const canCreateProject = usePermission("create_project");
-  const canViewAllProjects = usePermission("view_projects");
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,13 +23,7 @@ export default function DashboardPage() {
       
       try {
         setLoading(true);
-        let data;
-
-        if (canViewAllProjects) {
-          data = await getAllProjects(token);
-        } else {
-          data = await getUserProjects(user.id);
-        }
+        const data = await getUserProjects(user.id);
         
         if (isMounted) {
           setProjects(data?.projects || []);
@@ -52,7 +45,7 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [user, token, canViewAllProjects]);
+  }, [user, token]);
 
   // Filter projects based on search
   const filteredProjects = useMemo(() => {
@@ -77,7 +70,7 @@ export default function DashboardPage() {
         <GreetingHeader user={user} />
 
         {/* 2. Stats Component - Always rendered to prevent shift */}
-        <DashboardStats projects={projects} loading={loading} />
+        <DashboardStats projects={projects} loading={loading} user={user} />
 
         <SearchCreateHeader
           searchQuery={searchQuery}

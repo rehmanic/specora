@@ -13,6 +13,7 @@ import {
 import { Folder, ChevronsUpDown, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import useAuthStore from "@/store/authStore";
 
 export function ProjectHeader() {
   const { selectedProject, projects, fetchProjects, setSelectedProject } = useProjectsStore();
@@ -20,6 +21,8 @@ export function ProjectHeader() {
   const isCollapsed = state === "collapsed";
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAuthStore();
+  const canCreateProject = user?.permissions?.includes("create_project") ?? false;
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -157,17 +160,20 @@ export function ProjectHeader() {
               ))}
             </div>
 
-            <DropdownMenuSeparator className="my-2" />
-
-            <DropdownMenuItem
-              onClick={() => router.push("/projects/create")}
-              className="text-primary hover:bg-primary/10 cursor-pointer gap-3 rounded-lg p-2 transition-colors"
-            >
-              <div className="bg-primary/10 flex size-6 items-center justify-center rounded-lg">
-                <Plus className="size-4" />
-              </div>
-              <span className="text-sm font-bold">New Project</span>
-            </DropdownMenuItem>
+            {canCreateProject && (
+              <>
+                <DropdownMenuSeparator className="my-2" />
+                <DropdownMenuItem
+                  onClick={() => router.push("/projects/create")}
+                  className="text-primary hover:bg-primary/10 cursor-pointer gap-3 rounded-lg p-2 transition-colors"
+                >
+                  <div className="bg-primary/10 flex size-6 items-center justify-center rounded-lg">
+                    <Plus className="size-4" />
+                  </div>
+                  <span className="text-sm font-bold">New Project</span>
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

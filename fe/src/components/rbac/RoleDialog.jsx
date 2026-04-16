@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Shield, ShieldCheck, Users, FileText, Layout, BarChart, CheckCircle, MessageSquare, Lock, } from "lucide-react";
+import { Shield, ShieldCheck, Users, FileText, Layout, BarChart, CheckCircle, MessageSquare, Lock, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import useRbacStore from "@/store/rbacStore";
 
@@ -18,6 +18,7 @@ export function RoleDialog({ role, open, onOpenChange }) {
   const [name, setName] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [permSearch, setPermSearch] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -29,11 +30,23 @@ export function RoleDialog({ role, open, onOpenChange }) {
         setName("");
         setSelectedPermissions([]);
       }
+      setPermSearch("");
     }
   }, [open, role, fetchPermissions]);
 
   // Categorize permissions: group by the 'module' field from the API
-  const categorizedPermissions = permissions.reduce((acc, p) => {
+  const normalizedSearch = permSearch.trim().toLowerCase();
+
+  const filteredPermissions = normalizedSearch
+    ? permissions.filter(
+        (p) =>
+          (p.label || p.name).toLowerCase().includes(normalizedSearch) ||
+          p.description?.toLowerCase().includes(normalizedSearch) ||
+          p.name.toLowerCase().includes(normalizedSearch)
+      )
+    : null; // null means "show grouped view"
+
+  const categorizedPermissions = (filteredPermissions ?? permissions).reduce((acc, p) => {
     const category = p.module || "General";
     if (!acc[category]) acc[category] = [];
     acc[category].push(p);
@@ -131,73 +144,151 @@ export function RoleDialog({ role, open, onOpenChange }) {
               </span>
             </div>
 
-            <ScrollArea className="bg-muted/10 -mr-4 h-[400px] rounded-xl border pr-4">
-              <Accordion type="multiple" className="w-full px-1">
-                {Object.entries(categorizedPermissions).map(([category, perms]) => {
-                  const activeInCategory = perms.filter((p) => selectedPermissions.includes(p.id)).length;
-                  return (
-                    <AccordionItem key={category} value={category} className="mt-1 border-none first:mt-0">
-                      <AccordionTrigger className="hover:bg-muted/50 group rounded-lg px-3 py-2.5 transition-all hover:no-underline">
-                        <div className="flex w-full items-center justify-between pr-4">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-background border-border text-muted-foreground group-data-[state=open]:text-primary group-data-[state=open]:border-primary/30 group-data-[state=open]:bg-primary/5 rounded-md border p-1.5 transition-colors">
-                              {getCategoryIcon(category)}
-                            </div>
-                            <span className="text-sm font-semibold tracking-tight capitalize">{category}</span>
-                          </div>
-                          {activeInCategory > 0 && (
-                            <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums">
-                              {activeInCategory}
-                            </span>
+            {/* Permission Search */}
+            <div className="relative">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+              <Input
+                placeholder="Search permissions..."
+                value={permSearch}
+                onChange={(e) => setPermSearch(e.target.value)}
+                className="bg-muted/30 h-9 pl-9 pr-8 text-sm"
+              />
+              {permSearch && (
+                <button
+                  onClick={() => setPermSearch("")}
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            <ScrollArea className="bg-muted/10 -mr-4 h-[340px] rounded-xl border pr-4">
+              {filteredPermissions !== null && filteredPermissions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center opacity-40">
+                  <Search className="mb-2 h-10 w-10" />
+                  <p className="text-xs font-medium">No permissions match your search</p>
+                </div>
+              ) : filteredPermissions !== null ? (
+                // Flat search results view
+                <div className="space-y-2 p-2">
+                  {Object.entries(categorizedPermissions).map(([category, perms]) =>
+                    perms.map((p) => {
+                      const isSelected = selectedPermissions.includes(p.id);
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => handleTogglePermission(p.id)}
+                          className={cn(
+                            "group/perm flex cursor-pointer items-start gap-4 rounded-xl border p-3 transition-all duration-200 select-none",
+                            isSelected
+                              ? "bg-primary/5 border-primary/30 shadow-sm"
+                              : "hover:bg-muted/50 border-transparent bg-transparent"
                           )}
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="border-primary/10 ml-6 space-y-4 border-l-2 px-10 py-3 pb-4">
-                        {perms.map((p) => {
-                          const isSelected = selectedPermissions.includes(p.id);
-                          return (
-                            <div
-                              key={p.id}
-                              onClick={() => handleTogglePermission(p.id)}
-                              className={cn(
-                                "group/perm flex cursor-pointer items-start gap-4 rounded-xl border p-3 transition-all duration-200 select-none",
-                                isSelected
-                                  ? "bg-primary/5 border-primary/30 shadow-sm"
-                                  : "hover:bg-muted/50 border-transparent bg-transparent"
-                              )}
-                            >
-                              <Checkbox
-                                id={`p-${p.id}`}
-                                checked={isSelected}
-                                onCheckedChange={() => handleTogglePermission(p.id)}
-                                onClick={(e) => e.stopPropagation()} // Prevent double toggle
-                                className="border-muted data-[state=checked]:bg-primary data-[state=checked]:border-primary mt-0.5 h-5 w-5 rounded-md transition-colors"
-                              />
-                              <div className="grid flex-1 gap-1.5">
-                                <label
-                                  htmlFor={`p-${p.id}`}
-                                  className={cn(
-                                    "group-hover/perm:text-primary cursor-pointer text-sm leading-none font-semibold transition-colors",
-                                    isSelected ? "text-primary" : "text-foreground"
-                                  )}
-                                  onClick={(e) => e.stopPropagation()} // Prevent double toggle
-                                >
-                                  {p.label || p.name}
-                                </label>
-                                {p.description && (
-                                  <p className="text-muted-foreground line-clamp-2 text-[11px] leading-relaxed">
-                                    {p.description}
-                                  </p>
+                        >
+                          <Checkbox
+                            id={`ps-${p.id}`}
+                            checked={isSelected}
+                            onCheckedChange={() => handleTogglePermission(p.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="border-muted data-[state=checked]:bg-primary data-[state=checked]:border-primary mt-0.5 h-5 w-5 rounded-md transition-colors"
+                          />
+                          <div className="grid flex-1 gap-1">
+                            <div className="flex items-center gap-2">
+                              <label
+                                htmlFor={`ps-${p.id}`}
+                                className={cn(
+                                  "cursor-pointer text-sm font-semibold leading-none transition-colors",
+                                  isSelected ? "text-primary" : "text-foreground"
                                 )}
-                              </div>
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {p.label || p.name}
+                              </label>
+                              <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px] font-medium">
+                                {category}
+                              </span>
                             </div>
-                          );
-                        })}
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
+                            {p.description && (
+                              <p className="text-muted-foreground line-clamp-2 text-[11px] leading-relaxed">
+                                {p.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              ) : (
+                // Grouped accordion view (default)
+                <Accordion type="multiple" className="w-full px-1">
+                  {Object.entries(categorizedPermissions).map(([category, perms]) => {
+                    const activeInCategory = perms.filter((p) => selectedPermissions.includes(p.id)).length;
+                    return (
+                      <AccordionItem key={category} value={category} className="mt-1 border-none first:mt-0">
+                        <AccordionTrigger className="hover:bg-muted/50 group rounded-lg px-3 py-2.5 transition-all hover:no-underline">
+                          <div className="flex w-full items-center justify-between pr-4">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-background border-border text-muted-foreground group-data-[state=open]:text-primary group-data-[state=open]:border-primary/30 group-data-[state=open]:bg-primary/5 rounded-md border p-1.5 transition-colors">
+                                {getCategoryIcon(category)}
+                              </div>
+                              <span className="text-sm font-semibold tracking-tight capitalize">{category}</span>
+                            </div>
+                            {activeInCategory > 0 && (
+                              <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums">
+                                {activeInCategory}
+                              </span>
+                            )}
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="border-primary/10 ml-6 space-y-4 border-l-2 px-10 py-3 pb-4">
+                          {perms.map((p) => {
+                            const isSelected = selectedPermissions.includes(p.id);
+                            return (
+                              <div
+                                key={p.id}
+                                onClick={() => handleTogglePermission(p.id)}
+                                className={cn(
+                                  "group/perm flex cursor-pointer items-start gap-4 rounded-xl border p-3 transition-all duration-200 select-none",
+                                  isSelected
+                                    ? "bg-primary/5 border-primary/30 shadow-sm"
+                                    : "hover:bg-muted/50 border-transparent bg-transparent"
+                                )}
+                              >
+                                <Checkbox
+                                  id={`p-${p.id}`}
+                                  checked={isSelected}
+                                  onCheckedChange={() => handleTogglePermission(p.id)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="border-muted data-[state=checked]:bg-primary data-[state=checked]:border-primary mt-0.5 h-5 w-5 rounded-md transition-colors"
+                                />
+                                <div className="grid flex-1 gap-1.5">
+                                  <label
+                                    htmlFor={`p-${p.id}`}
+                                    className={cn(
+                                      "group-hover/perm:text-primary cursor-pointer text-sm leading-none font-semibold transition-colors",
+                                      isSelected ? "text-primary" : "text-foreground"
+                                    )}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {p.label || p.name}
+                                  </label>
+                                  {p.description && (
+                                    <p className="text-muted-foreground line-clamp-2 text-[11px] leading-relaxed">
+                                      {p.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
+              )}
               {permissions.length === 0 && (
                 <div className="flex h-full flex-col items-center justify-center py-10 text-center opacity-40">
                   <ShieldCheck className="mb-2 h-10 w-10" />

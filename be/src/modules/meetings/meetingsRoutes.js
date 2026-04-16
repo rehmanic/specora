@@ -23,12 +23,12 @@ router.post("/webhook", express.raw({ type: 'application/webhook+json' }), webho
 router.use(verifyToken);
 
 router.post("/create", requirePermissions("create_meeting"), createMeeting);
-router.get("/project/:projectId", requirePermissions("join_meeting"), getProjectMeetings);
-router.get("/:meetingId", requirePermissions("join_meeting"), getMeeting);
+router.get("/project/:projectId", requirePermissions("view_meetings"), getProjectMeetings);
+router.get("/:meetingId", requirePermissions("view_meeting_details"), getMeeting);
 router.post("/:meetingId/join", requirePermissions("join_meeting"), joinMeeting);
 router.put("/:meetingId", requirePermissions("update_meeting"), updateMeeting);
 router.post("/:meetingId/transcribe", requirePermissions("generate_meeting_transcript"), transcribeMeeting);
-router.post("/:meetingId/extract-requirements", requirePermissions("generate_meeting_transcript"), extractMeetingRequirements);
+router.post("/:meetingId/extract-requirements", requirePermissions("extract_requirements_from_meeting"), extractMeetingRequirements);
 router.delete("/:meetingId", requirePermissions("delete_meeting"), deleteMeeting);
 router.post("/:meetingId/upload-recording", requirePermissions("record_meeting"), recordingUpload.single('recording'), uploadRecording);
 

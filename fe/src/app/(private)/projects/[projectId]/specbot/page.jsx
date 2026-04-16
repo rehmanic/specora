@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import useUserStore from "@/store/authStore";
+import { usePermission } from "@/hooks/usePermission";
 import useSpecbotStore from "@/store/specbotStore";
 import useProjectsStore from "@/store/projectsStore";
 import {
@@ -55,7 +56,16 @@ export default function SpecbotPage() {
   const { selectedProject } = useProjectsStore();
   const params = useParams();
   const projectId = params.projectId;
-  const isClient = user?.role === "client";
+  
+  // Permissions
+  const canSendMessages = usePermission("send_specbot_chat_message");
+  const canSummarize = usePermission("summarize_specbot_chat");
+  const canExtract = usePermission("extract_requirements_from_specbot_chat");
+  const canDownload = usePermission("download_specbot_chat_messages");
+  
+  // Logic: Users with analytical permissions see the dashboard, others see the simplified chat
+  const canAnalyzeChat = canSummarize || canExtract || canDownload;
+  const isChatOnlyView = !canAnalyzeChat;
 
   const {
     chats,
@@ -362,7 +372,7 @@ export default function SpecbotPage() {
   }
 
   // Client View: Chat-centric sidebar layout
-  if (isClient) {
+  if (isChatOnlyView) {
     return (
       <div className="relative z-0 flex h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] w-full flex-1 overflow-hidden">
         {/* Chat Area */}
@@ -417,7 +427,7 @@ export default function SpecbotPage() {
                             ? "SpecBot"
                             : msg.sender?.display_name ||
                               msg.sender?.username ||
-                              (msg.sender_id === user?.id ? "You" : "Client")
+                              (msg.sender_id === user?.id ? "You" : "User")
                         }
                         avatarUrl={msg.sender_type === "user" ? msg.sender?.profile_pic_url : null}
                         metadata={msg.metadata}
@@ -444,8 +454,8 @@ export default function SpecbotPage() {
                     value={inputValue}
                     onChange={setInputValue}
                     onSend={handleSendMessage}
-                    disabled={sendingMessage}
-                    placeholder={sendingMessage ? "Waiting for response..." : "Type your message here..."}
+                    disabled={sendingMessage || !canSendMessages}
+                    placeholder={!canSendMessages ? "You don't have permission to send messages" : sendingMessage ? "Waiting for response..." : "Type your message here..."}
                     showAttachments={false}
                   />
                 </div>
@@ -492,27 +502,33 @@ export default function SpecbotPage() {
               <MessageSquare className="size-4" />
               View Chat
             </TabsTrigger>
-            <TabsTrigger
-              value="download"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
-            >
-              <Download className="size-4" />
-              Download & Export
-            </TabsTrigger>
-            <TabsTrigger
-              value="summary"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
-            >
-              <FileText className="size-4" />
-              AI Summary
-            </TabsTrigger>
-            <TabsTrigger
-              value="requirements"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
-            >
-              <ListChecks className="size-4" />
-              Extract Requirements
-            </TabsTrigger>
+            {canDownload && (
+              <TabsTrigger
+                value="download"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+              >
+                <Download className="size-4" />
+                Download & Export
+              </TabsTrigger>
+            )}
+            {canSummarize && (
+              <TabsTrigger
+                value="summary"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+              >
+                <FileText className="size-4" />
+                AI Summary
+              </TabsTrigger>
+            )}
+            {canExtract && (
+              <TabsTrigger
+                value="requirements"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground justify-start gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+              >
+                <ListChecks className="size-4" />
+                Extract Requirements
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -525,7 +541,7 @@ export default function SpecbotPage() {
                   <CardTitle className="text-lg">Conversation Transcript</CardTitle>
                 </div>
                 <CardDescription>
-                  Review the full history of interactions between the client and Specbot.
+                  Review the full history of interactions recorded by Specbot.
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 space-y-6 overflow-y-auto p-6">

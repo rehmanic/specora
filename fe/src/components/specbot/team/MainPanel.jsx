@@ -26,7 +26,7 @@ export default function MainPanel({
       <div className="bg-background flex h-full flex-col items-center justify-center px-6 text-center">
         <h2 className="text-2xl font-semibold">Access limited</h2>
         <p className="text-muted-foreground mt-2">
-          Specbot workspace is available for managers and requirements engineers.
+          This Specbot workspace is restricted to authorized project members.
         </p>
       </div>
     );
@@ -130,7 +130,7 @@ export default function MainPanel({
                 timestamp={formattedTime}
                 isSender={msg.sender_type === "user"}
                 name={
-                  msg.sender_type === "bot" ? "SpecBot" : msg.sender?.display_name || msg.sender?.username || "Client"
+                  msg.sender_type === "bot" ? "SpecBot" : msg.sender?.display_name || msg.sender?.username || "User"
                 }
                 avatarUrl={msg.sender_type === "user" ? msg.sender?.profile_pic_url : null}
                 metadata={msg.metadata}

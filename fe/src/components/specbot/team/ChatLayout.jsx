@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import LeftSidebar from "./LeftSidebar";
 import MainPanel from "./MainPanel";
 import useUserStore from "@/store/authStore";
+import { usePermission } from "@/hooks/usePermission";
 import useProjectsStore from "@/store/projectsStore";
 import useSpecbotStore from "@/store/specbotStore";
 import { downloadSpecbotChat, extractSpecbotRequirements, summarizeSpecbotChat } from "@/api/specbot";
@@ -46,19 +47,17 @@ export default function ChatLayout({
   // const [isImporting, setIsImporting] = useState(false);
 
   const canAccess = true; // access control is handled by Sidebar and API, but we can double check
-  const isClient = user?.role === "client";
-  const isManager = user?.role === "manager";
-  const isReqEngineer = user?.role === "requirements_engineer";
-
-  // Clients can create/delete chats but not attach files
-  // RE/Managers can download/summarize/extract but not create chats (maybe?)
-  // Wait, req said "Client can create SpecBot chat, delete SpecBot chat".
-  // Req also said "Requirements Engineer can download chat, summarize it, and extract requirements".
-
-  const canCreateChat = isClient; // "The client can create a specbot chat" - strictly enforcing this based on user feedback.
-
-  const canAnalyze = isManager || isReqEngineer;
-  const showAttachments = !isClient; // "Remove the file attachment option from the chat" for Client
+  
+  // Permissions replacement for roles
+  const canCreateChat = usePermission("create_specbot_chat");
+  const canSummarize = usePermission("summarize_specbot_chat");
+  const canExtract = usePermission("extract_requirements_from_specbot_chat");
+  
+  const canAnalyze = canSummarize || canExtract;
+  // External users (respondents) don't show attachments, analysts do.
+  // We'll use canAnalyze as the proxy for internal users.
+  const showAttachments = canAnalyze;
+  const isReadOnly = !canCreateChat; // Non-creators view in read-only mode for history if allowed
 
   const downloaded = useMemo(() => {
     if (!currentChat) return false;
@@ -98,7 +97,7 @@ export default function ChatLayout({
           chats={chats}
           onChatSelect={handleChatSelect}
           hideNewChat={!canCreateChat}
-          readOnly={!isClient}
+          readOnly={isReadOnly}
           activeChatId={currentChat?.id}
         />
       </div>

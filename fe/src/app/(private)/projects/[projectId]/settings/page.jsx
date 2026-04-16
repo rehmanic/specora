@@ -3,7 +3,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function ProjectSettingsPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requiredPermissions={["project_settings"]}>
       <ProjectInfo variant="project-settings" />
     </ProtectedRoute>
   );
