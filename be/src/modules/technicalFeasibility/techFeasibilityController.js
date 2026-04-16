@@ -131,6 +131,20 @@ When answering:
             return res.status(500).json({ message: "Gemini API key configuration error" });
         }
 
+        // Gemini 503 — model temporarily overloaded
+        if (error.status === 503 || error.message?.includes("503") || error.message?.includes("UNAVAILABLE")) {
+            return res.status(503).json({
+                message: "The AI model is currently experiencing high demand. Please try again in a moment.",
+            });
+        }
+
+        // Gemini 429 — rate limit exceeded
+        if (error.status === 429 || error.message?.includes("429") || error.message?.includes("RESOURCE_EXHAUSTED")) {
+            return res.status(429).json({
+                message: "AI rate limit reached. Please wait a moment before trying again.",
+            });
+        }
+
         res.status(500).json({ message: "Failed to perform technical feasibility search" });
     }
 };
