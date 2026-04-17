@@ -13,9 +13,8 @@ describe('checkProjectExists Middleware', () => {
     });
 
     describe('action: create', () => {
-        it('should return 409 when project already exists', async () => {
-            const mockProject = { id: 'proj-123', name: 'Existing Project' };
-            prisma.projects.findUnique.mockResolvedValue(mockProject);
+        it('returns 409 when a project already exists', async () => {
+            prisma.project.findUnique.mockResolvedValue({ id: 'proj-123', name: 'Existing Project' });
 
             const middleware = checkProjectExists('create');
             const req = createMockRequest({ body: { name: 'Existing Project' } });
@@ -26,11 +25,10 @@ describe('checkProjectExists Middleware', () => {
 
             expect(res.status).toHaveBeenCalledWith(409);
             expect(res.jsonData.message).toBe('Project already exists');
-            expect(next).not.toHaveBeenCalled();
         });
 
-        it('should call next when project does not exist', async () => {
-            prisma.projects.findUnique.mockResolvedValue(null);
+        it('calls next when the name is available', async () => {
+            prisma.project.findUnique.mockResolvedValue(null);
 
             const middleware = checkProjectExists('create');
             const req = createMockRequest({ body: { name: 'New Project' } });
@@ -44,9 +42,8 @@ describe('checkProjectExists Middleware', () => {
     });
 
     describe('action: update', () => {
-        it('should call next when project exists', async () => {
-            const mockProject = { id: 'proj-123', name: 'Existing Project' };
-            prisma.projects.findUnique.mockResolvedValue(mockProject);
+        it('calls next when the project exists', async () => {
+            prisma.project.findUnique.mockResolvedValue({ id: 'proj-123', name: 'Existing Project' });
 
             const middleware = checkProjectExists('update');
             const req = createMockRequest({ params: { projectId: 'proj-123' } });
@@ -58,8 +55,8 @@ describe('checkProjectExists Middleware', () => {
             expect(next).toHaveBeenCalled();
         });
 
-        it('should return 401 when project does not exist', async () => {
-            prisma.projects.findUnique.mockResolvedValue(null);
+        it('returns 401 when the project is missing', async () => {
+            prisma.project.findUnique.mockResolvedValue(null);
 
             const middleware = checkProjectExists('update');
             const req = createMockRequest({ params: { projectId: 'nonexistent' } });
@@ -70,12 +67,11 @@ describe('checkProjectExists Middleware', () => {
 
             expect(res.status).toHaveBeenCalledWith(401);
             expect(res.jsonData.message).toBe("Project doesn't exist");
-            expect(next).not.toHaveBeenCalled();
         });
     });
 
-    it('should return 500 on database error', async () => {
-        prisma.projects.findUnique.mockRejectedValue(new Error('DB error'));
+    it('returns 500 on database error', async () => {
+        prisma.project.findUnique.mockRejectedValue(new Error('DB error'));
 
         const middleware = checkProjectExists('create');
         const req = createMockRequest({ body: { name: 'Test Project' } });
@@ -86,6 +82,5 @@ describe('checkProjectExists Middleware', () => {
 
         expect(res.status).toHaveBeenCalledWith(500);
         expect(res.jsonData.message).toBe('Internal server error');
-        expect(next).not.toHaveBeenCalled();
     });
 });

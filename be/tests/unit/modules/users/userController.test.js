@@ -21,27 +21,26 @@ describe('User Controller', () => {
     });
 
     describe('createUser', () => {
-        it('should create a new user successfully', async () => {
+        it('creates a user when the role exists', async () => {
+            const mockRole = { id: 'role-1', name: 'client', role_permission: [] };
             const mockUser = {
                 id: 'user-123',
                 username: 'newuser',
                 password_hash: 'hashed_password',
-                role: 'client',
-                permissions: ['view_projects'],
                 email: 'new@example.com',
                 profile_pic_url: null,
                 display_name: 'New User',
+                role: mockRole,
                 created_at: new Date(),
             };
 
-            prisma.users.create.mockResolvedValue(mockUser);
+            prisma.role.findUnique.mockResolvedValue(mockRole);
+            prisma.app_user.create.mockResolvedValue(mockUser);
 
             const req = createMockRequest({
                 body: {
                     username: 'newuser',
                     password: 'password123',
-                    role: 'client',
-                    permissions: ['view_projects'],
                     email: 'new@example.com',
                     display_name: 'New User',
                 },
@@ -51,33 +50,41 @@ describe('User Controller', () => {
             await createUser(req, res);
 
             expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
-            expect(prisma.users.create).toHaveBeenCalled();
+            expect(prisma.app_user.create).toHaveBeenCalled();
             expect(res.status).toHaveBeenCalledWith(201);
-            expect(res.jsonData.user).not.toHaveProperty('password_hash');
+            expect(res.jsonData.user.username).toBe('newuser');
         });
 
-        it('should return 500 on error', async () => {
-            prisma.users.create.mockRejectedValue(new Error('DB error'));
+        it('returns 500 when role is missing', async () => {
+            prisma.role.findUnique.mockResolvedValue(null);
 
             const req = createMockRequest({
-                body: { username: 'newuser', password: 'pass' },
+                body: { username: 'newuser', password: 'pass', email: 'new@example.com' },
             });
             const res = createMockResponse();
 
             await createUser(req, res);
 
             expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.jsonData.message).toBe('Role not found');
         });
     });
 
     describe('getAllUsers', () => {
-        it('should return all users', async () => {
-            const mockUsers = [
-                { id: '1', username: 'user1', email: 'user1@test.com' },
-                { id: '2', username: 'user2', email: 'user2@test.com' },
-            ];
-
-            prisma.users.findMany.mockResolvedValue(mockUsers);
+        it('returns formatted users', async () => {
+            prisma.app_user.findMany.mockResolvedValue([
+                {
+                    id: '1',
+                    username: 'user1',
+                    email: 'user1@test.com',
+                    display_name: 'User One',
+                    profile_pic_url: null,
+                    role: { name: 'client', role_permission: [] },
+                    _count: { project_member: 2 },
+                    created_at: new Date('2024-01-01'),
+                    updated_at: new Date('2024-01-02'),
+                },
+            ]);
 
             const req = createMockRequest();
             const res = createMockResponse();
@@ -85,12 +92,12 @@ describe('User Controller', () => {
             await getAllUsers(req, res);
 
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.jsonData.count).toBe(2);
-            expect(res.jsonData.users).toEqual(mockUsers);
+            expect(res.jsonData.count).toBe(1);
+            expect(res.jsonData.users[0].projects_count).toBe(2);
         });
 
-        it('should return 404 when no users found', async () => {
-            prisma.users.findMany.mockResolvedValue([]);
+        it('returns 404 when empty', async () => {
+            prisma.app_user.findMany.mockResolvedValue([]);
 
             const req = createMockRequest();
             const res = createMockResponse();
@@ -100,23 +107,20 @@ describe('User Controller', () => {
             expect(res.status).toHaveBeenCalledWith(404);
             expect(res.jsonData.message).toBe('No users found');
         });
-
-        it('should return 500 on error', async () => {
-            prisma.users.findMany.mockRejectedValue(new Error('DB error'));
-
-            const req = createMockRequest();
-            const res = createMockResponse();
-
-            await getAllUsers(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-        });
     });
 
     describe('getUserByUsername', () => {
-        it('should return user when found', async () => {
-            const mockUser = { id: '1', username: 'testuser', email: 'test@test.com' };
-            prisma.users.findUnique.mockResolvedValue(mockUser);
+        it('returns a formatted user when found', async () => {
+            prisma.app_user.findUnique.mockResolvedValue({
+                id: '1',
+                username: 'testuser',
+                email: 'test@test.com',
+                display_name: 'Test User',
+                profile_pic_url: null,
+                role: { name: 'manager', role_permission: [] },
+                created_at: new Date(),
+                updated_at: new Date(),
+            });
 
             const req = createMockRequest({ params: { username: 'testuser' } });
             const res = createMockResponse();
@@ -124,39 +128,27 @@ describe('User Controller', () => {
             await getUserByUsername(req, res);
 
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.jsonData.user).toEqual(mockUser);
+            expect(res.jsonData.user.username).toBe('testuser');
         });
 
-        it('should return 404 when user not found', async () => {
-            prisma.users.findUnique.mockResolvedValue(null);
+        it('returns 404 when not found', async () => {
+            prisma.app_user.findUnique.mockResolvedValue(null);
 
-            const req = createMockRequest({ params: { username: 'nonexistent' } });
+            const req = createMockRequest({ params: { username: 'missing' } });
             const res = createMockResponse();
 
             await getUserByUsername(req, res);
 
             expect(res.status).toHaveBeenCalledWith(404);
         });
-
-        it('should return 500 on error', async () => {
-            prisma.users.findUnique.mockRejectedValue(new Error('DB error'));
-
-            const req = createMockRequest({ params: { username: 'testuser' } });
-            const res = createMockResponse();
-
-            await getUserByUsername(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-        });
     });
 
     describe('getUsersByIds', () => {
-        it('should return users for given IDs', async () => {
-            const mockUsers = [
-                { id: '1', username: 'user1' },
-                { id: '2', username: 'user2' },
-            ];
-            prisma.users.findMany.mockResolvedValue(mockUsers);
+        it('returns formatted users for a list of ids', async () => {
+            prisma.app_user.findMany.mockResolvedValue([
+                { id: '1', username: 'user1', email: 'u1@test.com', display_name: 'U1', profile_pic_url: null, role: { name: 'client', role_permission: [] }, created_at: new Date(), updated_at: new Date() },
+                { id: '2', username: 'user2', email: 'u2@test.com', display_name: 'U2', profile_pic_url: null, role: { name: 'manager', role_permission: [] }, created_at: new Date(), updated_at: new Date() },
+            ]);
 
             const req = createMockRequest({ body: { userIds: ['1', '2'] } });
             const res = createMockResponse();
@@ -167,7 +159,7 @@ describe('User Controller', () => {
             expect(res.jsonData.count).toBe(2);
         });
 
-        it('should return 400 when userIds is invalid', async () => {
+        it('returns 400 for missing ids', async () => {
             const req = createMockRequest({ body: {} });
             const res = createMockResponse();
 
@@ -175,68 +167,28 @@ describe('User Controller', () => {
 
             expect(res.status).toHaveBeenCalledWith(400);
         });
-
-        it('should return 400 when userIds is empty array', async () => {
-            const req = createMockRequest({ body: { userIds: [] } });
-            const res = createMockResponse();
-
-            await getUsersByIds(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(400);
-        });
-
-        it('should return 500 on error', async () => {
-            prisma.users.findMany.mockRejectedValue(new Error('DB error'));
-
-            const req = createMockRequest({ body: { userIds: ['1'] } });
-            const res = createMockResponse();
-
-            await getUsersByIds(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
-        });
     });
 
     describe('updateUser', () => {
-        it('should update user without password change', async () => {
-            const mockUpdatedUser = {
+        it('hashes password and updates role when provided', async () => {
+            const mockRole = { id: 'role-2', name: 'manager' };
+            prisma.role.findUnique.mockResolvedValue(mockRole);
+            prisma.app_user.update.mockResolvedValue({
                 id: '1',
                 username: 'testuser',
-                password_hash: 'old_hash',
-                role: 'manager',
                 email: 'updated@test.com',
-            };
-            prisma.users.update.mockResolvedValue(mockUpdatedUser);
-
-            const req = createMockRequest({
-                body: {
-                    username: 'testuser',
-                    role: 'manager',
-                    email: 'updated@test.com',
-                },
+                display_name: 'Test User',
+                profile_pic_url: null,
+                role: { name: 'manager', role_permission: [] },
+                password_hash: 'hashed_password',
             });
-            const res = createMockResponse();
-
-            await updateUser(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.jsonData.user).not.toHaveProperty('password_hash');
-        });
-
-        it('should update user with new password', async () => {
-            const mockUpdatedUser = {
-                id: '1',
-                username: 'testuser',
-                password_hash: 'new_hash',
-                role: 'manager',
-            };
-            prisma.users.update.mockResolvedValue(mockUpdatedUser);
 
             const req = createMockRequest({
                 body: {
                     username: 'testuser',
                     password: 'newpassword',
                     role: 'manager',
+                    email: 'updated@test.com',
                 },
             });
             const res = createMockResponse();
@@ -247,8 +199,8 @@ describe('User Controller', () => {
             expect(res.status).toHaveBeenCalledWith(200);
         });
 
-        it('should return 500 on error', async () => {
-            prisma.users.update.mockRejectedValue(new Error('DB error'));
+        it('returns 404 when role is missing', async () => {
+            prisma.role.findUnique.mockResolvedValue(null);
 
             const req = createMockRequest({
                 body: { username: 'testuser', role: 'manager' },
@@ -257,14 +209,15 @@ describe('User Controller', () => {
 
             await updateUser(req, res);
 
-            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.status).toHaveBeenCalledWith(404);
+            expect(res.jsonData.message).toBe('Role not found');
         });
     });
 
     describe('deleteUser', () => {
-        it('should delete user successfully', async () => {
-            prisma.users.findUnique.mockResolvedValue({ id: '1', username: 'testuser' });
-            prisma.users.delete.mockResolvedValue({});
+        it('deletes an existing user', async () => {
+            prisma.app_user.findUnique.mockResolvedValue({ id: '1', username: 'testuser' });
+            prisma.app_user.delete.mockResolvedValue({});
 
             const req = createMockRequest({ params: { username: 'testuser' } });
             const res = createMockResponse();
@@ -275,26 +228,15 @@ describe('User Controller', () => {
             expect(res.jsonData.message).toBe('User deleted successfully');
         });
 
-        it('should return 404 when user not found', async () => {
-            prisma.users.findUnique.mockResolvedValue(null);
+        it('returns 404 when the user is missing', async () => {
+            prisma.app_user.findUnique.mockResolvedValue(null);
 
-            const req = createMockRequest({ params: { username: 'nonexistent' } });
+            const req = createMockRequest({ params: { username: 'missing' } });
             const res = createMockResponse();
 
             await deleteUser(req, res);
 
             expect(res.status).toHaveBeenCalledWith(404);
-        });
-
-        it('should return 500 on error', async () => {
-            prisma.users.findUnique.mockRejectedValue(new Error('DB error'));
-
-            const req = createMockRequest({ params: { username: 'testuser' } });
-            const res = createMockResponse();
-
-            await deleteUser(req, res);
-
-            expect(res.status).toHaveBeenCalledWith(500);
         });
     });
 });

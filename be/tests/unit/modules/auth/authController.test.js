@@ -15,18 +15,7 @@ describe('Auth Controller', () => {
     });
 
     describe('signup', () => {
-        it('should create a new user and return token on success', async () => {
-            const mockUser = {
-                id: 'user-123',
-                username: 'testuser',
-                email: 'test@example.com',
-                password_hash: 'hashed_password',
-                role: 'manager',
-                created_at: new Date(),
-            };
-
-            prisma.users.create.mockResolvedValue(mockUser);
-
+        it('should return 403 because registration is frozen', async () => {
             const req = createMockRequest({
                 body: {
                     username: 'testuser',
@@ -38,24 +27,11 @@ describe('Auth Controller', () => {
 
             await signup(req, res);
 
-            expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
-            expect(prisma.users.create).toHaveBeenCalledWith({
-                data: {
-                    username: 'testuser',
-                    email: 'test@example.com',
-                    password_hash: 'hashed_password',
-                },
-            });
-            expect(jwt.sign).toHaveBeenCalled();
-            expect(res.status).toHaveBeenCalledWith(201);
-            expect(res.jsonData.message).toBe('User registered successfully');
-            expect(res.jsonData.token).toBe('mock-jwt-token');
-            expect(res.jsonData.user).not.toHaveProperty('password_hash');
+            expect(res.status).toHaveBeenCalledWith(403);
+            expect(res.jsonData.message).toBe('Registration is currently frozen. Please contact an administrator.');
         });
 
-        it('should return 500 on internal error', async () => {
-            prisma.users.create.mockRejectedValue(new Error('Database error'));
-
+        it('should not attempt DB writes while registration is frozen', async () => {
             const req = createMockRequest({
                 body: {
                     username: 'testuser',
@@ -67,8 +43,10 @@ describe('Auth Controller', () => {
 
             await signup(req, res);
 
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.jsonData.message).toBe('Internal server error');
+            expect(prisma.users.create).not.toHaveBeenCalled();
+            expect(bcrypt.hash).not.toHaveBeenCalled();
+            expect(jwt.sign).not.toHaveBeenCalled();
+            expect(res.status).toHaveBeenCalledWith(403);
         });
     });
 

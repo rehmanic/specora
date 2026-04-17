@@ -35,7 +35,7 @@ describe('requirePermissions Middleware', () => {
         middleware(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
-        expect(res.jsonData.message).toBe('Access denied: Missing required permissions');
+        expect(res.jsonData.message).toBe('Missing required permissions: add_user');
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -63,7 +63,7 @@ describe('requirePermissions Middleware', () => {
         middleware(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
-        expect(res.jsonData.message).toBe('Access denied: Missing required permissions');
+        expect(res.jsonData.message).toBe('Missing required permissions: view_users');
         expect(next).not.toHaveBeenCalled();
     });
 
@@ -78,7 +78,7 @@ describe('requirePermissions Middleware', () => {
         middleware(req, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
-        expect(res.jsonData.message).toBe('Access denied: Missing required permissions');
+        expect(res.jsonData.message).toBe('Missing required permissions: view_users');
         expect(next).not.toHaveBeenCalled();
     });
 
