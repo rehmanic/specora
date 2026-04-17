@@ -12,44 +12,55 @@ process.env.GEMINI_API_KEY = 'test-gemini-api-key';
 
 // Mock Prisma client
 vi.mock('../config/db/prismaClient.js', () => {
+    const createCrud = () => ({
+        create: vi.fn(),
+        createMany: vi.fn(),
+        findMany: vi.fn(),
+        findUnique: vi.fn(),
+        findFirst: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+        deleteMany: vi.fn(),
+    });
+
+    const appUser = createCrud();
+    const project = createCrud();
+    const specbotChat = createCrud();
+    const specbotMessage = createCrud();
+    const groupChat = createCrud();
+    const groupMessage = createCrud();
+    const projectMember = createCrud();
+
+    const prismaMock = {
+        // Current Prisma model names
+        app_user: appUser,
+        project,
+        specbot_chat: specbotChat,
+        specbot_message: specbotMessage,
+        group_chat: groupChat,
+        group_message: groupMessage,
+        project_member: projectMember,
+        role: createCrud(),
+        permission: createCrud(),
+        role_permission: createCrud(),
+
+        // Backward-compatible aliases for older tests
+        users: appUser,
+        projects: project,
+        specbot_chats: specbotChat,
+        messages: specbotMessage,
+        group_chats: groupChat,
+    };
+
+    prismaMock.$transaction = vi.fn(async (arg) => {
+        if (typeof arg === 'function') {
+            return arg(prismaMock);
+        }
+        return arg;
+    });
+
     return {
-        default: {
-            users: {
-                create: vi.fn(),
-                findMany: vi.fn(),
-                findUnique: vi.fn(),
-                findFirst: vi.fn(),
-                update: vi.fn(),
-                delete: vi.fn(),
-                deleteMany: vi.fn(),
-            },
-            projects: {
-                create: vi.fn(),
-                findMany: vi.fn(),
-                findUnique: vi.fn(),
-                update: vi.fn(),
-                delete: vi.fn(),
-            },
-            specbot_chats: {
-                create: vi.fn(),
-                findMany: vi.fn(),
-                findUnique: vi.fn(),
-                update: vi.fn(),
-                delete: vi.fn(),
-            },
-            messages: {
-                create: vi.fn(),
-                findMany: vi.fn(),
-                findUnique: vi.fn(),
-                update: vi.fn(),
-                delete: vi.fn(),
-                deleteMany: vi.fn(),
-            },
-            group_chats: {
-                findUnique: vi.fn(),
-            },
-            $transaction: vi.fn().mockResolvedValue([{}, {}]),
-        },
+        default: prismaMock,
     };
 });
 
