@@ -93,6 +93,80 @@ docker restart specora-be
 - `npm run test:watch`: Run tests in watch mode.
 - `npm run test:coverage`: Generate test coverage reports.
 
+## ✅ Running Test Cases
+
+This project uses **Vitest** for backend unit tests under `be/tests`.
+
+### Recommended: Run Tests in Docker
+
+Use this flow for consistent results across machines.
+
+1. From the repo root, start backend dependencies:
+
+```bash
+docker compose up -d specora-db specora-be
+```
+
+1. Run backend tests inside the backend container:
+
+```bash
+docker exec specora-be npm test
+```
+
+1. Optional test variants:
+
+```bash
+# watch mode
+docker exec specora-be npm run test:watch
+
+# coverage report
+docker exec specora-be npm run test:coverage
+```
+
+### Run Tests Locally (Without Docker)
+
+If you prefer local execution:
+
+```bash
+cd be
+npm install
+npm test
+```
+
+If Vitest is missing, ensure dependencies are installed in `be/node_modules`:
+
+```bash
+npm install
+```
+
+### Run a Specific Test File
+
+From `be`:
+
+```bash
+npx vitest run tests/unit/modules/auth/authController.test.js
+```
+
+In Docker:
+
+```bash
+docker exec specora-be npx vitest run tests/unit/modules/auth/authController.test.js
+```
+
+### What a Successful Run Looks Like
+
+You should see output similar to:
+
+- `Test Files ... passed`
+- `Tests ... passed`
+- Exit code `0`
+
+### Notes
+
+- Global test mocks are configured in `be/tests/setup.js`.
+- Vitest configuration is in `be/vitest.config.js`.
+- Use Docker for evaluation/demo to avoid local environment differences.
+
 ## 🛡️ Security
 
 - All endpoints are protected by JWT authentication where applicable.

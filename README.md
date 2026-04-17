@@ -58,6 +58,25 @@ Here are some of the most useful Docker and Docker Compose commands for working 
 - `docker exec -it specora-be sh` — Open an interactive shell inside the Backend container.
 - `docker exec -it specora-db psql -U <your_postgres_user> -d <your_postgres_db>` — Access the PostgreSQL database CLI.
 
+### Running Backend Tests
+
+Backend tests are in `be/tests` and are executed with Vitest.
+
+Recommended (Docker):
+
+```bash
+docker compose up -d specora-db specora-be
+docker exec specora-be npm test
+```
+
+Optional:
+
+```bash
+docker exec specora-be npm run test:watch
+docker exec specora-be npm run test:coverage
+```
+
+For detailed backend testing instructions, see [be/README.md](./be/README.md).
 
 ## 🛠️ Technology Stack
 
