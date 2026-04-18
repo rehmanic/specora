@@ -17,7 +17,7 @@ import { getTemplateForType } from "@/utils/docTemplates";
 
 export default function NewDocDialog({ onSubmit, open, onOpenChange, srsExists }) {
   const [title, setTitle] = useState("");
-  const [type, setType] = useState("general");
+  const [type, setType] = useState("srs");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -28,7 +28,7 @@ export default function NewDocDialog({ onSubmit, open, onOpenChange, srsExists }
       const initialContent = getTemplateForType(type);
       await onSubmit({ title: title.trim(), type, content: initialContent });
       setTitle("");
-      setType("general");
+      setType("srs");
       onOpenChange(false);
     } catch {
       // error handled by parent
@@ -67,9 +67,8 @@ export default function NewDocDialog({ onSubmit, open, onOpenChange, srsExists }
                 onChange={(e) => setType(e.target.value)}
                 className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="general">General Note</option>
                 <option value="srs" disabled={srsExists}>
-                  SRS (Software Requirements Spec) {srsExists ? "(Found existing)" : ""}
+                  SRS (Software Requirements Spec) {srsExists ? "(already exists)" : ""}
                 </option>
                 <option value="use_case">Textual Use Case</option>
               </select>

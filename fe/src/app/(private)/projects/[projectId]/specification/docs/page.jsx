@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FileText, Loader2, Search, Pencil, Trash2, Eye, Calendar, Info } from "lucide-react";
+import { FileText, Loader2, Search, Pencil, Trash2, Eye, Calendar, Info, Download } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +17,13 @@ import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 import TablePagination from "@/components/common/TablePagination";
 import StatsCard from "@/components/requirements/StatsCard";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
-import { getDocs, createDoc, deleteDoc as deleteDocApi } from "@/api/docs";
+import { getDocs, createDoc, deleteDoc as deleteDocApi, exportDoc } from "@/api/docs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Page() {
   const { projectId } = useParams();
@@ -37,7 +43,6 @@ export default function Page() {
     total: docs.length,
     srs: docs.filter((d) => d.type === "srs").length,
     useCase: docs.filter((d) => d.type === "use_case").length,
-    general: docs.filter((d) => d.type === "general").length,
   };
 
   // Filtered list
@@ -112,11 +117,10 @@ export default function Page() {
             icon={FileText}
           />
 
-          <div className="animate-fade-in grid grid-cols-2 gap-4 lg:grid-cols-4" style={{ animationDelay: "0.1s" }}>
+          <div className="animate-fade-in grid grid-cols-3 gap-4" style={{ animationDelay: "0.1s" }}>
             <StatsCard icon={FileText} label="Total Docs" value={stats.total} color="primary" />
             <StatsCard icon={Info} label="SRS" value={stats.srs} color="info" />
             <StatsCard icon={FileText} label="Use Cases" value={stats.useCase} color="warning" />
-            <StatsCard icon={Info} label="General Notes" value={stats.general} color="success" />
           </div>
 
           {/* Toolbar */}
@@ -169,7 +173,7 @@ export default function Page() {
                   </TableHeader>
                   <TableBody>
                     {paginated.map((doc) => {
-                      const typeLabel = doc.type === "srs" ? "SRS" : doc.type === "use_case" ? "Use Case" : "General";
+                      const typeLabel = doc.type === "srs" ? "SRS" : "Use Case";
                       const updatedAt = doc.updated_at
                         ? new Date(doc.updated_at).toLocaleDateString("en-US", {
                             month: "short",
@@ -225,6 +229,42 @@ export default function Page() {
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
+
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-muted-foreground hover:text-primary h-8 w-8"
+                                    title="Export"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem
+                                    onClick={async () => {
+                                      try {
+                                        await exportDoc(projectId, doc.id, "pdf", doc.title || "document");
+                                      } catch (e) { toast.error("PDF export failed."); }
+                                    }}
+                                  >
+                                    <FileText className="mr-2 h-3.5 w-3.5" />
+                                    Export as PDF
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={async () => {
+                                      try {
+                                        await exportDoc(projectId, doc.id, "docx", doc.title || "document");
+                                      } catch (e) { toast.error("DOCX export failed."); }
+                                    }}
+                                  >
+                                    <Download className="mr-2 h-3.5 w-3.5" />
+                                    Export as Word (.docx)
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+
                               <Button
                                 variant="ghost"
                                 size="icon"

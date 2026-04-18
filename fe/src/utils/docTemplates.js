@@ -110,13 +110,8 @@ export const TUC_TEMPLATE = `
   </table>
 `;
 
-export const GENERAL_TEMPLATE = `
-  <h1>Untitled Document</h1>
-  <p><em>Start typing your document here...</em></p>
-`;
-
 export function getTemplateForType(type) {
   if (type === "srs") return SRS_TEMPLATE;
   if (type === "use_case") return TUC_TEMPLATE;
-  return GENERAL_TEMPLATE;
+  return TUC_TEMPLATE; // safe fallback
 }

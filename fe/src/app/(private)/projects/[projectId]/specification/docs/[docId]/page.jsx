@@ -1,8 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Save, Loader2, FileText, Check, Link, Trash2, X, Info } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
+  FileText,
+  Check,
+  Link,
+  Trash2,
+  X,
+  Info,
+  Sparkles,
+} from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +24,15 @@ import { getRequirements } from "@/api/requirements";
 import RichTextEditor from "@/components/docs/RichTextEditor";
 import useProjectsStore from "@/store/projectsStore";
 import RequirementLinker from "@/components/prototyping/RequirementLinker";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { Badge } from "@/components/ui/badge";
+import DocAIPanel from "@/components/docs/DocAIPanel";
+
+// Right panel modes
+const PANEL_NONE = null;
+const PANEL_TRACEABILITY = "traceability";
+const PANEL_AI = "ai";
 
 export default function DocEditorPage() {
   const { projectId, docId } = useParams();
@@ -35,10 +52,9 @@ export default function DocEditorPage() {
 
   const [requirements, setRequirements] = useState([]);
   const [linkedRequirementIds, setLinkedRequirementIds] = useState([]);
-  const [isRightOpen, setIsRightOpen] = useState(true);
+  const [activePanel, setActivePanel] = useState(PANEL_NONE);
 
   const setEntityTitle = useProjectsStore((state) => state.setEntityTitle);
-
   const titleInputRef = useRef(null);
 
   useEffect(() => {
@@ -46,7 +62,6 @@ export default function DocEditorPage() {
 
     async function fetchData() {
       try {
-        // Fetch Doc
         const data = await getDocById(projectId, docId);
         const d = data.doc;
         if (!d) throw new Error("Document not found");
@@ -60,7 +75,6 @@ export default function DocEditorPage() {
         const linked = (d.requirement_links || []).map((l) => l.requirement?.id || l.requirement_id);
         setLinkedRequirementIds(linked);
 
-        // Fetch Requirements for linker
         const reqData = await getRequirements(projectId);
         setRequirements(reqData.requirements || []);
       } catch (err) {
@@ -123,6 +137,15 @@ export default function DocEditorPage() {
     }
   };
 
+  // Called by DocAIPanel when the user clicks "Apply to Editor"
+  const handleApplyAIContent = (newContent) => {
+    setContent(newContent);
+  };
+
+  const togglePanel = (panel) => {
+    setActivePanel((prev) => (prev === panel ? PANEL_NONE : panel));
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -130,6 +153,10 @@ export default function DocEditorPage() {
       </div>
     );
   }
+
+  const isPanelOpen = activePanel !== PANEL_NONE;
+  const showTraceability = activePanel === PANEL_TRACEABILITY;
+  const showAI = activePanel === PANEL_AI;
 
   return (
     <ProtectedRoute requiredPermissions={["view_documents"]}>
@@ -164,8 +191,8 @@ export default function DocEditorPage() {
             </Badge>
           </div>
 
-          <div className="ml-4 flex shrink-0 items-center gap-3">
-            <div className="mr-2 hidden items-center gap-2 lg:flex">
+          <div className="ml-4 flex shrink-0 items-center gap-2">
+            <div className="mr-1 hidden items-center gap-2 lg:flex">
               {lastSaved && (
                 <span className="text-muted-foreground bg-muted/50 flex items-center gap-1 rounded-md px-2 py-1 text-[10px] tracking-tight uppercase">
                   <Check className="h-3 w-3 text-emerald-500" />
@@ -173,6 +200,30 @@ export default function DocEditorPage() {
                 </span>
               )}
             </div>
+
+            {/* AI panel toggle — always visible */}
+            <Button
+              variant={showAI ? "secondary" : "ghost"}
+              size="icon"
+              className={`h-8 w-8 transition-colors ${showAI ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+              onClick={() => togglePanel(PANEL_AI)}
+              title="AI Document Assistant"
+            >
+              <Sparkles className="h-4 w-4" />
+            </Button>
+
+            {/* Traceability toggle — only for use_case */}
+            {type === "use_case" && (
+              <Button
+                variant={showTraceability ? "secondary" : "ghost"}
+                size="icon"
+                className={`h-8 w-8 transition-colors ${showTraceability ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                onClick={() => togglePanel(PANEL_TRACEABILITY)}
+                title="Requirement Traceability"
+              >
+                <Link className="h-4 w-4" />
+              </Button>
+            )}
 
             <Button
               variant="ghost"
@@ -205,60 +256,61 @@ export default function DocEditorPage() {
             </div>
           </div>
 
-          {/* Requirements Sidebar */}
-          {type === "use_case" && (
-            <div
-              className={`border-border/50 bg-background flex flex-col border-l transition-all duration-300 ease-in-out ${isRightOpen ? "w-[320px]" : "w-10"}`}
-            >
-              {isRightOpen ? (
-                <div className="animate-in fade-in slide-in-from-right-4 flex h-full flex-col overflow-hidden duration-300">
-                  <div className="border-border/50 bg-muted/5 flex shrink-0 items-center justify-between border-b p-4">
-                    <div className="flex items-center gap-2">
-                      <Link className="text-primary h-4 w-4" />
-                      <h3 className="text-sm font-semibold">Traceability</h3>
-                    </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsRightOpen(false)}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex-1 overflow-hidden p-3">
-                    <Card className="flex h-full flex-col border-none bg-transparent shadow-none">
-                      <CardContent className="flex-1 overflow-hidden p-0">
-                        {loading ? (
-                          <div className="flex h-full items-center justify-center">
-                            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
-                          </div>
-                        ) : requirements.length > 0 ? (
-                          <div className="border-border/50 bg-card/50 h-full overflow-hidden rounded-lg border">
-                            <RequirementLinker
-                              requirements={requirements}
-                              linkedIds={linkedRequirementIds}
-                              onToggle={handleToggleRequirement}
-                            />
-                          </div>
-                        ) : (
-                          <div className="text-muted-foreground border-border/50 flex h-full flex-col items-center justify-center space-y-2 rounded-lg border border-dashed p-6 text-center">
-                            <Info className="h-8 w-8 opacity-20" />
-                            <p className="text-xs font-medium">No requirements available to link.</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
+          {/* AI Panel */}
+          {showAI && (
+            <div className="border-border/50 bg-background animate-in slide-in-from-right-4 flex w-[340px] shrink-0 flex-col border-l duration-300">
+              <DocAIPanel
+                projectId={projectId}
+                docId={docId}
+                docType={type}
+                currentContent={content}
+                onApply={handleApplyAIContent}
+                onClose={() => setActivePanel(PANEL_NONE)}
+              />
+            </div>
+          )}
+
+          {/* Traceability Panel — use_case only */}
+          {showTraceability && (
+            <div className="border-border/50 bg-background animate-in slide-in-from-right-4 flex w-[320px] shrink-0 flex-col border-l duration-300">
+              <div className="border-border/50 bg-muted/5 flex shrink-0 items-center justify-between border-b p-4">
+                <div className="flex items-center gap-2">
+                  <Link className="text-primary h-4 w-4" />
+                  <h3 className="text-sm font-semibold">Traceability</h3>
                 </div>
-              ) : (
-                <div
-                  className="hover:bg-muted/30 flex h-full cursor-pointer flex-col items-center py-6 transition-colors"
-                  onClick={() => setIsRightOpen(true)}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setActivePanel(PANEL_NONE)}
                 >
-                  <Button variant="ghost" size="icon" className="mb-4 h-7 w-7">
-                    <Link className="text-muted-foreground h-4 w-4" />
-                  </Button>
-                  <div className="text-muted-foreground/60 flex flex-1 items-center justify-center text-[10px] font-bold tracking-widest uppercase select-none [writing-mode:vertical-lr]">
-                    Requirement Traceability
-                  </div>
-                </div>
-              )}
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex-1 overflow-hidden p-3">
+                <Card className="flex h-full flex-col border-none bg-transparent shadow-none">
+                  <CardContent className="flex-1 overflow-hidden p-0">
+                    {loading ? (
+                      <div className="flex h-full items-center justify-center">
+                        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+                      </div>
+                    ) : requirements.length > 0 ? (
+                      <div className="border-border/50 bg-card/50 h-full overflow-hidden rounded-lg border">
+                        <RequirementLinker
+                          requirements={requirements}
+                          linkedIds={linkedRequirementIds}
+                          onToggle={handleToggleRequirement}
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground border-border/50 flex h-full flex-col items-center justify-center space-y-2 rounded-lg border border-dashed p-6 text-center">
+                        <Info className="h-8 w-8 opacity-20" />
+                        <p className="text-xs font-medium">No requirements available to link.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           )}
         </main>

@@ -52,3 +52,39 @@ export const updateDocRequirements = (projectId, docId, requirementIds) =>
     method: "PUT",
     body: JSON.stringify({ requirementIds }),
   });
+
+export const generateDoc = async (projectId, docId, { useCaseContext } = {}) => {
+  const data = await request(`/docs/${projectId}/${docId}/generate`, {
+    method: "POST",
+    body: JSON.stringify({ useCaseContext }),
+  });
+  return data.content;
+};
+
+export const editDocWithAI = async (projectId, docId, { editInstructions, currentContent }) => {
+  const data = await request(`/docs/${projectId}/${docId}/edit-with-ai`, {
+    method: "POST",
+    body: JSON.stringify({ editInstructions, currentContent }),
+  });
+  return data.content;
+};
+
+// format = "pdf" | "docx"
+export const exportDoc = async (projectId, docId, format, filename) => {
+  const token = useAuthStore.getState().token;
+  const response = await fetch(
+    `${API_BASE}/docs/${projectId}/${docId}/export/${format}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!response.ok) throw new Error(`Export failed (${response.status})`);
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${filename}.${format}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
