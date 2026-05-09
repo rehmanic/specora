@@ -1,0 +1,152 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{longtable}
+\usepackage{array}
+
+\title{Test Cases: Economic Feasibility Module}
+\author{Specora Test Suite}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+This document contains the test cases for the Economic Feasibility module of the Specora project. The module provides tools for project cost and duration estimation using Monte Carlo simulations and duration estimates for project requirements.
+
+\section{Test Cases}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-ECON-001 \\ \hline
+\textbf{Test Objective} & Verify fetching the default economic configuration for a project. \\ \hline
+\textbf{Pre Conditions} & Project "project-1" exists but has no economic\_config record yet. \\ \hline
+\textbf{Steps} & 
+1. Send a GET request to /api/economic-feasibility/config/project-1. \\ \hline
+\textbf{Test Data} & projectId: "project-1" \\ \hline
+\textbf{Expected Result} & Status 200 OK, returns default config (hourly\_rate: 50, currency: "USD", num\_developers: 1). \\ \hline
+\textbf{Post Condition} & None. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-ECON-002 \\ \hline
+\textbf{Test Objective} & Verify updating economic configuration. \\ \hline
+\textbf{Pre Conditions} & Project "project-1" exists. \\ \hline
+\textbf{Steps} & 
+1. Send a PUT request to /api/economic-feasibility/config/project-1. \newline
+2. Provide new config data. \\ \hline
+\textbf{Test Data} & \{ "hourly\_rate": 100, "currency": "EUR", "num\_developers": 3 \} \\ \hline
+\textbf{Expected Result} & Status 200 OK, message: "Config saved successfully", returns the updated config. \\ \hline
+\textbf{Post Condition} & Database record is updated with new configuration. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-ECON-003 \\ \hline
+\textbf{Test Objective} & Verify validation for invalid configuration data. \\ \hline
+\textbf{Pre Conditions} & Project "project-1" exists. \\ \hline
+\textbf{Steps} & 
+1. Send a PUT request to /api/economic-feasibility/config/project-1. \newline
+2. Provide a negative hourly rate. \\ \hline
+\textbf{Test Data} & \{ "hourly\_rate": -50, "currency": "USD", "num\_developers": 1 \} \\ \hline
+\textbf{Expected Result} & Status 400 Bad Request, message: "hourly\_rate must be > 0 and num\_developers must be >= 1". \\ \hline
+\textbf{Post Condition} & Config remains unchanged. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-ECON-004 \\ \hline
+\textbf{Test Objective} & Verify fetching requirement estimates. \\ \hline
+\textbf{Pre Conditions} & Project "project-1" has requirement "req-1" with a saved estimate. \\ \hline
+\textbf{Steps} & 
+1. Send a GET request to /api/economic-feasibility/estimates/project-1. \\ \hline
+\textbf{Test Data} & projectId: "project-1" \\ \hline
+\textbf{Expected Result} & Status 200 OK, returns list of estimates including requirement "req-1" details. \\ \hline
+\textbf{Post Condition} & Estimates retrieved successfully. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-ECON-005 \\ \hline
+\textbf{Test Objective} & Verify bulk upsert of requirement estimates. \\ \hline
+\textbf{Pre Conditions} & Multiple requirements exist for project "project-1". \\ \hline
+\textbf{Steps} & 
+1. Send a PUT request to /api/economic-feasibility/estimates/project-1. \newline
+2. Provide an array of estimates. \\ \hline
+\textbf{Test Data} & \{ "estimates": [\{ "requirement\_id": "uuid-1", "optimistic\_hours": 10, "most\_likely\_hours": 20, "pessimistic\_hours": 40 \}] \} \\ \hline
+\textbf{Expected Result} & Status 200 OK, message: "Estimates saved successfully". \\ \hline
+\textbf{Post Condition} & Estimates are updated/created in the database. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-ECON-006 \\ \hline
+\textbf{Test Objective} & Verify validation of PERT constraint for estimates. \\ \hline
+\textbf{Pre Conditions} & None. \\ \hline
+\textbf{Steps} & 
+1. Send a PUT request to /api/economic-feasibility/estimates/project-1. \newline
+2. Provide optimistic hours greater than pessimistic hours. \\ \hline
+\textbf{Test Data} & \{ "estimates": [\{ "requirement\_id": "uuid-1", "optimistic\_hours": 50, "most\_likely\_hours": 20, "pessimistic\_hours": 40 \}] \} \\ \hline
+\textbf{Expected Result} & Status 400 Bad Request, message: "Must satisfy: optimistic ≤ most\_likely ≤ pessimistic". \\ \hline
+\textbf{Post Condition} & No updates applied. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-ECON-007 \\ \hline
+\textbf{Test Objective} & Verify running a successful Monte Carlo simulation. \\ \hline
+\textbf{Pre Conditions} & Project has valid economic\_config and at least one economic\_estimate record. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/economic-feasibility/simulate/project-1. \\ \hline
+\textbf{Test Data} & iterations: 5000 (optional) \\ \hline
+\textbf{Expected Result} & Status 200 OK, returns simulation object with cost and duration statistics (mean, median, p90, etc.). \\ \hline
+\textbf{Post Condition} & Statistics computed and returned correctly. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-ECON-008 \\ \hline
+\textbf{Test Objective} & Verify simulation failure when no estimates are provided. \\ \hline
+\textbf{Pre Conditions} & Project has config but 0 estimates. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/economic-feasibility/simulate/project-1. \\ \hline
+\textbf{Test Data} & N/A \\ \hline
+\textbf{Expected Result} & Status 400 Bad Request, message: "No estimates found. Please enter duration estimates for requirements first." \\ \hline
+\textbf{Post Condition} & Simulation does not run. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-ECON-009 \\ \hline
+\textbf{Test Objective} & Verify validation for iteration count in simulation. \\ \hline
+\textbf{Pre Conditions} & Project has config and estimates. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/economic-feasibility/simulate/project-1. \newline
+2. Provide iterations count out of allowed range (e.g., 50). \\ \hline
+\textbf{Test Data} & \{ "iterations": 50 \} \\ \hline
+\textbf{Expected Result} & Status 400 Bad Request, message: "iterations must be between 100 and 100000". \\ \hline
+\textbf{Post Condition} & Simulation does not run. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\end{document}
