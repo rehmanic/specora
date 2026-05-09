@@ -1,0 +1,167 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{longtable}
+\usepackage{array}
+
+\title{Test Cases: Requirements Module}
+\author{Specora Test Suite}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+This document contains the test cases for the Requirements module of the Specora project. The module provides a comprehensive suite for requirements engineering, including hierarchical organization, version control (history/rollback), traceability linking, collaborative commenting, and bulk import functionality.
+
+\section{Test Cases}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-REQ-001 \\ \hline
+\textbf{Test Objective} & Verify creating a root-level requirement with an automatic readable ID. \\ \hline
+\textbf{Pre Conditions} & Project "project-1" exists. User is authenticated and has "create_requirement" permission. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/requirements/project-1. \newline
+2. Provide title, description, and priority. \\ \hline
+\textbf{Test Data} & \{ "title": "User Authentication", "description": "System must allow users to login", "priority": "high" \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, readable\_id generated as "REQ-001" (if first root). \\ \hline
+\textbf{Post Condition} & Requirement record created in the database. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-REQ-002 \\ \hline
+\textbf{Test Objective} & Verify creating a child requirement (Hierarchy). \\ \hline
+\textbf{Pre Conditions} & Root requirement "REQ-001" exists with ID "parent-uuid". \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/requirements/project-1. \newline
+2. Provide parent\_id as "parent-uuid". \\ \hline
+\textbf{Test Data} & \{ "title": "Google OAuth", "description": "Support Google login", "parent\_id": "parent-uuid" \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, readable\_id generated as "REQ-001.1". \\ \hline
+\textbf{Post Condition} & Requirement created as a child of REQ-001. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textbf{l}}|}
+\hline
+\textbf{Test Case ID} & TC-REQ-003 \\ \hline
+\textbf{Test Objective} & Verify that updating a requirement creates a history snapshot. \\ \hline
+\textbf{Pre Conditions} & Requirement exists with current title "Original Title". \\ \hline
+\textbf{Steps} & 
+1. Send a PUT request to /api/requirements/project-1/req-uuid. \newline
+2. Update the title and provide a change reason. \\ \hline
+\textbf{Test Data} & \{ "title": "New Title", "change\_reason": "Requirement refined" \} \\ \hline
+\textbf{Expected Result} & Status 200 OK. A new record is added to requirement\_history with "Original Title". \\ \hline
+\textbf{Post Condition} & Requirement updated, history version count incremented. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-REQ-004 \\ \hline
+\textbf{Test Objective} & Verify rolling back a requirement to a previous version. \\ \hline
+\textbf{Pre Conditions} & Requirement has at least one entry in history (version 1). \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/requirements/project-1/req-uuid/rollback/hist-uuid. \\ \hline
+\textbf{Test Data} & historyId: "hist-uuid" \\ \hline
+\textbf{Expected Result} & Status 200 OK, requirement fields revert to values in historyId. \\ \hline
+\textbf{Post Condition} & Current requirement state matches history entry; new history entry for the rollback is created. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-REQ-005 \\ \hline
+\textbf{Test Objective} & Verify adding a collaborative comment to a requirement. \\ \hline
+\textbf{Pre Conditions} & Requirement exists. User has "comment_on_requirements" permission. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/requirements/project-1/req-uuid/comments. \\ \hline
+\textbf{Test Data} & \{ "content": "This requirement needs more detail on OAuth scopes." \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, comment added with author details. \\ \hline
+\textbf{Post Condition} & Comment record added and linked to requirement. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-REQ-006 \\ \hline
+\textbf{Test Objective} & Verify creating a traceability link (dependency) between requirements. \\ \hline
+\textbf{Pre Conditions} & Requirements REQ-001 and REQ-002 exist. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/requirements/project-1/REQ-001-uuid/traceability. \\ \hline
+\textbf{Test Data} & \{ "target\_type": "requirement", "target\_id": "REQ-002-uuid", "link\_type": "depends\_on" \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, traceability link established. \\ \hline
+\textbf{Post Condition} & Link saved and a history entry recorded on the source requirement noting the new dependency. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-REQ-007 \\ \hline
+\textbf{Test Objective} & Verify that duplicate traceability links are rejected. \\ \hline
+\textbf{Pre Conditions} & A link already exists from REQ-001 to REQ-002 of type "depends\_on". \\ \hline
+\textbf{Steps} & 
+1. Attempt to create the same link again via POST request. \\ \hline
+\textbf{Test Data} & Same as TC-REQ-006. \\ \hline
+\textbf{Expected Result} & Status 400 Bad Request, message: "This dependency already exists". \\ \hline
+\textbf{Post Condition} & No duplicate link is created. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-REQ-008 \\ \hline
+\textbf{Test Objective} & Verify importing requirements with nested hierarchy. \\ \hline
+\textbf{Pre Conditions} & User has "import_requirement" permission. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/requirements/project-1/import. \newline
+2. Provide an array of requirements, where one requirement has a "children" array. \\ \hline
+\textbf{Test Data} & \{ "requirements": [\{ "title": "Parent", "description": "D", "children": [\{ "title": "Child", "description": "D" \}] \}] \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, both requirements created with correct parent-child relationship and sequential readable IDs. \\ \hline
+\textbf{Post Condition} & Two requirement records created. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-REQ-009 \\ \hline
+\textbf{Test Objective} & Verify validation during import (missing description). \\ \hline
+\textbf{Pre Conditions} & None. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/requirements/project-1/import with a requirement missing "description". \\ \hline
+\textbf{Test Data} & \{ "requirements": [\{ "title": "Incomplete Req" \}] \} \\ \hline
+\textbf{Expected Result} & Status 201 (since partial success is possible) or errors array populated. Controller returns status 201 with an errors list. \\ \hline
+\textbf{Post Condition} & The invalid requirement is skipped; errors reported in response. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-REQ-010 \\ \hline
+\textbf{Test Objective} & Verify fetching the traceability graph for a project. \\ \hline
+\textbf{Pre Conditions} & Project has requirements and traceability links. \\ \hline
+\textbf{Steps} & 
+1. Send a GET request to /api/requirements/project-1/traceability/graph. \\ \hline
+\textbf{Test Data} & projectId: "project-1" \\ \hline
+\textbf{Expected Result} & Status 200 OK, returns "nodes" (requirements) and "links" (traceability and hierarchy links). \\ \hline
+\textbf{Post Condition} & Graph data retrieved for visualization. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\end{longtable}
+
+\end{document}
