@@ -1,0 +1,166 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{longtable}
+\usepackage{array}
+
+\title{Test Cases: Prototyping Module}
+\author{Specora Test Suite}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+This document contains the test cases for the Prototyping module of the Specora project. The module allows project teams to create low-fidelity prototypes, design individual screens using a canvas-based editor, and link requirements to specific screens for traceability.
+
+\section{Test Cases}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROTO-001 \\ \hline
+\textbf{Test Objective} & Verify fetching all prototypes for a project. \\ \hline
+\textbf{Pre Conditions} & Project "project-1" exists with two prototypes. User is authenticated. \\ \hline
+\textbf{Steps} & 
+1. Send a GET request to /api/prototyping/prototypes/project-1. \\ \hline
+\textbf{Test Data} & projectId: "project-1" \\ \hline
+\textbf{Expected Result} & Status 200 OK, returns list of prototypes including screen summaries. \\ \hline
+\textbf{Post Condition} & Prototypes retrieved successfully. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROTO-002 \\ \hline
+\textbf{Test Objective} & Verify creating a new prototype. \\ \hline
+\textbf{Pre Conditions} & Project "project-1" exists. User has "create_prototype" permission. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/prototyping/prototypes/project-1. \newline
+2. Provide prototype name and description. \\ \hline
+\textbf{Test Data} & \{ "name": "Mobile App MVP", "description": "High-level flow for mobile app" \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, returns the new prototype object. \\ \hline
+\textbf{Post Condition} & Prototype record is added to the database. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROTO-003 \\ \hline
+\textbf{Test Objective} & Verify fetching screens for a specific prototype. \\ \hline
+\textbf{Pre Conditions} & Prototype "proto-123" exists with three screens. \\ \hline
+\textbf{Steps} & 
+1. Send a GET request to /api/prototyping/prototypes/proto-123/screens. \\ \hline
+\textbf{Test Data} & prototypeId: "proto-123" \\ \hline
+\textbf{Expected Result} & Status 200 OK, returns screens array sorted by "order" ascending. \\ \hline
+\textbf{Post Condition} & Screens retrieved successfully. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROTO-004 \\ \hline
+\textbf{Test Objective} & Verify creating a new screen within a prototype. \\ \hline
+\textbf{Pre Conditions} & Prototype exists. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/prototyping/prototypes/proto-123/screens. \newline
+2. Provide screen name. \\ \hline
+\textbf{Test Data} & \{ "name": "Login Screen" \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, returns the screen object with an automatically incremented order value. \\ \hline
+\textbf{Post Condition} & Screen record created with default empty canvas\_data. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROTO-005 \\ \hline
+\textbf{Test Objective} & Verify updating screen canvas data and thumbnail. \\ \hline
+\textbf{Pre Conditions} & Screen "scr-123" exists. \\ \hline
+\textbf{Steps} & 
+1. Send a PUT request to /api/prototyping/screens/scr-123. \newline
+2. Provide updated canvas\_data and thumbnail base64 string. \\ \hline
+\textbf{Test Data} & \{ "canvas\_data": \{ "elements": [\{ "type": "rect" \}] \}, "thumbnail": "data:image/png;base64,..." \} \\ \hline
+\textbf{Expected Result} & Status 200 OK, returns the updated screen object. \\ \hline
+\textbf{Post Condition} & Screen design data is persisted. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROTO-006 \\ \hline
+\textbf{Test Objective} & Verify reordering screens within a prototype. \\ \hline
+\textbf{Pre Conditions} & Prototype has multiple screens. \\ \hline
+\textbf{Steps} & 
+1. Send a PUT request to /api/prototyping/screens/reorder. \newline
+2. Provide an array of screen IDs and their new order indices. \\ \hline
+\textbf{Test Data} & \{ "screenOrders": [\{ "id": "scr-A", "order": 1 \}, \{ "id": "scr-B", "order": 0 \}] \} \\ \hline
+\textbf{Expected Result} & Status 200 OK, message: "Screens reordered". \\ \hline
+\textbf{Post Condition} & Order indices are updated in a single transaction. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROTO-007 \\ \hline
+\textbf{Test Objective} & Verify fetching requirements linked to a screen. \\ \hline
+\textbf{Pre Conditions} & Screen "scr-123" is linked to requirement "REQ-001". \\ \hline
+\textbf{Steps} & 
+1. Send a GET request to /api/prototyping/screens/scr-123/requirements. \\ \hline
+\textbf{Test Data} & screenId: "scr-123" \\ \hline
+\textbf{Expected Result} & Status 200 OK, returns list of requirements with their titles and descriptions. \\ \hline
+\textbf{Post Condition} & Traceability links retrieved. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROTO-008 \\ \hline
+\textbf{Test Objective} & Verify linking requirements to a screen. \\ \hline
+\textbf{Pre Conditions} & Screen exists. Requirements "REQ-1" and "REQ-2" exist. \\ \hline
+\textbf{Steps} & 
+1. Send a PUT request to /api/prototyping/screens/scr-123/requirements. \newline
+2. Provide array of requirement IDs. \\ \hline
+\textbf{Test Data} & \{ "requirement\_ids": ["uuid-req-1", "uuid-req-2"] \} \\ \hline
+\textbf{Expected Result} & Status 200 OK, message: "Requirements linked". \\ \hline
+\textbf{Post Condition} & Existing links are replaced with the provided set of links. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROTO-009 \\ \hline
+\textbf{Test Objective} & Verify deleting a prototype and its screens. \\ \hline
+\textbf{Pre Conditions} & Prototype exists with multiple screens. \\ \hline
+\textbf{Steps} & 
+1. Send a DELETE request to /api/prototyping/prototypes/proto-123. \\ \hline
+\textbf{Test Data} & prototypeId: "proto-123" \\ \hline
+\textbf{Expected Result} & Status 200 OK, message: "Prototype deleted". \\ \hline
+\textbf{Post Condition} & Prototype and associated screens are removed from the database. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROTO-010 \\ \hline
+\textbf{Test Objective} & Verify error handling for creating prototype without a name. \\ \hline
+\textbf{Pre Conditions} & None. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/prototyping/prototypes/project-1 with empty name. \\ \hline
+\textbf{Test Data} & \{ "name": "" \} \\ \hline
+\textbf{Expected Result} & Status 400 Bad Request, message: "Prototype name is required". \\ \hline
+\textbf{Post Condition} & None. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\end{document}
