@@ -1,0 +1,163 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{longtable}
+\usepackage{array}
+
+\title{Test Cases: Projects Module}
+\author{Specora Test Suite}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+This document contains the test cases for the Projects module of the Specora project. The module handles project lifecycle management, including creation, member association, and metadata management (tags).
+
+\section{Test Cases}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROJ-001 \\ \hline
+\textbf{Test Objective} & Verify creating a new project successfully. \\ \hline
+\textbf{Pre Conditions} & User is authenticated and has "create_project" permission. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/projects/. \newline
+2. Provide project name, start\_date, and end\_date. \\ \hline
+\textbf{Test Data} & \{ "name": "Specora AI", "start\_date": "2026-06-01", "end\_date": "2026-12-31" \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, returns the created project with a generated slug. \\ \hline
+\textbf{Post Condition} & Project record is added and creator is automatically added as a member. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROJ-002 \\ \hline
+\textbf{Test Objective} & Verify that duplicate project names are rejected. \\ \hline
+\textbf{Pre Conditions} & A project named "Specora AI" already exists. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/projects/ with name "Specora AI". \\ \hline
+\textbf{Test Data} & \{ "name": "Specora AI", "start\_date": "2026-01-01", "end\_date": "2026-05-01" \} \\ \hline
+\textbf{Expected Result} & Status 400 Bad Request, message: "A project with this name already exists". \\ \hline
+\textbf{Post Condition} & No duplicate project is created. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROJ-003 \\ \hline
+\textbf{Test Objective} & Verify fetching projects for a specific user. \\ \hline
+\textbf{Pre Conditions} & User "user-123" is a member/creator of 5 projects. Current user is "user-123". \\ \hline
+\textbf{Steps} & 
+1. Send a GET request to /api/projects/user-123. \\ \hline
+\textbf{Test Data} & userId: "user-123" \\ \hline
+\textbf{Expected Result} & Status 200 OK, returns list of 5 projects. \\ \hline
+\textbf{Post Condition} & User projects retrieved correctly. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROJ-004 \\ \hline
+\textbf{Test Objective} & Verify access rejection for viewing another user's projects. \\ \hline
+\textbf{Pre Conditions} & Current user is "user-A". Requesting projects for "user-B". \\ \hline
+\textbf{Steps} & 
+1. Send a GET request to /api/projects/user-B. \\ \hline
+\textbf{Test Data} & userId: "user-B" \\ \hline
+\textbf{Expected Result} & Status 403 Forbidden, message: "Access denied. You can only view your own projects." \\ \hline
+\textbf{Post Condition} & Request is blocked. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROJ-005 \\ \hline
+\textbf{Test Objective} & Verify updating project details and syncing members. \\ \hline
+\textbf{Pre Conditions} & Project "proj-123" exists. \\ \hline
+\textbf{Steps} & 
+1. Send a PUT request to /api/projects/proj-123. \newline
+2. Provide updated name and a new member list. \\ \hline
+\textbf{Test Data} & \{ "name": "New Name", "start\_date": "2026-06-01", "end\_date": "2026-12-31", "members": ["user-1", "user-2"] \} \\ \hline
+\textbf{Expected Result} & Status 200 OK, project name and slug updated, member list synced. \\ \hline
+\textbf{Post Condition} & Database record reflects new state. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROJ-006 \\ \hline
+\textbf{Test Objective} & Verify adding a new member to a project. \\ \hline
+\textbf{Pre Conditions} & Project exists and user is not a member. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/projects/proj-123/members. \\ \hline
+\textbf{Test Data} & \{ "memberId": "user-uuid" \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, message: "Member added successfully". \\ \hline
+\textbf{Post Condition} & New record added to project\_member table. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROJ-007 \\ \hline
+\textbf{Test Objective} & Verify that the project creator cannot be removed from the project. \\ \hline
+\textbf{Pre Conditions} & User "creator-uuid" is the creator of "proj-123". \\ \hline
+\textbf{Steps} & 
+1. Send a DELETE request to /api/projects/proj-123/members/creator-uuid. \\ \hline
+\textbf{Test Data} & memberId: "creator-uuid" \\ \hline
+\textbf{Expected Result} & Status 403 Forbidden, message: "Cannot remove the project creator". \\ \hline
+\textbf{Post Condition} & Creator remains in the project. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROJ-008 \\ \hline
+\textbf{Test Objective} & Verify adding a tag to a project. \\ \hline
+\textbf{Pre Conditions} & Project exists and has less than 10 tags. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/projects/proj-123/tags. \\ \hline
+\textbf{Test Data} & \{ "tag": "AI-Research" \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, tag added to project tags array. \\ \hline
+\textbf{Post Condition} & Tag "AI-Research" is persisted. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROJ-009 \\ \hline
+\textbf{Test Objective} & Verify tag limit enforcement (max 10). \\ \hline
+\textbf{Pre Conditions} & Project already has 10 tags. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/projects/proj-123/tags with an 11th tag. \\ \hline
+\textbf{Test Data} & \{ "tag": "TooManyTags" \} \\ \hline
+\textbf{Expected Result} & Status 400 Bad Request, message: "Maximum of 10 tags allowed". \\ \hline
+\textbf{Post Condition} & No new tag is added. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-PROJ-010 \\ \hline
+\textbf{Test Objective} & Verify deleting a project record. \\ \hline
+\textbf{Pre Conditions} & Project "proj-123" exists. \\ \hline
+\textbf{Steps} & 
+1. Send a DELETE request to /api/projects/proj-123. \\ \hline
+\textbf{Test Data} & projectId: "proj-123" \\ \hline
+\textbf{Expected Result} & Status 200 OK, message: "Project deleted successfully". \\ \hline
+\textbf{Post Condition} & Project and all associated data (via relations) are removed. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\end{document}
