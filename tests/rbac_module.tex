@@ -1,0 +1,164 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{longtable}
+\usepackage{array}
+
+\title{Test Cases: RBAC Module}
+\author{Specora Test Suite}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+This document contains the test cases for the Role-Based Access Control (RBAC) module of the Specora project. The module manages system roles, granular permissions, and the associations between them to enforce authorization across the platform.
+
+\section{Test Cases}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-RBAC-001 \\ \hline
+\textbf{Test Objective} & Verify fetching all system roles with their assigned permissions. \\ \hline
+\textbf{Pre Conditions} & System has defined roles (e.g., Admin, Manager). User is authenticated with "view_roles" permission. \\ \hline
+\textbf{Steps} & 
+1. Send a GET request to /api/rbac/roles. \\ \hline
+\textbf{Test Data} & N/A \\ \hline
+\textbf{Expected Result} & Status 200 OK, returns list of roles with nested permission objects. \\ \hline
+\textbf{Post Condition} & Roles and permissions retrieved successfully. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-RBAC-002 \\ \hline
+\textbf{Test Objective} & Verify creating a new role with initial permissions. \\ \hline
+\textbf{Pre Conditions} & User has "create_role" permission. Permissions REQ-1 and REQ-2 exist. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/rbac/roles. \newline
+2. Provide role name and an array of permission IDs. \\ \hline
+\textbf{Test Data} & \{ "name": "Reviewer", "permissionIds": ["uuid-req-1", "uuid-req-2"] \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, role created and linked to permissions. \\ \hline
+\textbf{Post Condition} & Role record and mapping records added to the database. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-RBAC-003 \\ \hline
+\textbf{Test Objective} & Verify that duplicate role names are rejected. \\ \hline
+\textbf{Pre Conditions} & A role named "Admin" already exists. \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/rbac/roles with name "Admin". \\ \hline
+\textbf{Test Data} & \{ "name": "Admin" \} \\ \hline
+\textbf{Expected Result} & Status 400 Bad Request, message: "Role name already exists". \\ \hline
+\textbf{Post Condition} & No duplicate role is created. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-RBAC-004 \\ \hline
+\textbf{Test Objective} & Verify that a role in use by users cannot be deleted. \\ \hline
+\textbf{Pre Conditions} & Role "Manager" is currently assigned to at least one user. \\ \hline
+\textbf{Steps} & 
+1. Send a DELETE request to /api/rbac/roles/manager-uuid. \\ \hline
+\textbf{Test Data} & id: "manager-uuid" \\ \hline
+\textbf{Expected Result} & Status 400 Bad Request, message explaining that the role is still assigned to users. \\ \hline
+\textbf{Post Condition} & Role remains in the database. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-RBAC-005 \\ \hline
+\textbf{Test Objective} & Verify creating a new granular permission. \\ \hline
+\textbf{Pre Conditions} & User has "create_role" permission (governs RBAC management). \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/rbac/permissions. \newline
+2. Provide name, label, and module name. \\ \hline
+\textbf{Test Data} & \{ "name": "audit_logs", "label": "Audit Logs", "module": "Security" \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, returns the new permission object. \\ \hline
+\textbf{Post Condition} & Permission record is added to the database. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-RBAC-006 \\ \hline
+\textbf{Test Objective} & Verify assigning a permission to an existing role. \\ \hline
+\textbf{Pre Conditions} & Role "Editor" exists. Permission "delete_all" exists but is not linked to "Editor". \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/rbac/roles/editor-uuid/permissions. \newline
+2. Provide permissionId. \\ \hline
+\textbf{Test Data} & \{ "permissionId": "delete-all-uuid" \} \\ \hline
+\textbf{Expected Result} & Status 201 Created, message: "Permission assigned to role successfully". \\ \hline
+\textbf{Post Condition} & Mapping record added to role\_permission table. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-RBAC-007 \\ \hline
+\textbf{Test Objective} & Verify that a permission cannot be assigned to the same role twice. \\ \hline
+\textbf{Pre Conditions} & Permission "view_docs" is already assigned to role "Viewer". \\ \hline
+\textbf{Steps} & 
+1. Send a POST request to /api/rbac/roles/viewer-uuid/permissions with the same permissionId. \\ \hline
+\textbf{Test Data} & \{ "permissionId": "view-docs-uuid" \} \\ \hline
+\textbf{Expected Result} & Status 400 Bad Request, message: "Permission already assigned to this role". \\ \hline
+\textbf{Post Condition} & No duplicate mapping record is created. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-RBAC-008 \\ \hline
+\textbf{Test Objective} & Verify removing a permission from a role. \\ \hline
+\textbf{Pre Conditions} & Permission "edit_all" is assigned to role "Admin". \\ \hline
+\textbf{Steps} & 
+1. Send a DELETE request to /api/rbac/roles/admin-uuid/permissions/edit-all-uuid. \\ \hline
+\textbf{Test Data} & roleId: "admin-uuid", permissionId: "edit-all-uuid" \\ \hline
+\textbf{Expected Result} & Status 200 OK, message: "Permission removed from role successfully". \\ \hline
+\textbf{Post Condition} & Mapping record is removed from the database. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-RBAC-009 \\ \hline
+\textbf{Test Objective} & Verify deleting a permission. \\ \hline
+\textbf{Pre Conditions} & Permission "test_perm" exists. \\ \hline
+\textbf{Steps} & 
+1. Send a DELETE request to /api/rbac/permissions/test-perm-uuid. \\ \hline
+\textbf{Test Data} & id: "test-perm-uuid" \\ \hline
+\textbf{Expected Result} & Status 200 OK, message: "Permission deleted successfully". \\ \hline
+\textbf{Post Condition} & Permission and all its role associations are removed. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\begin{longtable}{|p{0.15\textwidth}|p{0.8\textwidth}|}
+\hline
+\textbf{Test Case ID} & TC-RBAC-010 \\ \hline
+\textbf{Test Objective} & Verify fetching a single role by ID. \\ \hline
+\textbf{Pre Conditions} & Role "Admin" exists. \\ \hline
+\textbf{Steps} & 
+1. Send a GET request to /api/rbac/roles/admin-uuid. \\ \hline
+\textbf{Test Data} & id: "admin-uuid" \\ \hline
+\textbf{Expected Result} & Status 200 OK, returns detailed role object with permissions array. \\ \hline
+\textbf{Post Condition} & Role details retrieved. \\ \hline
+\textbf{Actual Result} &  \\ \hline
+\textbf{Pass/Fail} &  \\ \hline
+\end{longtable}
+
+\end{document}
