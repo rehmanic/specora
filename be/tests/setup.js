@@ -21,6 +21,10 @@ vi.mock('../config/db/prismaClient.js', () => {
         update: vi.fn(),
         delete: vi.fn(),
         deleteMany: vi.fn(),
+        count: vi.fn(),
+        updateMany: vi.fn(),
+        upsert: vi.fn(),
+        aggregate: vi.fn(),
     });
 
     const appUser = createCrud();
@@ -43,6 +47,24 @@ vi.mock('../config/db/prismaClient.js', () => {
         role: createCrud(),
         permission: createCrud(),
         role_permission: createCrud(),
+        doc: createCrud(),
+        requirement: createCrud(),
+        doc_requirement: createCrud(),
+        requirement_history: createCrud(),
+        requirement_comment: createCrud(),
+        traceability_link: createCrud(),
+        diagram: createCrud(),
+        diagram_requirement: createCrud(),
+        economic_config: createCrud(),
+        economic_estimate: createCrud(),
+        feedback: createCrud(),
+        feedback_response: createCrud(),
+        prototype: createCrud(),
+        prototype_screen: createCrud(),
+        screen_requirement: createCrud(),
+        meeting: createCrud(),
+        meeting_attendee: createCrud(),
+        meeting_transcript: createCrud(),
 
         // Backward-compatible aliases for older tests
         users: appUser,

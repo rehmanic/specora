@@ -18,6 +18,8 @@ const mocks = vi.hoisted(() => {
         use: vi.fn(),
         route: vi.fn((path) => createRouteChain(path)),
         put: vi.fn(),
+        post: vi.fn(),
+        get: vi.fn(),
     };
 
     const verifyToken = vi.fn();
@@ -30,6 +32,9 @@ const mocks = vi.hoisted(() => {
         updateDoc: vi.fn(),
         deleteDoc: vi.fn(),
         updateDocRequirements: vi.fn(),
+        generateDoc: vi.fn(),
+        editDocWithAI: vi.fn(),
+        exportDoc: vi.fn(),
     };
 
     return {
@@ -105,8 +110,30 @@ describe('docRoutes', () => {
         );
     });
 
+    it('registers AI and export endpoints', async () => {
+        await loadRoutes();
+
+        expect(mocks.router.post).toHaveBeenCalledWith(
+            '/:id/generate',
+            'perm:update_document',
+            mocks.controller.generateDoc,
+        );
+
+        expect(mocks.router.post).toHaveBeenCalledWith(
+            '/:id/edit-with-ai',
+            'perm:update_document',
+            mocks.controller.editDocWithAI,
+        );
+
+        expect(mocks.router.get).toHaveBeenCalledWith(
+            '/:id/export/:format',
+            'perm:view_documents',
+            mocks.controller.exportDoc,
+        );
+    });
+
     it('builds permission middleware for every protected action', async () => {
         await loadRoutes();
-        expect(mocks.requirePermissionsFactory).toHaveBeenCalledTimes(6);
+        expect(mocks.requirePermissionsFactory).toHaveBeenCalledTimes(9);
     });
 });
