@@ -204,7 +204,7 @@ ${reqsText}
 
             const instructions = {
                 task: "evaluate_requirements",
-                expectations: "Evaluate each requirement strictly against IEEE characteristics. For each characteristic, provide a boolean status. Provide a structured reasoning string where each point is on a new line (e.g., 'Unambiguous: explanation\\nComplete: explanation...'). If satisfied, keep the reasoning brief ('Satisfied').",
+                expectations: "Evaluate each requirement strictly against IEEE characteristics. For each characteristic, provide a boolean status. MUST include the exact 'requirement_id' (e.g. the UUID provided) for each object. Provide a structured reasoning string where each point is on a new line (e.g., 'Unambiguous: explanation\\nComplete: explanation...'). If satisfied, keep the reasoning brief ('Satisfied').",
                 output: "Return a JSON array of objects.",
                 jsonMode: true
             };
@@ -224,7 +224,9 @@ ${reqsText}
             );
         }
 
+        const startTime = Date.now();
         const chunkedResults = await Promise.all(chunkPromises);
+        const cycle_time = Date.now() - startTime;
         const results = chunkedResults.flat();
 
         // Return combined results
@@ -240,7 +242,8 @@ ${reqsText}
 
         res.status(200).json({
             message: "AI Verification completed successfully",
-            results: enrichedResults
+            results: enrichedResults,
+            cycle_time
         });
 
     } catch (error) {
@@ -294,7 +297,9 @@ Description: ${requirement.description}
             jsonMode: true
         };
 
+        const startTime = Date.now();
         const aiResponse = await generateStatelessResponse(promptText, instructions);
+        const cycle_time = Date.now() - startTime;
         let parsedResults = [];
         try {
             const cleanedText = extractJson(aiResponse);
@@ -309,6 +314,7 @@ Description: ${requirement.description}
 
         res.status(200).json({
             message: "AI Verification for requirement completed successfully",
+            cycle_time,
             result: {
                 requirement_id: requirement.id,
                 title: requirement.title,

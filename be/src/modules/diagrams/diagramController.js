@@ -148,19 +148,37 @@ export async function generateFromDescription(req, res) {
         const resolvedId = await resolveProjectId(req.params.projectId);
         if (!resolvedId) return res.status(404).json({ message: "Project not found" });
 
-        const { description } = req.body;
-        if (!description || typeof description !== "string" || !description.trim()) {
-            return res.status(400).json({ message: "Description is required" });
+        const { diagram_type, requirement_ids } = req.body;
+        if (!diagram_type || typeof diagram_type !== "string" || !diagram_type.trim()) {
+            return res.status(400).json({ message: "Diagram type is required" });
+        }
+        if (!Array.isArray(requirement_ids) || requirement_ids.length === 0) {
+            return res.status(400).json({ message: "At least one requirement must be selected" });
         }
 
-        const raw = await generateStatelessResponse(description.trim(), {
-            task: "Generate a Mermaid.js diagram from the user's description.",
-            expectations: "Output ONLY valid Mermaid diagram syntax. No explanations, no markdown, no code fences.",
-            output: "Plain Mermaid code only (e.g. flowchart, sequenceDiagram, etc.).",
+        const reqs = await prisma.requirement.findMany({
+            where: { id: { in: requirement_ids }, project_id: resolvedId },
+            select: { readable_id: true, title: true, description: true }
         });
 
+        if (reqs.length === 0) {
+            return res.status(400).json({ message: "Selected requirements not found" });
+        }
+
+        const reqText = reqs.map(r => `[${r.readable_id}] ${r.title}: ${r.description}`).join("\n");
+        const prompt = `Generate a ${diagram_type.trim()} based on the following requirements:\n\n${reqText}`;
+
+        const start = Date.now();
+        const raw = await generateStatelessResponse(prompt, {
+            task: `Generate a Mermaid.js ${diagram_type.trim()} from the user's requirements.`,
+            expectations: "Output ONLY valid Mermaid diagram syntax. No explanations, no markdown, no code fences. CRITICAL: Always use double quotes around text labels inside nodes (e.g. A[\"Node Text (with special chars)\"]) to prevent parsing errors.",
+            output: "Plain Mermaid code only (e.g. flowchart, sequenceDiagram, etc.).",
+        });
+        const end = Date.now();
+        const cycle_time = end - start;
+
         const mermaid_code = extractMermaidCode(raw);
-        res.json({ mermaid_code });
+        res.json({ mermaid_code, cycle_time });
     } catch (err) {
         console.error("generateFromDescription error:", err);
         res.status(500).json({ message: err.message || "Failed to generate diagram" });
@@ -185,7 +203,7 @@ export async function editDiagram(req, res) {
 
         const raw = await generateStatelessResponse(content, {
             task: "Update the Mermaid diagram according to the user's edit request.",
-            expectations: "Return ONLY the complete updated Mermaid code. No explanations, no markdown code fences.",
+            expectations: "Return ONLY the complete updated Mermaid code. No explanations, no markdown code fences. CRITICAL: Always use double quotes around text labels inside nodes (e.g. A[\"Node Text (with special chars)\"]) to prevent parsing errors.",
             output: "Plain Mermaid code only.",
         });
 

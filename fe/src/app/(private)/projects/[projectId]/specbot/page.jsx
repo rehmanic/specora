@@ -36,6 +36,7 @@ import {
 import PageBanner from "@/components/layout/PageBanner";
 import { downloadSpecbotChat, extractSpecbotRequirements, summarizeSpecbotChat } from "@/api/specbot";
 import { importRequirements } from "@/api/requirements";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -218,6 +219,9 @@ export default function SpecbotPage() {
         updateChatLocal(chat.id, { last_summarized_at: new Date().toISOString() });
         setSummaryData(response?.artifact?.data);
         if (!silent) setProcessing((prev) => ({ ...prev, open: false }));
+        if (response?.cycle_time) {
+          toast.success(`Summary generated in ${(response.cycle_time / 1000).toFixed(2)}s`);
+        }
       } else if (type === "extract") {
         const response = await extractSpecbotRequirements(chat.id);
         updateChatLocal(chat.id, { last_extracted_at: new Date().toISOString() });
@@ -230,6 +234,9 @@ export default function SpecbotPage() {
         if (!silent) {
           setProcessing((prev) => ({ ...prev, open: false }));
           setActiveTab("requirements");
+        }
+        if (response?.cycle_time) {
+          toast.success(`Requirements extracted in ${(response.cycle_time / 1000).toFixed(2)}s`);
         }
       }
     } catch (err) {

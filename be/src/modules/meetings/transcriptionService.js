@@ -103,17 +103,20 @@ export const processTranscription = async (meetingId, audioUrl) => {
             where: { meeting_id: meetingId }
         });
 
+        const cycle_time = Date.now() - startTime;
+
         if (existing) {
             await prisma.meeting_transcript.update({
                 where: { id: existing.id },
-                data: { content: transcriptContent }
+                data: { content: transcriptContent, cycle_time }
             });
             console.log(`[Transcription] Updated transcript (ID: ${existing.id})`);
         } else {
             await prisma.meeting_transcript.create({
                 data: {
                     meeting_id: meetingId,
-                    content: transcriptContent
+                    content: transcriptContent,
+                    cycle_time
                 }
             });
             console.log("[Transcription] Created new transcript.");

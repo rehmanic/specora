@@ -113,6 +113,9 @@ export default function MeetingReviewPage() {
       setExtractedReqs(reqs);
       setSelectedReqIds(new Set(reqs.map((r) => r._tempId)));
       notify.success("Analysis complete!", { id: toastId });
+      if (response?.cycle_time) {
+        setTimeout(() => notify.success(`Requirements extracted in ${(response.cycle_time / 1000).toFixed(2)}s`), 1000);
+      }
       setActiveTab("requirements");
     } catch (err) {
       notify.error("Failed to extract requirements", { id: toastId });
@@ -217,11 +220,16 @@ export default function MeetingReviewPage() {
     });
   };
 
-  const getTranscript = () => {
+  const getTranscriptObj = () => {
     if (!meeting) return null;
     if (meeting.transcript) return meeting.transcript;
-    if (meeting.transcripts?.length > 0) return meeting.transcripts[0].content;
+    if (meeting.transcripts?.length > 0) return meeting.transcripts[0];
     return null;
+  };
+
+  const getTranscript = () => {
+    const obj = getTranscriptObj();
+    return obj ? obj.content : null;
   };
 
   const hasTranscript = () => !!getTranscript();
@@ -436,6 +444,11 @@ export default function MeetingReviewPage() {
                   <div className="flex items-center gap-2">
                     <FileText className="text-primary size-4" />
                     <CardTitle className="text-lg">Transcript</CardTitle>
+                    {getTranscriptObj()?.cycle_time && (
+                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 ml-2 text-[10px]">
+                        Generated in {(getTranscriptObj().cycle_time / 1000).toFixed(2)}s
+                      </Badge>
+                    )}
                   </div>
                   <CardDescription>Full text conversion of the meeting audio.</CardDescription>
                 </div>

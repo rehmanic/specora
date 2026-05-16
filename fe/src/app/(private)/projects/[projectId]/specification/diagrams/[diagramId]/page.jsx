@@ -28,12 +28,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getDiagram, updateDiagram, generateDiagram, editDiagram, updateDiagramRequirements } from "@/api/diagrams";
 import { getRequirements } from "@/api/requirements";
 import mermaid from "mermaid";
 import useProjectsStore from "@/store/projectsStore";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import RequirementLinker from "@/components/prototyping/RequirementLinker";
 import {
   Dialog,
   DialogContent,
@@ -64,6 +64,18 @@ const MERMAID_SYNTAX_EXAMPLES = [
     name: "Entity Relationship",
     code: "erDiagram\n  CUSTOMER ||--o{ ORDER : places\n  ORDER ||--|{ LINE-ITEM : contains",
   },
+  {
+    name: "Gantt Chart",
+    code: "gantt\n  title A Gantt Diagram\n  dateFormat  YYYY-MM-DD\n  section Section\n  A task           :a1, 2014-01-01, 30d\n  Another task     :after a1  , 20d",
+  },
+  {
+    name: "Pie Chart",
+    code: "pie title Pets adopted by volunteers\n  \"Dogs\" : 386\n  \"Cats\" : 85\n  \"Rats\" : 15",
+  },
+  {
+    name: "Mindmap",
+    code: "mindmap\n  root((mindmap))\n    Outcomes\n      Public interaction\n      Data processing\n    Risks\n      Security\n      Performance",
+  },
 ];
 
 function useDebounce(value, delay) {
@@ -86,7 +98,7 @@ export default function DiagramEditorPage() {
   const [editLoading, setEditLoading] = useState(false);
   const [previewSvg, setPreviewSvg] = useState("");
   const [previewError, setPreviewError] = useState("");
-  const [aiDescription, setAiDescription] = useState("");
+  const [generateType, setGenerateType] = useState("");
   const [editInstruction, setEditInstruction] = useState("");
   const [requirements, setRequirements] = useState([]);
   const [linkedRequirementIds, setLinkedRequirementIds] = useState([]);
@@ -189,18 +201,27 @@ export default function DiagramEditorPage() {
   };
 
   const handleGenerate = async () => {
-    if (!aiDescription.trim()) {
-      toast.info("Enter a description first.");
+    if (!generateType) {
+      toast.info("Select a diagram type first.");
+      return;
+    }
+    if (linkedRequirementIds.length === 0) {
+      toast.info("Select at least one requirement.");
       return;
     }
     setGenerateLoading(true);
     try {
-      const { mermaid_code } = await generateDiagram(projectId, {
-        description: aiDescription.trim(),
+      const { mermaid_code, cycle_time } = await generateDiagram(projectId, {
+        diagram_type: generateType,
+        requirement_ids: linkedRequirementIds
       });
       setMermaidCode(mermaid_code || "");
-      setAiDescription("");
-      toast.success("Diagram generated.");
+      
+      if (cycle_time) {
+        toast.success(`Diagram generated in ${(cycle_time / 1000).toFixed(2)}s.`);
+      } else {
+        toast.success("Diagram generated.");
+      }
     } catch (err) {
       toast.error(err.message || "Failed to generate diagram.");
     } finally {
@@ -312,115 +333,50 @@ export default function DiagramEditorPage() {
         </div>
 
         <div className="relative mt-6 flex min-h-0 flex-1 gap-4 overflow-hidden">
-          {/* Left Panel: Code & AI */}
+          {/* Left Panel: Code */}
           <div
             className={`flex min-h-0 flex-col gap-4 transition-all duration-300 ease-in-out ${
-              isLeftOpen ? "w-[400px] opacity-100" : "w-12 opacity-100"
+              isLeftOpen ? "w-[350px] opacity-100" : "w-12 opacity-100"
             }`}
           >
             {isLeftOpen ? (
-              <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
-                <Card className="border-border bg-card/50 group/card flex min-h-0 flex-1 flex-col overflow-hidden shadow-sm backdrop-blur-sm">
-                  <CardHeader className="flex shrink-0 flex-row items-center justify-between space-y-0 px-4 py-2">
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-sm font-semibold">Mermaid Editor</CardTitle>
+              <Card className="border-border bg-card/50 group/card flex min-h-0 flex-1 flex-col overflow-hidden shadow-sm backdrop-blur-sm">
+                <CardHeader className="flex shrink-0 flex-row items-center justify-between space-y-0 px-4 py-2">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm font-semibold">Mermaid Editor</CardTitle>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 opacity-0 transition-opacity group-hover/card:opacity-100"
+                    onClick={() => setIsLeftOpen(false)}
+                  >
+                    <PanelLeftClose className="h-4 w-4" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden p-3 pt-0">
+                  {loadLoading ? (
+                    <div className="text-muted-foreground flex flex-1 items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin" />
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 opacity-0 transition-opacity group-hover/card:opacity-100"
-                      onClick={() => setIsLeftOpen(false)}
-                    >
-                      <PanelLeftClose className="h-4 w-4" />
-                    </Button>
-                  </CardHeader>
-                  <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden p-3 pt-0">
-                    {loadLoading ? (
-                      <div className="text-muted-foreground flex flex-1 items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                      </div>
-                    ) : (
-                      <div className="flex h-full flex-col gap-2">
-                        <Input
-                          placeholder="Diagram title"
-                          value={diagramTitle}
-                          onChange={(e) => setDiagramTitle(e.target.value)}
-                          className="bg-muted/30 h-8 border-none text-sm font-medium focus-visible:ring-1"
-                        />
-                        <Textarea
-                          value={mermaidCode}
-                          onChange={(e) => setMermaidCode(e.target.value)}
-                          placeholder="flowchart LR&#10;  A --> B"
-                          className="bg-muted/20 border-border/50 min-h-0 flex-1 resize-none p-3 font-mono text-xs leading-relaxed"
-                        />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card className="border-border bg-card/50 shrink-0 shadow-sm backdrop-blur-sm">
-                  <CardHeader className="space-y-0 px-4 py-2">
-                    <CardTitle className="flex items-center gap-2 py-1 text-sm font-semibold">
-                      <Sparkles className="text-primary h-4 w-4" />
-                      AI assistant
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 p-3 pt-0">
-                    <Tabs defaultValue="generate" className="w-full">
-                      <TabsList className="grid h-8 w-full grid-cols-2">
-                        <TabsTrigger value="generate" className="text-xs">
-                          Generate
-                        </TabsTrigger>
-                        <TabsTrigger value="edit" className="text-xs">
-                          Edit
-                        </TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="generate" className="space-y-2 pt-2">
-                        <Textarea
-                          value={aiDescription}
-                          onChange={(e) => setAiDescription(e.target.value)}
-                          placeholder="e.g. A flowchart showing login..."
-                          className="bg-muted/20 min-h-[60px] text-xs"
-                        />
-                        <Button
-                          onClick={handleGenerate}
-                          disabled={generateLoading || !aiDescription.trim()}
-                          size="sm"
-                          className="h-8 w-full text-xs"
-                        >
-                          {generateLoading ? (
-                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                          ) : (
-                            <Sparkles className="mr-2 h-3 w-3" />
-                          )}
-                          Generate
-                        </Button>
-                      </TabsContent>
-                      <TabsContent value="edit" className="space-y-2 pt-2">
-                        <Input
-                          value={editInstruction}
-                          onChange={(e) => setEditInstruction(e.target.value)}
-                          placeholder="e.g. Add a node for Admin"
-                          className="bg-muted/20 h-8 text-xs"
-                        />
-                        <Button
-                          onClick={handleEdit}
-                          disabled={editLoading || !editInstruction.trim() || !mermaidCode.trim()}
-                          size="sm"
-                          className="h-8 w-full text-xs font-medium"
-                        >
-                          {editLoading ? (
-                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                          ) : (
-                            <Pencil className="mr-2 h-3 w-3" />
-                          )}
-                          Apply edit
-                        </Button>
-                      </TabsContent>
-                    </Tabs>
-                  </CardContent>
-                </Card>
-              </div>
+                  ) : (
+                    <div className="flex h-full flex-col gap-2">
+                      <Input
+                        placeholder="Diagram title"
+                        value={diagramTitle}
+                        onChange={(e) => setDiagramTitle(e.target.value)}
+                        className="bg-muted/30 h-8 border-none text-sm font-medium focus-visible:ring-1"
+                      />
+                      <Textarea
+                        value={mermaidCode}
+                        onChange={(e) => setMermaidCode(e.target.value)}
+                        placeholder="flowchart LR&#10;  A --> B"
+                        className="bg-muted/20 border-border/50 min-h-0 flex-1 resize-none p-3 font-mono text-xs leading-relaxed"
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             ) : (
               <div className="bg-muted/10 border-border/50 flex h-full flex-col items-center rounded-xl border py-4">
                 <Button
@@ -553,7 +509,7 @@ export default function DiagramEditorPage() {
             )}
           </div>
 
-          {/* Right Panel: Requirements */}
+          {/* Right Panel: AI Assistant */}
           <div
             className={`flex min-h-0 flex-col transition-all duration-300 ease-in-out ${
               isRightOpen ? "w-[320px] opacity-100" : "w-12 opacity-100"
@@ -562,7 +518,10 @@ export default function DiagramEditorPage() {
             {isRightOpen ? (
               <Card className="border-border bg-card/50 group/req flex min-h-0 flex-1 flex-col overflow-hidden shadow-sm backdrop-blur-sm">
                 <CardHeader className="flex shrink-0 flex-row items-center justify-between space-y-0 px-4 py-2">
-                  <CardTitle className="text-primary font-display text-sm font-semibold">Requirements</CardTitle>
+                  <CardTitle className="flex items-center gap-2 py-1 text-sm font-semibold text-primary">
+                    <Sparkles className="h-4 w-4" />
+                    AI Assistant
+                  </CardTitle>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -572,24 +531,93 @@ export default function DiagramEditorPage() {
                     <PanelRightClose className="h-4 w-4" />
                   </Button>
                 </CardHeader>
-                <CardContent className="min-h-0 flex-1 overflow-hidden p-3 pt-0">
-                  {loadLoading ? (
-                    <div className="flex h-full flex-1 items-center justify-center">
-                      <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
-                    </div>
-                  ) : requirements.length > 0 ? (
-                    <div className="border-border/50 bg-muted/10 h-full overflow-hidden rounded-lg border">
-                      <RequirementLinker
-                        requirements={requirements}
-                        linkedIds={linkedRequirementIds}
-                        onToggle={handleToggleRequirement}
+                <CardContent className="min-h-0 flex-1 overflow-hidden p-3 pt-0 flex flex-col">
+                  <Tabs defaultValue="generate" className="flex min-h-0 flex-1 flex-col w-full">
+                    <TabsList className="grid h-8 w-full shrink-0 grid-cols-2">
+                      <TabsTrigger value="generate" className="text-xs">
+                        Generate
+                      </TabsTrigger>
+                      <TabsTrigger value="edit" className="text-xs">
+                        Edit
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="generate" className="min-h-0 flex-1 flex-col space-y-2 pt-2 flex">
+                      <Select value={generateType} onValueChange={setGenerateType}>
+                        <SelectTrigger className="h-8 text-xs shrink-0">
+                          <SelectValue placeholder="Select diagram type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Flowchart">Flowchart</SelectItem>
+                          <SelectItem value="Sequence Diagram">Sequence Diagram</SelectItem>
+                          <SelectItem value="Class Diagram">Class Diagram</SelectItem>
+                          <SelectItem value="State Diagram">State Diagram</SelectItem>
+                          <SelectItem value="Entity Relationship">Entity Relationship</SelectItem>
+                          <SelectItem value="Gantt Chart">Gantt Chart</SelectItem>
+                          <SelectItem value="Pie Chart">Pie Chart</SelectItem>
+                          <SelectItem value="Mindmap">Mindmap</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <div className="text-xs font-medium mt-2 shrink-0">Requirements:</div>
+                      <div className="flex-1 overflow-y-auto rounded-md border border-border/50 bg-muted/20 p-2 space-y-2">
+                        {requirements.length === 0 ? (
+                          <div className="text-xs text-muted-foreground p-2">No requirements available.</div>
+                        ) : (
+                          requirements.map((req) => (
+                            <label key={req.id} className="flex items-start space-x-2 cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                className="mt-0.5 rounded border-gray-300"
+                                checked={linkedRequirementIds.includes(req.id)}
+                                onChange={() => handleToggleRequirement(req.id)}
+                              />
+                              <div className="grid leading-none">
+                                <span className="text-[11px] font-semibold">{req.readable_id}</span>
+                                <span className="text-[10px] text-muted-foreground line-clamp-1">{req.title}</span>
+                              </div>
+                            </label>
+                          ))
+                        )}
+                      </div>
+
+                      <Button
+                        onClick={handleGenerate}
+                        disabled={generateLoading || !generateType || linkedRequirementIds.length === 0}
+                        size="sm"
+                        className="h-8 w-full text-xs mt-2 shrink-0"
+                      >
+                        {generateLoading ? (
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="mr-2 h-3 w-3" />
+                        )}
+                        Generate
+                      </Button>
+                    </TabsContent>
+                    
+                    <TabsContent value="edit" className="space-y-2 pt-2 flex flex-col">
+                      <Input
+                        value={editInstruction}
+                        onChange={(e) => setEditInstruction(e.target.value)}
+                        placeholder="e.g. Add a node for Admin"
+                        className="bg-muted/20 h-8 text-xs shrink-0"
                       />
-                    </div>
-                  ) : (
-                    <div className="text-muted-foreground border-border/50 bg-muted/5 flex h-full flex-col items-center justify-center space-y-2 rounded-lg border border-dashed p-6 text-center">
-                      <p className="text-xs font-medium">No requirements</p>
-                    </div>
-                  )}
+                      <Button
+                        onClick={handleEdit}
+                        disabled={editLoading || !editInstruction.trim() || !mermaidCode.trim()}
+                        size="sm"
+                        className="h-8 w-full text-xs font-medium shrink-0"
+                      >
+                        {editLoading ? (
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        ) : (
+                          <Pencil className="mr-2 h-3 w-3" />
+                        )}
+                        Apply edit
+                      </Button>
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             ) : (
@@ -603,7 +631,7 @@ export default function DiagramEditorPage() {
                   <PanelRightOpen className="text-muted-foreground h-5 w-5" />
                 </Button>
                 <div className="text-muted-foreground/60 flex flex-1 items-center justify-center text-[10px] font-bold tracking-widest uppercase select-none [writing-mode:vertical-lr]">
-                  Traceability
+                  AI Assistant
                 </div>
               </div>
             )}

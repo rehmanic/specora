@@ -344,11 +344,14 @@ DOCUMENT TITLE: ${doc.title}
             jsonMode: false,
         };
 
+        const startTime = Date.now();
         const generatedContent = await generateStatelessResponse(content, instructions);
+        const cycle_time = Date.now() - startTime;
 
         res.status(200).json({
             status: "success",
             content: generatedContent,
+            cycle_time,
         });
     } catch (err) {
         next(err);
@@ -402,11 +405,14 @@ ${currentContent || "(empty document)"}
             jsonMode: false,
         };
 
+        const startTime = Date.now();
         const editedContent = await generateStatelessResponse(content, instructions);
+        const cycle_time = Date.now() - startTime;
 
         res.status(200).json({
             status: "success",
             content: editedContent,
+            cycle_time,
         });
     } catch (err) {
         next(err);

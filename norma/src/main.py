@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from typing import List
 
+import time
 import faiss
 import numpy as np
 from dotenv import load_dotenv
@@ -48,6 +49,7 @@ class FeasibilityResult(BaseModel):
     title: str
     is_feasible: bool
     retrieved_context: List[RetrievedChunk]
+    cycle_time: float = None
 
 class BatchFeasibilityResult(BaseModel):
     results: List[FeasibilityResult]
@@ -145,6 +147,7 @@ def health_check():
 
 @app.post("/api/v1/feasibility/legal/single", response_model=FeasibilityResult)
 def check_single_feasibility(request: RequirementRequest):
+    start_time = time.time()
     if not model or not index:
         raise HTTPException(status_code=503, detail="Norma resources not fully loaded.")
 
@@ -160,11 +163,13 @@ def check_single_feasibility(request: RequirementRequest):
         requirement_id=request.id,
         title=request.title,
         is_feasible=is_feasible,  # Simple boolean evaluation for now based on context retrieval
-        retrieved_context=[RetrievedChunk(**r) for r in retrieved]
+        retrieved_context=[RetrievedChunk(**r) for r in retrieved],
+        cycle_time=int((time.time() - start_time) * 1000)
     )
 
 @app.post("/api/v1/feasibility/legal/batch", response_model=BatchFeasibilityResult)
 def check_batch_feasibility(request: BatchRequirementRequest):
+    start_time = time.time()
     if not model or not index:
         raise HTTPException(status_code=503, detail="Norma resources not fully loaded.")
     
@@ -185,7 +190,8 @@ def check_batch_feasibility(request: BatchRequirementRequest):
             requirement_id=req.id,
             title=req.title,
             is_feasible=is_feasible,
-            retrieved_context=[RetrievedChunk(**r) for r in retrieved]
+            retrieved_context=[RetrievedChunk(**r) for r in retrieved],
+            cycle_time=int((time.time() - start_time) * 1000)
         ))
         
     return BatchFeasibilityResult(results=results)

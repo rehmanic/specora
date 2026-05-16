@@ -103,14 +103,25 @@ describe('Diagram Controller', () => {
     });
 
     describe('generateFromDescription', () => {
-        it('generates mermaid code from text using Gemini', async () => {
-            req.body = { description: 'A flow chart' };
+        it('generates mermaid code from text using Gemini and calculates cycle_time', async () => {
+            req.body = { diagram_type: 'Flowchart', requirement_ids: ['req-1', 'req-2'] };
+            prisma.requirement.findMany.mockResolvedValue([
+                { readable_id: 'REQ-1', title: 'Login', description: 'User can login' },
+                { readable_id: 'REQ-2', title: 'Logout', description: 'User can logout' }
+            ]);
             generateStatelessResponse.mockResolvedValue('```mermaid\ngraph TD;\n```');
 
             await diagramController.generateFromDescription(req, res);
 
-            expect(generateStatelessResponse).toHaveBeenCalled();
-            expect(res.json).toHaveBeenCalledWith({ mermaid_code: 'graph TD;' });
+            expect(prisma.requirement.findMany).toHaveBeenCalled();
+            expect(generateStatelessResponse).toHaveBeenCalledWith(
+                expect.stringContaining('Generate a Flowchart based on the following requirements:'),
+                expect.any(Object)
+            );
+            expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+                mermaid_code: 'graph TD;',
+                cycle_time: expect.any(Number)
+            }));
         });
     });
 

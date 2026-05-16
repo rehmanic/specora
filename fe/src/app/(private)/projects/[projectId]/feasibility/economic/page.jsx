@@ -484,7 +484,11 @@ export default function Page() {
 
       const data = await res.json();
       setResults(data.simulation);
-      toast.success("Simulation completed successfully!");
+      if (data.cycle_time) {
+        toast.success(`Simulation completed in ${(data.cycle_time / 1000).toFixed(2)}s!`);
+      } else {
+        toast.success("Simulation completed successfully!");
+      }
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -813,6 +817,71 @@ export default function Page() {
                     </Card>
                   ) : (
                     <>
+                      {/* Technique Comparison */}
+                      <div className="space-y-4">
+                        <h3 className="flex items-center gap-2 text-lg font-semibold">
+                          <BarChart3 className="text-primary h-4 w-4" /> Comparative Analysis
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                          {/* Monte Carlo */}
+                          <Card className="border-border/50 shadow-sm">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm font-semibold">Probabilistic (Monte Carlo)</CardTitle>
+                              <CardDescription className="text-[10px]">Accounts for uncertainty through simulation</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                              <div className="flex justify-between items-end">
+                                <span className="text-xs text-muted-foreground">Expected Cost:</span>
+                                <span className="font-bold text-sm text-primary">{formatCost(results.cost.mean)}</span>
+                              </div>
+                              <div className="flex justify-between items-end">
+                                <span className="text-xs text-muted-foreground">Duration:</span>
+                                <span className="font-bold text-sm">{formatHours(results.duration.mean)}</span>
+                              </div>
+                              <Badge className="w-full justify-center bg-primary/10 text-primary border-none text-[10px]">Highly Recommended</Badge>
+                            </CardContent>
+                          </Card>
+
+                          {/* PERT */}
+                          <Card className="border-border/50 shadow-sm">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm font-semibold">Deterministic (PERT)</CardTitle>
+                              <CardDescription className="text-[10px]">Weighted average of 3-point estimates</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                              <div className="flex justify-between items-end">
+                                <span className="text-xs text-muted-foreground">Calculated Cost:</span>
+                                <span className="font-bold text-sm text-blue-600">{formatCost(results.pert.cost)}</span>
+                              </div>
+                              <div className="flex justify-between items-end">
+                                <span className="text-xs text-muted-foreground">Duration:</span>
+                                <span className="font-bold text-sm">{formatHours(results.pert.duration)}</span>
+                              </div>
+                              <Badge variant="outline" className="w-full justify-center text-[10px]">Mathematical Average</Badge>
+                            </CardContent>
+                          </Card>
+
+                          {/* COCOMO */}
+                          <Card className="border-border/50 shadow-sm">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm font-semibold">Algorithmic (COCOMO II)</CardTitle>
+                              <CardDescription className="text-[10px]">Effort based on project complexity scale</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                              <div className="flex justify-between items-end">
+                                <span className="text-xs text-muted-foreground">Organic Effort:</span>
+                                <span className="font-bold text-sm text-emerald-600">{results.cocomo.organic.effort.toFixed(1)} Person-Mo</span>
+                              </div>
+                              <div className="flex justify-between items-end">
+                                <span className="text-xs text-muted-foreground">Embedded Effort:</span>
+                                <span className="font-bold text-sm text-rose-600">{results.cocomo.embedded.effort.toFixed(1)} Person-Mo</span>
+                              </div>
+                              <Badge variant="outline" className="w-full justify-center text-[10px]">Complexity Adjusted</Badge>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </div>
+
                       {/* Config used */}
                       <div className="text-muted-foreground flex items-center gap-2 text-sm">
                         <Badge variant="outline">{results.config.num_requirements} requirements</Badge>

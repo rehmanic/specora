@@ -684,10 +684,12 @@ export const summarizeSpecbotChat = async (req, res) => {
             output: "JSON or text is fine; concise paragraphs preferred.",
         };
 
+        const startTime = Date.now();
         const summaryText = await generateStatelessResponse(
             transcript,
             instructions
         );
+        const cycle_time = Date.now() - startTime;
 
         const summaryPayload = {
             chat_id: chatId,
@@ -695,6 +697,7 @@ export const summarizeSpecbotChat = async (req, res) => {
             generated_at: new Date().toISOString(),
             summary_text: summaryText,
             key_points: extractBulletPoints(summaryText),
+            cycle_time,
         };
 
         await fs.promises.writeFile(
@@ -711,6 +714,7 @@ export const summarizeSpecbotChat = async (req, res) => {
 
         res.status(200).json({
             message: "Summary generated and stored",
+            cycle_time,
             artifact: {
                 type: "summary",
                 path: artifactPaths.summary,
@@ -811,10 +815,12 @@ export const extractRequirementsFromChat = async (req, res) => {
 Do NOT wrap the output in markdown code blocks. Return ONLY the raw JSON string.`
         };
 
+        const startTime = Date.now();
         const requirementsText = await generateStatelessResponse(
             transcript,
             instructions
         );
+        const cycle_time = Date.now() - startTime;
 
         const requirementsPayload = {
             chat_id: chatId,
@@ -822,6 +828,7 @@ Do NOT wrap the output in markdown code blocks. Return ONLY the raw JSON string.
             generated_at: new Date().toISOString(),
             requirements: [],
             raw: requirementsText,
+            cycle_time,
         };
 
         try {
@@ -859,6 +866,7 @@ Do NOT wrap the output in markdown code blocks. Return ONLY the raw JSON string.
 
         res.status(200).json({
             message: "Requirements extracted and stored",
+            cycle_time,
             artifact: {
                 type: "requirements",
                 path: artifactPaths.requirements,

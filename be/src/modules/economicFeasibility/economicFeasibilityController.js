@@ -218,6 +218,7 @@ export const simulate = async (req, res) => {
         }
 
         // Run simulation
+        const startTime = Date.now();
         const { costResults, durationResults } = runSimulation({
             estimates,
             numDevelopers: config.num_developers,
@@ -228,6 +229,33 @@ export const simulate = async (req, res) => {
         // Compute statistics
         const costStats = computeStatistics(costResults);
         const durationStats = computeStatistics(durationResults);
+        const cycle_time = Date.now() - startTime;
+
+        // Calculate PERT Deterministic
+        let totalPertHours = 0;
+        estimates.forEach(est => {
+            totalPertHours += (est.optimistic_hours + 4 * est.most_likely_hours + est.pessimistic_hours) / 6;
+        });
+
+        // Basic COCOMO II Estimation (simplified)
+        // Heuristic: 1 staff-month = 152 hours. Estimate KLOC from effort (staff-months * average productivity)
+        const totalEffortSM = totalPertHours / 152;
+        const estimatedKLOC = totalEffortSM * 1.5; // Heuristic: 1.5 KLOC per staff-month
+
+        const cocomo = {
+            organic: {
+                effort: 2.4 * Math.pow(estimatedKLOC, 1.05),
+                duration: 2.5 * Math.pow(2.4 * Math.pow(estimatedKLOC, 1.05), 0.38)
+            },
+            semidetached: {
+                effort: 3.0 * Math.pow(estimatedKLOC, 1.12),
+                duration: 2.5 * Math.pow(3.0 * Math.pow(estimatedKLOC, 1.12), 0.35)
+            },
+            embedded: {
+                effort: 3.6 * Math.pow(estimatedKLOC, 1.20),
+                duration: 2.5 * Math.pow(3.6 * Math.pow(estimatedKLOC, 1.20), 0.32)
+            }
+        };
 
         res.status(200).json({
             message: "Simulation completed successfully",
@@ -241,7 +269,14 @@ export const simulate = async (req, res) => {
                 },
                 cost: costStats,
                 duration: durationStats,
+                pert: {
+                    total_hours: totalPertHours,
+                    duration: totalPertHours / config.num_developers,
+                    cost: totalPertHours * config.hourly_rate
+                },
+                cocomo: cocomo
             },
+            cycle_time,
         });
     } catch (error) {
         console.error("Error running simulation:", error);

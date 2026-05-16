@@ -159,7 +159,11 @@ export default function Page() {
       const resMap = {};
       res.results.forEach((r) => (resMap[r.requirement_id] = r.analysis));
       setAiResults(resMap);
-      toast.success("AI Analysis completed!");
+      if (res.cycle_time) {
+        toast.success(`AI Analysis completed in ${(res.cycle_time / 1000).toFixed(2)}s!`);
+      } else {
+        toast.success("AI Analysis completed!");
+      }
     } catch (error) {
       toast.error(error.message || "Failed to run AI verification.");
     } finally {
@@ -172,7 +176,11 @@ export default function Page() {
     try {
       const res = await runAIVerificationForRequirement(projectId, req.id);
       setAiResults((prev) => ({ ...prev, [req.id]: res.result.analysis }));
-      toast.success(`AI Analysis completed for: ${req.title}`);
+      if (res.cycle_time) {
+        toast.success(`AI Analysis completed in ${(res.cycle_time / 1000).toFixed(2)}s for: ${req.title}`);
+      } else {
+        toast.success(`AI Analysis completed for: ${req.title}`);
+      }
     } catch (error) {
       toast.error(error.message || `Failed to run AI on ${req.title}.`);
     } finally {

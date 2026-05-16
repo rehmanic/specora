@@ -51,9 +51,13 @@ export default function DocAIPanel({ projectId, docId, docType, currentContent, 
     setGeneratedContent(null);
     setApplied(false);
     try {
-      const raw = await generateDoc(projectId, docId);
-      setGeneratedContent(stripMarkdownFences(raw));
-      toast.success("Document generated! Review and apply it below.");
+      const res = await generateDoc(projectId, docId);
+      setGeneratedContent(stripMarkdownFences(res.content));
+      if (res.cycle_time) {
+        toast.success(`Document generated in ${(res.cycle_time / 1000).toFixed(2)}s! Review and apply it below.`);
+      } else {
+        toast.success("Document generated! Review and apply it below.");
+      }
     } catch (err) {
       toast.error(err.message || "Failed to generate document.");
     } finally {
@@ -70,12 +74,16 @@ export default function DocAIPanel({ projectId, docId, docType, currentContent, 
     setGeneratedContent(null);
     setApplied(false);
     try {
-      const raw = await editDocWithAI(projectId, docId, {
+      const res = await editDocWithAI(projectId, docId, {
         editInstructions,
         currentContent,
       });
-      setGeneratedContent(stripMarkdownFences(raw));
-      toast.success("Edit applied by AI! Review and accept below.");
+      setGeneratedContent(stripMarkdownFences(res.content));
+      if (res.cycle_time) {
+        toast.success(`Edit applied by AI in ${(res.cycle_time / 1000).toFixed(2)}s! Review and accept below.`);
+      } else {
+        toast.success("Edit applied by AI! Review and accept below.");
+      }
     } catch (err) {
       toast.error(err.message || "Failed to apply AI edit.");
     } finally {

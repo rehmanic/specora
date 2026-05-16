@@ -58,7 +58,7 @@ export const generateDoc = async (projectId, docId, { useCaseContext } = {}) => 
     method: "POST",
     body: JSON.stringify({ useCaseContext }),
   });
-  return data.content;
+  return data;
 };
 
 export const editDocWithAI = async (projectId, docId, { editInstructions, currentContent }) => {
@@ -66,7 +66,7 @@ export const editDocWithAI = async (projectId, docId, { editInstructions, curren
     method: "POST",
     body: JSON.stringify({ editInstructions, currentContent }),
   });
-  return data.content;
+  return data;
 };
 
 // format = "pdf" | "docx"

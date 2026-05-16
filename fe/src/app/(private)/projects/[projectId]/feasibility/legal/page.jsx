@@ -82,9 +82,17 @@ export default function Page() {
       setResults((prev) => ({ ...prev, [req.id]: data }));
 
       if (data.is_feasible) {
-        toast.success(`"${req.title}" — Relevant legal context found.`);
+        if (data.cycle_time) {
+          toast.success(`"${req.title}" — Relevant legal context found in ${(data.cycle_time / 1000).toFixed(2)}s.`);
+        } else {
+          toast.success(`"${req.title}" — Relevant legal context found.`);
+        }
       } else {
-        toast.warning(`"${req.title}" — No strong legal match.`);
+        if (data.cycle_time) {
+          toast.warning(`"${req.title}" — No strong legal match found in ${(data.cycle_time / 1000).toFixed(2)}s.`);
+        } else {
+          toast.warning(`"${req.title}" — No strong legal match.`);
+        }
       }
     } catch (error) {
       console.error("Error running feasibility:", error);

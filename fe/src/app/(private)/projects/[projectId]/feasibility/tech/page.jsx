@@ -131,6 +131,11 @@ function SearchResult({ result }) {
               <Badge variant="secondary" className="ml-1 text-xs">
                 {result.sources.length}
               </Badge>
+              {result.cycle_time && (
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 ml-auto text-[10px]">
+                  Generated in {(result.cycle_time / 1000).toFixed(2)}s
+                </Badge>
+              )}
             </CardTitle>
             <CardDescription>References used to ground this analysis</CardDescription>
           </CardHeader>
@@ -253,6 +258,7 @@ export default function Page() {
           groundingSupports: data.groundingSupports,
           searchQueries: data.searchQueries,
           searchEntryPoint: data.searchEntryPoint,
+          cycle_time: data.cycle_time,
         },
         timestamp: new Date(),
       };
@@ -262,7 +268,11 @@ export default function Page() {
       setSelectedEntry(entry); // Show in popup
 
       setQuery("");
-      toast.success("Search completed!");
+      if (data.cycle_time) {
+        toast.success(`Search completed in ${(data.cycle_time / 1000).toFixed(2)}s!`);
+      } else {
+        toast.success("Search completed!");
+      }
     } catch (error) {
       toast.error(error.message);
     } finally {

@@ -108,6 +108,7 @@ When answering:
 - Be specific and actionable, not generic${requirementsContext}`;
 
         // Call Gemini with Google Search grounding
+        const startTime = Date.now();
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: `${systemPrompt}\n\nUser Query: ${query.trim()}`,
@@ -117,11 +118,13 @@ When answering:
                 maxOutputTokens: 4000,
             },
         });
+        const cycle_time = Date.now() - startTime;
 
         const result = parseGroundingResponse(response);
 
         res.status(200).json({
             message: "Search completed successfully",
+            cycle_time,
             ...result,
         });
     } catch (error) {

@@ -62,7 +62,7 @@ export function ProjectNavigation() {
       ],
     },
     {
-      title: "Prototyping",
+      title: "Wireframing",
       icon: PenTool,
       url: `/projects/${slug}/prototyping`,
       requiredPermission: "view_prototypes",
