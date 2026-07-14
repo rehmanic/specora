@@ -14,8 +14,8 @@ RUN apt-get update && apt-get install -y \
 
 # Copy Whisper CLI binary and shared libraries
 COPY --from=whisper /app/build/bin/whisper-cli /usr/local/bin/whisper-cli
-COPY --from=whisper /app/build/src/libwhisper.so.1 /usr/local/lib/
-COPY --from=whisper /app/build/ggml/src/libggml*.so.* /usr/local/lib/
+COPY --from=whisper /app/build/bin/libwhisper.so.* /usr/local/lib/
+COPY --from=whisper /app/build/bin/libggml*.so.* /usr/local/lib/
 RUN ldconfig
 
 # Download Whisper model during build

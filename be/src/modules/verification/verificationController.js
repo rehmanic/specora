@@ -292,7 +292,7 @@ Description: ${requirement.description}
 
         const instructions = {
             task: "evaluate_requirements",
-            expectations: "Evaluate the requirement strictly against IEEE characteristics. provide a structured reasoning string where each point is on a new line (e.g., 'Unambiguous: explanation\\nComplete: explanation...'). If a characteristic is satisfied, keep the explanation brief ('Satisfied').",
+            expectations: "Evaluate the requirement strictly against IEEE characteristics. For each characteristic, provide a boolean status. MUST include the exact 'requirement_id' (e.g. the UUID provided) in the output object. Provide a structured reasoning string where each point is on a new line (e.g., 'Unambiguous: explanation\\nComplete: explanation...'). If satisfied, keep the reasoning brief ('Satisfied').",
             output: "Return valid JSON.",
             jsonMode: true
         };
@@ -310,7 +310,7 @@ Description: ${requirement.description}
             return res.status(500).json({ message: "Failed to parse AI response into valid format." });
         }
 
-        const aiAnalysis = parsedResults.find(p => p.requirement_id === requirement.id) || null;
+        const aiAnalysis = parsedResults.find(p => p.requirement_id === requirement.id) || parsedResults[0] || null;
 
         res.status(200).json({
             message: "AI Verification for requirement completed successfully",
