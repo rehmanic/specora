@@ -18,7 +18,6 @@ import TablePagination from "@/components/common/TablePagination";
 import StatsCard from "@/components/requirements/StatsCard";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-const NORMA_URL = "http://localhost:8000/api/v1/feasibility/legal/single";
 
 export default function Page() {
   const { projectId } = useParams();
@@ -66,9 +65,12 @@ export default function Page() {
   const handleRun = async (req) => {
     setRunningId(req.id);
     try {
-      const response = await fetch(NORMA_URL, {
+      const response = await fetch(`${API_BASE}/legal-feasibility/single`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           id: req.id,
           title: req.title,
@@ -76,7 +78,7 @@ export default function Page() {
         }),
       });
 
-      if (!response.ok) throw new Error("Norma service error");
+      if (!response.ok) throw new Error("Legal feasibility service error");
 
       const data = await response.json();
       setResults((prev) => ({ ...prev, [req.id]: data }));
@@ -96,7 +98,7 @@ export default function Page() {
       }
     } catch (error) {
       console.error("Error running feasibility:", error);
-      toast.error("Could not reach Norma. Is the service running?");
+      toast.error("Could not reach the legal feasibility service.");
     } finally {
       setRunningId(null);
     }
