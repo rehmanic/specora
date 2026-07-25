@@ -3,6 +3,8 @@ services:
   specora-db:
     image: postgres:16-alpine
     container_name: specora-db
+    ports:
+      - "5433:5432"
     env_file: ./be/.env
     volumes:
       - specora-db-data:/var/lib/postgresql/data
