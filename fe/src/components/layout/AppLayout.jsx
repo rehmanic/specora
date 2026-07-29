@@ -3,7 +3,6 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
-import { cn } from "@/lib/utils";
 
 export function AppLayout({ children }) {
   return (

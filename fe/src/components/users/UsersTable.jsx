@@ -4,16 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import ErrorBox from "@/components/common/ErrorBox";
 import TablePagination from "@/components/common/TablePagination";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { FolderKanban, Mail, Pencil, Trash2, Users } from "lucide-react";

@@ -25,6 +25,99 @@ async function main() {
         console.log(`Role ensured: ${role.name}`);
     }
 
+    // 1.5 Create Permissions
+    const frontendPermissions = [
+      "add_project_member",
+      "add_project_tag",
+      "add_user",
+      "comment_on_requirements",
+      "create_feedback_form",
+      "create_meeting",
+      "create_project",
+      "create_requirement",
+      "create_specbot_chat",
+      "delete_feedback_form",
+      "delete_meeting",
+      "delete_project",
+      "delete_requirement",
+      "download_specbot_chat_messages",
+      "export_requirement",
+      "extract_requirements_from_meeting",
+      "extract_requirements_from_specbot_chat",
+      "generate_meeting_transcript",
+      "import_requirement",
+      "join_meeting",
+      "manage_requirement_dependencies",
+      "project_settings",
+      "record_meeting",
+      "remove_project_member",
+      "remove_project_tag",
+      "send_specbot_chat_message",
+      "submit_feedback_response",
+      "summarize_specbot_chat",
+      "update_feedback_form",
+      "update_meeting",
+      "update_project",
+      "update_requirement",
+      "update_user",
+      "view_chat",
+      "view_diagrams",
+      "view_docs",
+      "view_documents",
+      "view_feasibility_studies",
+      "view_feedback_form_responses",
+      "view_feedback_forms",
+      "view_group_chat_messages",
+      "view_meeting_details",
+      "view_meeting_recording",
+      "view_meetings",
+      "view_own_feedback_response",
+      "view_project_members",
+      "view_project_tags",
+      "view_prototypes",
+      "view_requirement_comments",
+      "view_requirement_graph",
+      "view_requirement_history",
+      "view_requirements",
+      "view_roles",
+      "view_specbot_chat",
+      "view_technical_feasibility",
+      "view_users",
+      "view_verification_results",
+      "view_specbot_chat_messages",
+      "create_prototype",
+      "create_diagram",
+      "create_document"
+    ];
+
+    const dbPermissions = {};
+    for (const permName of frontendPermissions) {
+        // convert snake_case to Title Case
+        const label = permName.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        const p = await prisma.permission.upsert({
+            where: { name: permName },
+            update: { label: label, description: `Permission for ${label}`, module: 'general' },
+            create: { name: permName, label: label, description: `Permission for ${label}`, module: 'general' }
+        });
+        dbPermissions[p.name] = p.id;
+    }
+    console.log(`Ensured ${frontendPermissions.length} permissions`);
+
+    // Assign them all to manager
+    const managerRoleId = roles['manager'];
+    for (const permName of Object.keys(dbPermissions)) {
+        const permId = dbPermissions[permName];
+        const existingRp = await prisma.role_permission.findFirst({
+            where: { role_id: managerRoleId, permission_id: permId }
+        });
+        if (!existingRp) {
+            await prisma.role_permission.create({
+                data: { role_id: managerRoleId, permission_id: permId }
+            });
+        }
+    }
+    console.log("Assigned all permissions to manager role");
+
     // 2. Create Users
     const usersData = [
         {

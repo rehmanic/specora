@@ -1,14 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { UsersTable } from "@/components/users/UsersTable";
-import { Button } from "@/components/ui/button";
-import { UserPlus, Users, Code, Briefcase, Shield } from "lucide-react";
+import { Users, Code, Briefcase, Shield } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { getAllUsersRequest } from "@/api/users";
 import ErrorBox from "@/components/common/ErrorBox";
-import Logo from "@/components/common/Logo";
 import SearchCreateHeader from "@/components/common/SearchCreateHeader";
 import PageBanner from "@/components/layout/PageBanner";
 import { StatsCard } from "@/components/requirements/StatsCard";

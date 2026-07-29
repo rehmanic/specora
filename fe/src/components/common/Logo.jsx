@@ -16,7 +16,7 @@ export function Logo({ className, showText = true, size = "default" }) {
     <div className={cn("flex items-center gap-3", className)}>
       {showText ? (
         <img
-          src="/specora_logo.svg"
+          src="/specora-logo.svg"
           alt="Specora"
           className={cn("h-auto max-h-12 w-auto", currentSize.icon.replace("w-", "min-w-"))}
           // Adjusting class to handle resizing gracefully, assuming the SVG has its own aspect ratio
