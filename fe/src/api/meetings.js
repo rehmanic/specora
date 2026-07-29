@@ -1,64 +1,34 @@
-import useAuthStore from "@/store/authStore";
+import { api } from "./client";
+import { MEETINGS } from "./endpoints";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-
-const fetchWithAuth = async (endpoint, options = {}) => {
-  const { token } = useAuthStore.getState();
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-    ...options.headers,
-  };
-
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || "Request failed");
-  }
-
-  return res.json();
-};
+const AI_TIMEOUT = { timeout: 60_000 };
 
 export const createMeeting = (data) =>
-  fetchWithAuth("/meetings/create", { method: "POST", body: JSON.stringify(data) });
+  api.post(MEETINGS.CREATE, data);
 
-export const getProjectMeetings = (projectId) => fetchWithAuth(`/meetings/project/${projectId}`);
+export const getProjectMeetings = (projectId) =>
+  api.get(MEETINGS.BY_PROJECT(projectId));
 
-export const getMeeting = (meetingId) => fetchWithAuth(`/meetings/${meetingId}`);
+export const getMeeting = (meetingId) =>
+  api.get(MEETINGS.SINGLE(meetingId));
 
-export const joinMeeting = (meetingId) => fetchWithAuth(`/meetings/${meetingId}/join`, { method: "POST" });
+export const joinMeeting = (meetingId) =>
+  api.post(MEETINGS.JOIN(meetingId));
 
-export const uploadRecording = async (meetingId, blob) => {
-  const { token } = useAuthStore.getState();
+export async function uploadRecording(meetingId, blob) {
   const formData = new FormData();
   formData.append("recording", blob, `recording-${Date.now()}.webm`);
-
-  const res = await fetch(`${API_BASE}/meetings/${meetingId}/upload-recording`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || "Upload failed");
-  }
-
-  return res.json();
-};
+  return api.upload(MEETINGS.UPLOAD_RECORDING(meetingId), formData);
+}
 
 export const updateMeeting = (meetingId, data) =>
-  fetchWithAuth(`/meetings/${meetingId}`, { method: "PUT", body: JSON.stringify(data) });
+  api.put(MEETINGS.SINGLE(meetingId), data);
 
-export const transcribeMeeting = (meetingId) => fetchWithAuth(`/meetings/${meetingId}/transcribe`, { method: "POST" });
+export const transcribeMeeting = (meetingId) =>
+  api.post(MEETINGS.TRANSCRIBE(meetingId), undefined, AI_TIMEOUT);
 
-export const deleteMeeting = (meetingId) => fetchWithAuth(`/meetings/${meetingId}`, { method: "DELETE" });
+export const deleteMeeting = (meetingId) =>
+  api.delete(MEETINGS.SINGLE(meetingId));
 
 export const extractMeetingRequirements = (meetingId) =>
-  fetchWithAuth(`/meetings/${meetingId}/extract-requirements`, { method: "POST" });
+  api.post(MEETINGS.EXTRACT_REQUIREMENTS(meetingId), undefined, AI_TIMEOUT);

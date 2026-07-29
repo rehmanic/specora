@@ -1,352 +1,48 @@
-import useAuthStore from "@/store/authStore";
+import { api } from "./client";
+import { SPECBOT } from "./endpoints";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+const AI_TIMEOUT = { timeout: 60_000 };
 
 // ======================
-// Create Specbot Chat
+// Chat CRUD
 // ======================
-export async function createSpecbotChat(chatData) {
-  try {
-    const { token } = useAuthStore.getState();
+export const createSpecbotChat = (chatData) =>
+  api.post(SPECBOT.CHAT_CREATE, chatData);
 
-    const res = await fetch(`${API_BASE}/specbot/chat/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(chatData),
-    });
+export const deleteSpecbotChat = (chatId) =>
+  api.delete(SPECBOT.CHAT_DELETE(chatId));
 
-    let data;
-    try {
-      data = await res.json();
-    } catch (parseError) {
-      throw new Error("Server response is invalid. Please try again later.");
-    }
+export const clearSpecbotChat = (chatId) =>
+  api.delete(SPECBOT.CHAT_CLEAR(chatId));
 
-    if (!res.ok) {
-      throw new Error(data?.message || `Failed to create chat${res.status ? ` (${res.status})` : ""}`);
-    }
-
-    return data;
-  } catch (err) {
-    if (err instanceof Error) {
-      throw err;
-    }
-    throw new Error(err?.message || "Network error. Please check your connection and try again.");
+export function getAllSpecbotChats(projectId) {
+  let endpoint = SPECBOT.CHAT_ALL;
+  if (projectId) {
+    endpoint += `?projectId=${encodeURIComponent(projectId)}`;
   }
+  return api.get(endpoint, { cache: "no-store" });
 }
 
-// ======================
-// Delete Specbot Chat
-// ======================
-export async function deleteSpecbotChat(chatId) {
-  try {
-    const { token } = useAuthStore.getState();
-
-    const res = await fetch(`${API_BASE}/specbot/chat/delete/${chatId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch (parseError) {
-      throw new Error("Server response is invalid. Please try again later.");
-    }
-
-    if (!res.ok) {
-      throw new Error(data?.message || `Failed to delete chat${res.status ? ` (${res.status})` : ""}`);
-    }
-
-    return data;
-  } catch (err) {
-    if (err instanceof Error) {
-      throw err;
-    }
-    throw new Error(err?.message || "Network error. Please check your connection and try again.");
-  }
-}
+export const updateSpecbotChat = (chatId, updateData) =>
+  api.put(SPECBOT.CHAT_UPDATE(chatId), updateData);
 
 // ======================
-// Clear Specbot Chat
+// Messages
 // ======================
-export async function clearSpecbotChat(chatId) {
-  try {
-    const { token } = useAuthStore.getState();
+export const createMessage = (messageData) =>
+  api.post(SPECBOT.MESSAGE_CREATE, messageData);
 
-    const res = await fetch(`${API_BASE}/specbot/chat/${chatId}/clear`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch (parseError) {
-      throw new Error("Server response is invalid. Please try again later.");
-    }
-
-    if (!res.ok) {
-      throw new Error(data?.message || `Failed to clear chat${res.status ? ` (${res.status})` : ""}`);
-    }
-
-    return data;
-  } catch (err) {
-    if (err instanceof Error) {
-      throw err;
-    }
-    throw new Error(err?.message || "Network error. Please check your connection and try again.");
-  }
-}
+export const getAllMessages = (chatId) =>
+  api.get(SPECBOT.MESSAGES_ALL(chatId), { cache: "no-store" });
 
 // ======================
-// Get All Specbot Chats
+// AI-powered (longer timeout)
 // ======================
-export async function getAllSpecbotChats(projectId) {
-  try {
-    const { token } = useAuthStore.getState();
+export const downloadSpecbotChat = (chatId) =>
+  api.post(SPECBOT.CHAT_DOWNLOAD(chatId), undefined, AI_TIMEOUT);
 
-    let url = `${API_BASE}/specbot/chat/all`;
-    if (projectId) {
-      url += `?projectId=${encodeURIComponent(projectId)}`;
-    }
+export const summarizeSpecbotChat = (chatId) =>
+  api.post(SPECBOT.CHAT_SUMMARIZE(chatId), undefined, AI_TIMEOUT);
 
-    const res = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch (parseError) {
-      throw new Error("Server response is invalid. Please try again later.");
-    }
-
-    if (!res.ok) {
-      throw new Error(data?.message || `Failed to fetch chats${res.status ? ` (${res.status})` : ""}`);
-    }
-
-    return data;
-  } catch (err) {
-    if (err instanceof Error) {
-      throw err;
-    }
-    throw new Error(err?.message || "Network error. Please check your connection and try again.");
-  }
-}
-
-// ======================
-// Update Specbot Chat
-// ======================
-export async function updateSpecbotChat(chatId, updateData) {
-  try {
-    const { token } = useAuthStore.getState();
-
-    const res = await fetch(`${API_BASE}/specbot/chat/update/${chatId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(updateData),
-    });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch (parseError) {
-      throw new Error("Server response is invalid. Please try again later.");
-    }
-
-    if (!res.ok) {
-      throw new Error(data?.message || `Failed to update chat${res.status ? ` (${res.status})` : ""}`);
-    }
-
-    return data;
-  } catch (err) {
-    if (err instanceof Error) {
-      throw err;
-    }
-    throw new Error(err?.message || "Network error. Please check your connection and try again.");
-  }
-}
-
-// ======================
-// Create Message
-// ======================
-export async function createMessage(messageData) {
-  try {
-    const { token } = useAuthStore.getState();
-
-    const res = await fetch(`${API_BASE}/specbot/message/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(messageData),
-    });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch (parseError) {
-      throw new Error("Server response is invalid. Please try again later.");
-    }
-
-    if (!res.ok) {
-      throw new Error(data?.message || `Failed to send message${res.status ? ` (${res.status})` : ""}`);
-    }
-
-    return data;
-  } catch (err) {
-    if (err instanceof Error) {
-      throw err;
-    }
-    throw new Error(err?.message || "Network error. Please check your connection and try again.");
-  }
-}
-
-// ======================
-// Get All Messages
-// ======================
-export async function getAllMessages(chatId) {
-  try {
-    const { token } = useAuthStore.getState();
-
-    const res = await fetch(`${API_BASE}/specbot/messages/all/${chatId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch (parseError) {
-      throw new Error("Server response is invalid. Please try again later.");
-    }
-
-    if (!res.ok) {
-      throw new Error(data?.message || `Failed to fetch messages${res.status ? ` (${res.status})` : ""}`);
-    }
-
-    return data;
-  } catch (err) {
-    if (err instanceof Error) {
-      throw err;
-    }
-    throw new Error(err?.message || "Network error. Please check your connection and try again.");
-  }
-}
-
-// ======================
-// Download Specbot Chat (stores on server)
-// ======================
-export async function downloadSpecbotChat(chatId) {
-  try {
-    const { token } = useAuthStore.getState();
-
-    const res = await fetch(`${API_BASE}/specbot/chat/${chatId}/download`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch {
-      throw new Error("Server response is invalid. Please try again later.");
-    }
-
-    if (!res.ok) {
-      throw new Error(data?.message || "Could not store this chat right now. Please try again.");
-    }
-
-    return data;
-  } catch (err) {
-    if (err instanceof Error) {
-      throw err;
-    }
-    throw new Error("Could not store this chat right now. Please try again.");
-  }
-}
-
-// ======================
-// Summarize Specbot Chat
-// ======================
-export async function summarizeSpecbotChat(chatId) {
-  try {
-    const { token } = useAuthStore.getState();
-
-    const res = await fetch(`${API_BASE}/specbot/chat/${chatId}/summarize`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch {
-      throw new Error("Server response is invalid. Please try again later.");
-    }
-
-    if (!res.ok) {
-      throw new Error(data?.message || "Unable to summarize this chat right now. Please try again.");
-    }
-
-    return data;
-  } catch (err) {
-    if (err instanceof Error) {
-      throw err;
-    }
-    throw new Error("Unable to summarize this chat right now. Please try again.");
-  }
-}
-
-// ======================
-// Extract Requirements
-// ======================
-export async function extractSpecbotRequirements(chatId) {
-  try {
-    const { token } = useAuthStore.getState();
-
-    const res = await fetch(`${API_BASE}/specbot/chat/${chatId}/extract`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch {
-      throw new Error("Server response is invalid. Please try again later.");
-    }
-
-    if (!res.ok) {
-      throw new Error(data?.message || "Unable to extract requirements right now. Please try again.");
-    }
-
-    return data;
-  } catch (err) {
-    if (err instanceof Error) {
-      throw err;
-    }
-    throw new Error("Unable to extract requirements right now. Please try again.");
-  }
-}
+export const extractSpecbotRequirements = (chatId) =>
+  api.post(SPECBOT.CHAT_EXTRACT(chatId), undefined, AI_TIMEOUT);

@@ -1,68 +1,34 @@
-import useAuthStore from "@/store/authStore";
+import { api } from "./client";
+import { VERIFICATION } from "./endpoints";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-
-const request = async (endpoint, options = {}) => {
-  const token = useAuthStore.getState().token;
-  const headers = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
-
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Request failed with status ${response.status}`);
-  }
-
-  if (response.status === 204) return {};
-
-  return response.json();
-};
+const AI_TIMEOUT = { timeout: 60_000 };
 
 /**
  * Run Specora ARM verification
  * @param {string} projectId Target project id
  */
-export const runARMVerification = (projectId) => {
-  return request(`/verification/arm/${projectId}`, {
-    method: "POST",
-  });
-};
+export const runARMVerification = (projectId) =>
+  api.post(VERIFICATION.ARM(projectId), undefined, AI_TIMEOUT);
 
 /**
  * Run AI Verification
  * @param {string} projectId Target project id
  */
-export const runAIVerification = (projectId) => {
-  return request(`/verification/ai/${projectId}`, {
-    method: "POST",
-  });
-};
+export const runAIVerification = (projectId) =>
+  api.post(VERIFICATION.AI(projectId), undefined, AI_TIMEOUT);
 
 /**
  * Run Specora ARM verification for a single requirement
  * @param {string} projectId Target project id
  * @param {string} requirementId Target requirement id
  */
-export const runARMVerificationForRequirement = (projectId, requirementId) => {
-  return request(`/verification/arm/${projectId}/requirement/${requirementId}`, {
-    method: "POST",
-  });
-};
+export const runARMVerificationForRequirement = (projectId, requirementId) =>
+  api.post(VERIFICATION.ARM_REQUIREMENT(projectId, requirementId), undefined, AI_TIMEOUT);
 
 /**
  * Run AI Verification for a single requirement
  * @param {string} projectId Target project id
  * @param {string} requirementId Target requirement id
  */
-export const runAIVerificationForRequirement = (projectId, requirementId) => {
-  return request(`/verification/ai/${projectId}/requirement/${requirementId}`, {
-    method: "POST",
-  });
-};
+export const runAIVerificationForRequirement = (projectId, requirementId) =>
+  api.post(VERIFICATION.AI_REQUIREMENT(projectId, requirementId), undefined, AI_TIMEOUT);

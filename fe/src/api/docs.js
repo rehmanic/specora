@@ -1,84 +1,41 @@
-import useAuthStore from "@/store/authStore";
+import { api } from "./client";
+import { DOCS } from "./endpoints";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const AI_TIMEOUT = { timeout: 60_000 };
 
-const request = async (endpoint, options = {}) => {
-  const token = useAuthStore.getState().token;
-  const headers = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
+export const getDocs = (projectId) =>
+  api.get(DOCS.BY_PROJECT(projectId));
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+export const getDocById = (projectId, docId) =>
+  api.get(DOCS.SINGLE(projectId, docId));
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Request failed with status ${response.status}`);
-  }
-
-  if (response.status === 204) return {};
-
-  return response.json();
-};
-
-export const getDocs = (projectId) => request(`/docs/${projectId}`);
-
-export const getDocById = (projectId, docId) => request(`/docs/${projectId}/${docId}`);
-
-export const createDoc = async (projectId, docData) => {
-  const data = await request(`/docs/${projectId}`, {
-    method: "POST",
-    body: JSON.stringify(docData),
-  });
+export async function createDoc(projectId, docData) {
+  const data = await api.post(DOCS.BY_PROJECT(projectId), docData);
   return data.doc;
-};
+}
 
-export const updateDoc = async (projectId, docId, docData) => {
-  const data = await request(`/docs/${projectId}/${docId}`, {
-    method: "PUT",
-    body: JSON.stringify(docData),
-  });
+export async function updateDoc(projectId, docId, docData) {
+  const data = await api.put(DOCS.SINGLE(projectId, docId), docData);
   return data.doc;
-};
+}
 
-export const deleteDoc = (projectId, docId) => request(`/docs/${projectId}/${docId}`, { method: "DELETE" });
+export const deleteDoc = (projectId, docId) =>
+  api.delete(DOCS.SINGLE(projectId, docId));
 
 export const updateDocRequirements = (projectId, docId, requirementIds) =>
-  request(`/docs/${projectId}/${docId}/requirements`, {
-    method: "PUT",
-    body: JSON.stringify({ requirementIds }),
-  });
+  api.put(DOCS.REQUIREMENTS(projectId, docId), { requirementIds });
 
-export const generateDoc = async (projectId, docId, { useCaseContext } = {}) => {
-  const data = await request(`/docs/${projectId}/${docId}/generate`, {
-    method: "POST",
-    body: JSON.stringify({ useCaseContext }),
-  });
-  return data;
-};
+export const generateDoc = (projectId, docId, { useCaseContext } = {}) =>
+  api.post(DOCS.GENERATE(projectId, docId), { useCaseContext }, AI_TIMEOUT);
 
-export const editDocWithAI = async (projectId, docId, { editInstructions, currentContent }) => {
-  const data = await request(`/docs/${projectId}/${docId}/edit-with-ai`, {
-    method: "POST",
-    body: JSON.stringify({ editInstructions, currentContent }),
-  });
-  return data;
-};
+export const editDocWithAI = (projectId, docId, { editInstructions, currentContent }) =>
+  api.post(DOCS.EDIT_WITH_AI(projectId, docId), { editInstructions, currentContent }, AI_TIMEOUT);
 
 // format = "pdf" | "docx"
-export const exportDoc = async (projectId, docId, format, filename) => {
-  const token = useAuthStore.getState().token;
-  const response = await fetch(
-    `${API_BASE}/docs/${projectId}/${docId}/export/${format}`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  if (!response.ok) throw new Error(`Export failed (${response.status})`);
+export async function exportDoc(projectId, docId, format, filename) {
+  const res = await api.raw(DOCS.EXPORT(projectId, docId, format));
 
-  const blob = await response.blob();
+  const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -87,4 +44,4 @@ export const exportDoc = async (projectId, docId, format, filename) => {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-};
+}

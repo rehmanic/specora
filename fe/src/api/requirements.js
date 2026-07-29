@@ -1,52 +1,24 @@
-import useAuthStore from "@/store/authStore";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-
-const request = async (endpoint, options = {}) => {
-  const token = useAuthStore.getState().token;
-  const headers = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
-
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Request failed with status ${response.status}`);
-  }
-
-  // Return empty object for 204 No Content
-  if (response.status === 204) return {};
-
-  return response.json();
-};
+import { api } from "./client";
+import { REQUIREMENTS } from "./endpoints";
 
 /**
  * Fetch all requirements for a project with optional filters
  * @param {string} projectId Target project id or slug
  * @param {Object} params { search, status, priority, category }
  */
-export const getRequirements = (projectId, params = {}) => {
+export function getRequirements(projectId, params = {}) {
   const query = new URLSearchParams(params).toString();
-  return request(`/requirements/${projectId}${query ? `?${query}` : ""}`);
-};
+  const endpoint = REQUIREMENTS.BY_PROJECT(projectId) + (query ? `?${query}` : "");
+  return api.get(endpoint);
+}
 
 /**
  * Create a new requirement
  * @param {string} projectId Target project id or slug
  * @param {Object} data { title, description, priority, status, tags, category, attributes, parent_id, owner_id }
  */
-export const createRequirement = (projectId, data) => {
-  return request(`/requirements/${projectId}`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-};
+export const createRequirement = (projectId, data) =>
+  api.post(REQUIREMENTS.BY_PROJECT(projectId), data);
 
 /**
  * Update a requirement
@@ -54,95 +26,66 @@ export const createRequirement = (projectId, data) => {
  * @param {string} requirementId ID of the requirement
  * @param {Object} data fields to update, including optional change_reason
  */
-export const updateRequirement = (projectId, requirementId, data) => {
-  return request(`/requirements/${projectId}/${requirementId}`, {
-    method: "PUT",
-    body: JSON.stringify(data),
-  });
-};
+export const updateRequirement = (projectId, requirementId, data) =>
+  api.put(REQUIREMENTS.SINGLE(projectId, requirementId), data);
 
 /**
  * Delete a requirement
  * @param {string} projectId Target project id or slug
  * @param {string} requirementId ID of the requirement
  */
-export const deleteRequirement = (projectId, requirementId) => {
-  return request(`/requirements/${projectId}/${requirementId}`, {
-    method: "DELETE",
-  });
-};
+export const deleteRequirement = (projectId, requirementId) =>
+  api.delete(REQUIREMENTS.SINGLE(projectId, requirementId));
 
 /**
  * Get requirement change history
  */
-export const getRequirementHistory = (projectId, requirementId) => {
-  return request(`/requirements/${projectId}/${requirementId}/history`);
-};
+export const getRequirementHistory = (projectId, requirementId) =>
+  api.get(REQUIREMENTS.HISTORY(projectId, requirementId));
 
 /**
  * Rollback requirement to a specific version
  */
-export const rollbackRequirement = (projectId, requirementId, historyId) => {
-  return request(`/requirements/${projectId}/${requirementId}/rollback/${historyId}`, {
-    method: "POST",
-  });
-};
+export const rollbackRequirement = (projectId, requirementId, historyId) =>
+  api.post(REQUIREMENTS.ROLLBACK(projectId, requirementId, historyId));
 
 /**
  * Get comments for a requirement
  */
-export const getRequirementComments = (projectId, requirementId) => {
-  return request(`/requirements/${projectId}/${requirementId}/comments`);
-};
+export const getRequirementComments = (projectId, requirementId) =>
+  api.get(REQUIREMENTS.COMMENTS(projectId, requirementId));
 
 /**
  * Add a comment to a requirement
  */
-export const addRequirementComment = (projectId, requirementId, data) => {
-  return request(`/requirements/${projectId}/${requirementId}/comments`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-};
+export const addRequirementComment = (projectId, requirementId, data) =>
+  api.post(REQUIREMENTS.COMMENTS(projectId, requirementId), data);
 
 /**
  * Get traceability links for a requirement
  */
-export const getTraceabilityLinks = (projectId, requirementId) => {
-  return request(`/requirements/${projectId}/${requirementId}/traceability`);
-};
+export const getTraceabilityLinks = (projectId, requirementId) =>
+  api.get(REQUIREMENTS.TRACEABILITY(projectId, requirementId));
 
-export const createTraceabilityLink = (projectId, requirementId, data) => {
-  return request(`/requirements/${projectId}/${requirementId}/traceability`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-};
+export const createTraceabilityLink = (projectId, requirementId, data) =>
+  api.post(REQUIREMENTS.TRACEABILITY(projectId, requirementId), data);
 
 /**
  * Delete a traceability link
  */
-export const deleteTraceabilityLink = (projectId, linkId) => {
-  return request(`/requirements/${projectId}/traceability/${linkId}`, {
-    method: "DELETE",
-  });
-};
+export const deleteTraceabilityLink = (projectId, linkId) =>
+  api.delete(REQUIREMENTS.TRACEABILITY_LINK(projectId, linkId));
 
 /**
  * Get the project traceability graph
  */
-export const getTraceabilityGraph = (projectId) => {
-  return request(`/requirements/${projectId}/traceability/graph`);
-};
+export const getTraceabilityGraph = (projectId) =>
+  api.get(REQUIREMENTS.TRACEABILITY_GRAPH(projectId));
 
 /**
  * Import requirements from standard format
  * @param {string} projectId Target project id or slug
  * @param {Object} data { requirements: [...] }
  */
-export const importRequirements = (projectId, data) => {
-  return request(`/requirements/${projectId}/import`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-};
+export const importRequirements = (projectId, data) =>
+  api.post(REQUIREMENTS.IMPORT(projectId), data);

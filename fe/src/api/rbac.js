@@ -1,46 +1,22 @@
-import useAuthStore from "@/store/authStore";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-
-async function request(url, options = {}) {
-  const { token } = useAuthStore.getState();
-  const res = await fetch(`${API_BASE}${url}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    },
-  });
-
-  const responseData = await res.json();
-
-  if (!res.ok) {
-    throw new Error(responseData?.message || `Request failed with status ${res.status}`);
-  }
-
-  return responseData;
-}
+import { api } from "./client";
+import { RBAC } from "./endpoints";
 
 // ROLES
-export const getAllRolesRequest = () => request("/rbac/roles");
-export const getRoleByIdRequest = (id) => request(`/rbac/roles/${id}`);
-export const createRoleRequest = (data) => request("/rbac/roles", { method: "POST", body: JSON.stringify(data) });
-export const updateRoleRequest = (id, data) =>
-  request(`/rbac/roles/${id}`, { method: "PUT", body: JSON.stringify(data) });
-export const deleteRoleRequest = (id) => request(`/rbac/roles/${id}`, { method: "DELETE" });
+export const getAllRolesRequest = () => api.get(RBAC.ROLES);
+export const getRoleByIdRequest = (id) => api.get(RBAC.ROLE(id));
+export const createRoleRequest = (data) => api.post(RBAC.ROLES, data);
+export const updateRoleRequest = (id, data) => api.put(RBAC.ROLE(id), data);
+export const deleteRoleRequest = (id) => api.delete(RBAC.ROLE(id));
 
 // PERMISSIONS
-export const getAllPermissionsRequest = () => request("/rbac/permissions");
-export const getPermissionByIdRequest = (id) => request(`/rbac/permissions/${id}`);
-export const createPermissionRequest = (data) =>
-  request("/rbac/permissions", { method: "POST", body: JSON.stringify(data) });
-export const updatePermissionRequest = (id, data) =>
-  request(`/rbac/permissions/${id}`, { method: "PUT", body: JSON.stringify(data) });
-export const deletePermissionRequest = (id) => request(`/rbac/permissions/${id}`, { method: "DELETE" });
+export const getAllPermissionsRequest = () => api.get(RBAC.PERMISSIONS);
+export const getPermissionByIdRequest = (id) => api.get(RBAC.PERMISSION(id));
+export const createPermissionRequest = (data) => api.post(RBAC.PERMISSIONS, data);
+export const updatePermissionRequest = (id, data) => api.put(RBAC.PERMISSION(id), data);
+export const deletePermissionRequest = (id) => api.delete(RBAC.PERMISSION(id));
 
 // ASSIGNMENTS
 export const assignPermissionToRoleRequest = (roleId, permissionId) =>
-  request(`/rbac/roles/${roleId}/permissions`, { method: "POST", body: JSON.stringify({ permissionId }) });
+  api.post(RBAC.ROLE_PERMISSIONS(roleId), { permissionId });
 export const removePermissionFromRoleRequest = (roleId, permissionId) =>
-  request(`/rbac/roles/${roleId}/permissions/${permissionId}`, { method: "DELETE" });
+  api.delete(RBAC.ROLE_PERMISSION(roleId, permissionId));

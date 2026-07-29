@@ -1,63 +1,28 @@
-import useAuthStore from "@/store/authStore";
+import { api } from "./client";
+import { DIAGRAMS } from "./endpoints";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const AI_TIMEOUT = { timeout: 60_000 };
 
-const request = async (endpoint, options = {}) => {
-  const token = useAuthStore.getState().token;
-  const headers = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
-
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Request failed with status ${response.status}`);
-  }
-
-  if (response.status === 204) return {};
-
-  return response.json();
-};
-
-export const getDiagrams = (projectId) => request(`/diagrams/${projectId}`);
+export const getDiagrams = (projectId) =>
+  api.get(DIAGRAMS.BY_PROJECT(projectId));
 
 export const createDiagram = (projectId, body = {}) =>
-  request(`/diagrams/${projectId}`, {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  api.post(DIAGRAMS.BY_PROJECT(projectId), body);
 
-export const getDiagram = (projectId, diagramId) => request(`/diagrams/${projectId}/${diagramId}`);
+export const getDiagram = (projectId, diagramId) =>
+  api.get(DIAGRAMS.SINGLE(projectId, diagramId));
 
 export const updateDiagram = (projectId, diagramId, body) =>
-  request(`/diagrams/${projectId}/${diagramId}`, {
-    method: "PUT",
-    body: JSON.stringify(body),
-  });
+  api.put(DIAGRAMS.SINGLE(projectId, diagramId), body);
 
 export const deleteDiagram = (projectId, diagramId) =>
-  request(`/diagrams/${projectId}/${diagramId}`, { method: "DELETE" });
+  api.delete(DIAGRAMS.SINGLE(projectId, diagramId));
 
 export const generateDiagram = (projectId, { description }) =>
-  request(`/diagrams/${projectId}/generate`, {
-    method: "POST",
-    body: JSON.stringify({ description }),
-  });
+  api.post(DIAGRAMS.GENERATE(projectId), { description }, AI_TIMEOUT);
 
 export const editDiagram = (projectId, { current_mermaid_code, edit_instruction }) =>
-  request(`/diagrams/${projectId}/edit`, {
-    method: "POST",
-    body: JSON.stringify({ current_mermaid_code, edit_instruction }),
-  });
+  api.post(DIAGRAMS.EDIT(projectId), { current_mermaid_code, edit_instruction }, AI_TIMEOUT);
 
 export const updateDiagramRequirements = (projectId, diagramId, requirementIds) =>
-  request(`/diagrams/${projectId}/${diagramId}/requirements`, {
-    method: "PUT",
-    body: JSON.stringify({ requirement_ids: requirementIds }),
-  });
+  api.put(DIAGRAMS.REQUIREMENTS(projectId, diagramId), { requirement_ids: requirementIds });
