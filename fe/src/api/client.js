@@ -14,7 +14,7 @@
  */
 
 import useAuthStore from "@/store/authStore";
-import { ApiError, AuthenticationError, NetworkError, TimeoutError, ValidationError, } from "./errors";
+import { ApiError, AuthenticationError, NetworkError, TimeoutError, ValidationError, ServerError, } from "./errors";
 
 // ─── Base URL ────────────────────────────────────────────────────────────────
 
@@ -76,6 +76,9 @@ function classifyHttpError(res, data, endpoint) {
   }
   if (res.status === 400 || res.status === 422) {
     return new ValidationError(message, opts);
+  }
+  if (res.status >= 500 && res.status < 600) {
+    return new ServerError(message, opts);
   }
   return new ApiError(message, opts);
 }
