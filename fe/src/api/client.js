@@ -1,69 +1,41 @@
-/**
- * Centralized HTTP client for the Specora frontend.
- *
- * Every API module should import `api` from this file instead of calling
- * `fetch()` directly. This guarantees consistent auth handling, timeouts,
- * error classification, response parsing, and retry behaviour across the
- * entire frontend.
- *
- * Usage:
- *   import { api } from "./client";
- *   const users = await api.get("/users/all");
- *   await api.post("/users/create", { name: "Jane" });
- *   await api.upload("/upload", formData);
- */
-
 import useAuthStore from "@/store/authStore";
 import { ApiError, AuthenticationError, NetworkError, TimeoutError, ValidationError, ServerError, } from "./errors";
 
-// ─── Base URL ────────────────────────────────────────────────────────────────
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-
-if (!API_BASE) {
-  throw new Error(
-    "Missing NEXT_PUBLIC_API_URL environment variable. " +
-    "Add it to your .env.local file."
-  );
-}
-
-// ─── Defaults ────────────────────────────────────────────────────────────────
-
 const DEFAULT_TIMEOUT_MS = 15_000;
 const RETRY_DELAY_MS = 1_000;
 const MAX_RETRIES = 1;
 const RETRYABLE_STATUSES = new Set([502, 503, 504]);
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Pause for `ms` milliseconds. */
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/**
- * Parse the response body based on Content-Type.
- * Returns an empty object for 204 No Content.
- */
-async function parseResponse(res) {
-  if (res.status === 204) return {};
-
-  const contentType = res.headers.get("content-type") || "";
-
-  if (contentType.includes("application/json")) {
-    try {
-      return await res.json();
-    } catch {
-      // Body claimed JSON but wasn't parseable – fall through to text
-    }
-  }
-
-  // Non-JSON (HTML error pages, plain text, etc.)
-  const text = await res.text();
-  return { _raw: text };
+if (!API_BASE) {
+  throw new Error("Missing NEXT_PUBLIC_API_URL environment variable.");
 }
 
-/**
- * Classify an HTTP error response into the appropriate ApiError subclass.
- */
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function parseResponse(res) {
+  
+  if (res.status === 204) {
+    return {};
+  }
+
+  const text = await res.text();
+  if (!text) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    return { _raw: text };
+  }
+}
+
 function classifyHttpError(res, data, endpoint) {
   const message =
     data?.message ||

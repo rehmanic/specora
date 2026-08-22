@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Specora - Transform Ideas into Clear Specifications</title>
+  
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <link rel="stylesheet" href="styles.cc">
+  <style>
+    /* Inline styles that require Next.js logic can go here, but styles.cc handles everything */
+  </style>
+</head>
+<body class="flex min-h-screen flex-col bg-white font-sans text-slate-600">
+  
+  <!-- Header -->
+  <header class="fixed top-6 left-1/2 z-50 w-[95%] max-w-5xl -translate-x-1/2">
+    <div class="flex items-center justify-between rounded-full border border-slate-200 bg-white px-6 py-3 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.1)] transition-all duration-500 hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)]">
+      <a href="#" class="group flex items-center gap-2.5 transition-all duration-300">
+        <div class="relative">
+          <div class="absolute -inset-1 rounded-full bg-gradient-to-tr from-[oklch(0.85_0.20_130)]/40 to-emerald-400/40 opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100"></div>
+          <img
+            src="specora-logo.svg"
+            onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWdvbiBwb2ludHM9IjEyIDIgMiAyMiAxMiAxNSAyMiAyMiAxMiAyIi8+PC9zdmc+'"
+            alt="Specora"
+            class="relative z-10 h-8 w-8 drop-shadow-sm transition-transform duration-300 group-hover:scale-105 md:h-9 md:w-9"
+          />
+        </div>
+        <span class="text-lg font-bold tracking-tight text-slate-900 md:text-xl">Specora</span>
+      </a>
+
+      <nav class="hidden items-center gap-8 text-sm font-medium text-slate-500 md:flex">
+        <a href="#features" class="transition-colors hover:text-slate-900">
+          Features
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-4">
+        <a
+          href="#"
+          class="rounded-full bg-[oklch(0.85_0.20_130)] px-5 py-3 text-xs font-bold text-[oklch(0.15_0.02_285)] shadow-sm transition-all hover:brightness-95"
+        >
+          Get Started
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1">
+    
+    <!-- Hero -->
+    <section class="px-4 pt-32 pb-20 md:px-6">
+      <div class="mx-auto max-w-7xl">
+        <div class="hero-grid relative rounded-[2.5rem] bg-[oklch(0.15_0.02_285)] px-6 pt-20 pb-48 text-center md:pb-64 lg:pb-80">
+          
+          <div class="group mb-10 inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-medium text-slate-300 shadow-sm backdrop-blur-sm transition-colors hover:bg-white/10">
+            <i data-lucide="sparkles" class="h-3 w-3 text-[oklch(0.85_0.20_130)]"></i>
+            <span class="opacity-80">AI-Powered Platform</span>
+          </div>
+
+          <h1 class="relative z-10 mx-auto mb-6 max-w-5xl text-5xl leading-[1.1] font-medium tracking-tight text-white md:text-6xl lg:text-[4.5rem]">
+            Transform Ideas into <br class="hidden md:block" />
+            <span class="relative inline-block">Clear Specifications</span>
+          </h1>
+
+          <p class="relative z-10 mx-auto mb-8 max-w-2xl text-sm leading-relaxed font-light text-slate-300/80 md:mb-12 md:text-lg">
+            Specora streamlines requirements gathering with AI. Collaborate with stakeholders, generate precise specs,
+            and bridge the gap between vision and development.
+          </p>
+
+          <div class="absolute bottom-0 left-1/2 z-20 w-[90%] max-w-[75rem] -translate-x-1/2 translate-y-1/2 transform px-4 transition-all duration-500 md:w-full">
+            <div class="group overflow-hidden rounded-2xl border border-slate-200/60 bg-white transition-shadow duration-500 hover:shadow-[0_48px_80px_-24px_rgba(0,0,0,0.35),0_0_120px_-20px_rgba(20,184,166,0.2)]">
+              
+              <!-- Dashboard Mockup -->
+              <div class="relative max-h-[400px] w-full overflow-hidden bg-slate-50 md:max-h-[550px] lg:max-h-[650px]">
+                <img
+                  src="app_preview.png"
+                  onerror="this.src='https://placehold.co/1200x800?text=Dashboard+Preview'"
+                  alt="Specora Dashboard Preview"
+                  class="block h-auto min-h-full w-full object-cover object-top transition-transform duration-700 hover:scale-[1.01]"
+                />
+                <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-900/[0.05] to-transparent"></div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="hero-grid mt-64 bg-[oklch(0.15_0.02_285)] px-6 py-20 md:mt-80 lg:mt-96">
+      <div class="mx-auto grid max-w-7xl grid-cols-1 items-center justify-items-center gap-x-8 gap-y-16 sm:grid-cols-2 md:gap-x-16 lg:grid-cols-4">
+        
+        <div class="group flex flex-col items-center justify-center text-center transition-all duration-500">
+          <div class="mb-2 text-3xl font-semibold tracking-tight text-[oklch(0.85_0.20_130)] transition-transform duration-300 group-hover:scale-105 md:text-4xl">10x Faster</div>
+          <div class="text-[10px] leading-relaxed font-bold tracking-[0.1em] whitespace-nowrap text-slate-400 uppercase md:text-xs md:tracking-[0.2em]">Time to Specification</div>
+        </div>
+
+        <div class="group flex flex-col items-center justify-center text-center transition-all duration-500">
+          <div class="mb-2 text-3xl font-semibold tracking-tight text-[oklch(0.85_0.20_130)] transition-transform duration-300 group-hover:scale-105 md:text-4xl">99.2%</div>
+          <div class="text-[10px] leading-relaxed font-bold tracking-[0.1em] whitespace-nowrap text-slate-400 uppercase md:text-xs md:tracking-[0.2em]">AI Consistency</div>
+        </div>
+
+        <div class="group flex flex-col items-center justify-center text-center transition-all duration-500">
+          <div class="mb-2 text-3xl font-semibold tracking-tight text-[oklch(0.85_0.20_130)] transition-transform duration-300 group-hover:scale-105 md:text-4xl">85%</div>
+          <div class="text-[10px] leading-relaxed font-bold tracking-[0.1em] whitespace-nowrap text-slate-400 uppercase md:text-xs md:tracking-[0.2em]">Less Rework</div>
+        </div>
+
+        <div class="group flex flex-col items-center justify-center text-center transition-all duration-500">
+          <div class="mb-2 text-3xl font-semibold tracking-tight text-[oklch(0.85_0.20_130)] transition-transform duration-300 group-hover:scale-105 md:text-4xl">60%</div>
+          <div class="text-[10px] leading-relaxed font-bold tracking-[0.1em] whitespace-nowrap text-slate-400 uppercase md:text-xs md:tracking-[0.2em]">Faster Discovery</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" tabindex="0" class="relative overflow-hidden bg-white py-24 outline-none" aria-label="Specora platform features">
+      <div class="hero-grid pointer-events-none absolute inset-0 opacity-[0.03]"></div>
+      <div class="pointer-events-none absolute -top-24 -left-24 h-[620px] w-[620px] rounded-full bg-gradient-to-br from-[oklch(0.85_0.20_130)]/35 via-sky-400/20 to-transparent blur-[90px]"></div>
+      <div class="pointer-events-none absolute -right-24 -bottom-28 h-[720px] w-[720px] rounded-full bg-gradient-to-tr from-violet-400/25 via-emerald-400/15 to-transparent blur-[110px]"></div>
+
+      <div class="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6">
+        <div class="flex flex-col gap-12 pt-24 pb-10">
+          
+          <div class="flex items-end justify-between gap-6">
+            <div>
+              <h2 class="mt-5 text-3xl leading-[1.05] font-semibold tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
+                Core Modules
+                <span class="text-[oklch(0.55_0.15_130)]"> & Features</span>
+              </h2>
+              <p class="mt-3 max-w-2xl text-sm leading-relaxed font-light text-slate-500 md:text-base">
+                Experience the complete requirements lifecycle with purpose-built modules.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-8 grid min-h-0 grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
+            <!-- Rail -->
+            <div class="relative min-h-0 overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-slate-50/60 p-4 sm:p-5">
+              <div class="pointer-events-none absolute inset-0 opacity-[0.7]">
+                <div class="absolute -top-20 -right-24 h-72 w-72 rounded-full bg-gradient-to-br from-[oklch(0.85_0.20_130)]/25 to-transparent blur-[70px]"></div>
+              </div>
+
+              <div class="relative space-y-2 pr-1">
+                <div id="feature-pill" class="pointer-events-none absolute right-1 left-0 rounded-[1.8rem] bg-slate-900 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.45)] transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] opacity-0"></div>
+
+                <!-- Mod 1 -->
+                <button class="feature-btn group relative z-10 flex w-full items-center gap-4 rounded-[1.8rem] border px-4 py-4 text-left transition-colors duration-500">
+                  <div class="icon-container flex h-10 w-10 items-center justify-center rounded-2xl border transition-all duration-500">
+                    <i data-lucide="message-circle" class="h-5 w-5"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="mt-1 truncate text-base font-semibold tracking-tight">Elicitation</div>
+                      </div>
+                      <i data-lucide="arrow-right" class="arrow-icon h-4 w-4 shrink-0 transition-all duration-500"></i>
+                    </div>
+                    <div class="tagline-text mt-1 text-xs leading-snug">Gather & Extract Requirements</div>
+                  </div>
+                </button>
+
+                <!-- Mod 2 -->
+                <button class="feature-btn group relative z-10 flex w-full items-center gap-4 rounded-[1.8rem] border px-4 py-4 text-left transition-colors duration-500">
+                  <div class="icon-container flex h-10 w-10 items-center justify-center rounded-2xl border transition-all duration-500">
+                    <i data-lucide="shield-check" class="h-5 w-5"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="mt-1 truncate text-base font-semibold tracking-tight">Feasibility</div>
+                      </div>
+                      <i data-lucide="arrow-right" class="arrow-icon h-4 w-4 shrink-0 transition-all duration-500"></i>
+                    </div>
+                    <div class="tagline-text mt-1 text-xs leading-snug">Technical, Economic, and Legal Feasibility</div>
+                  </div>
+                </button>
+
+                <!-- Mod 3 -->
+                <button class="feature-btn group relative z-10 flex w-full items-center gap-4 rounded-[1.8rem] border px-4 py-4 text-left transition-colors duration-500">
+                  <div class="icon-container flex h-10 w-10 items-center justify-center rounded-2xl border transition-all duration-500">
+                    <i data-lucide="layout" class="h-5 w-5"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="mt-1 truncate text-base font-semibold tracking-tight">Prototyping</div>
+                      </div>
+                      <i data-lucide="arrow-right" class="arrow-icon h-4 w-4 shrink-0 transition-all duration-500"></i>
+                    </div>
+                    <div class="tagline-text mt-1 text-xs leading-snug">Visualize and Validate</div>
+                  </div>
+                </button>
+
+                <!-- Mod 4 -->
+                <button class="feature-btn group relative z-10 flex w-full items-center gap-4 rounded-[1.8rem] border px-4 py-4 text-left transition-colors duration-500">
+                  <div class="icon-container flex h-10 w-10 items-center justify-center rounded-2xl border transition-all duration-500">
+                    <i data-lucide="clipboard-check" class="h-5 w-5"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="mt-1 truncate text-base font-semibold tracking-tight">Verification</div>
+                      </div>
+                      <i data-lucide="arrow-right" class="arrow-icon h-4 w-4 shrink-0 transition-all duration-500"></i>
+                    </div>
+                    <div class="tagline-text mt-1 text-xs leading-snug">IEEE Analysis and Ambiguity Detection</div>
+                  </div>
+                </button>
+
+                <!-- Mod 5 -->
+                <button class="feature-btn group relative z-10 flex w-full items-center gap-4 rounded-[1.8rem] border px-4 py-4 text-left transition-colors duration-500">
+                  <div class="icon-container flex h-10 w-10 items-center justify-center rounded-2xl border transition-all duration-500">
+                    <i data-lucide="scroll-text" class="h-5 w-5"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="mt-1 truncate text-base font-semibold tracking-tight">Specification</div>
+                      </div>
+                      <i data-lucide="arrow-right" class="arrow-icon h-4 w-4 shrink-0 transition-all duration-500"></i>
+                    </div>
+                    <div class="tagline-text mt-1 text-xs leading-snug">Diagram & Document</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Stage -->
+            <div class="relative min-h-0 overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-slate-50/50">
+              
+              <!-- Slide 1 -->
+              <div class="feature-slide relative h-full p-6 sm:p-8 lg:p-10 hidden">
+                <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-400/25 via-emerald-400/15 to-cyan-400/15"></div>
+                <div class="pointer-events-none absolute inset-0 [mask-image:radial-gradient(60%_60%_at_60%_10%,black,transparent)]">
+                  <div class="absolute -top-28 right-10 h-[520px] w-[520px] rounded-full bg-white/20 blur-[90px]"></div>
+                </div>
+                
+                <div class="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-6">
+                  <div class="flex items-start justify-between gap-6">
+                    <div>
+                      <div class="flex items-center gap-3">
+                        <span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>
+                        <span class="text-[10px] font-black tracking-[0.25em] text-slate-600 uppercase">Elicitation</span>
+                      </div>
+                      <h3 class="mt-3 max-w-2xl text-2xl leading-snug font-semibold tracking-tight text-slate-900 md:text-3xl">Gather & Extract Requirements</h3>
+                      <p class="mt-3 max-w-2xl text-sm leading-relaxed font-light text-slate-600 md:text-base">Use AI features to elicit and extract requirements quickly.</p>
+                    </div>
+                    <div class="dot-nav hidden shrink-0 flex-col items-end gap-2 md:flex">
+                      <div class="module-label text-[10px] font-black tracking-widest text-slate-600 uppercase">Module 1</div>
+                      <div class="flex gap-1.5">
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="min-h-0 pb-10">
+                    <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="message-circle" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Specbot</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">An AI chatbot that can talk with clients and understand their needs.</p></div>
+                        </div>
+                      </div>
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="video" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Meetings</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">Record, transcribe and extract requirements from meetings with stakehoders.</p></div>
+                        </div>
+                      </div>
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="file-text" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Feedbacks</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">Gather and organize feedback from multiple stakeholders to clarify requirements and ensure everyone is on the same page.</p></div>
+                        </div>
+                      </div>
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="users" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Group chat</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">A group chat for all stakeholders for general discussions.</p></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 2 -->
+              <div class="feature-slide relative h-full p-6 sm:p-8 lg:p-10 hidden">
+                <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-400/25 via-teal-400/15 to-cyan-400/15"></div>
+                <div class="pointer-events-none absolute inset-0 [mask-image:radial-gradient(60%_60%_at_60%_10%,black,transparent)]">
+                  <div class="absolute -top-28 right-10 h-[520px] w-[520px] rounded-full bg-white/20 blur-[90px]"></div>
+                </div>
+                
+                <div class="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-6">
+                  <div class="flex items-start justify-between gap-6">
+                    <div>
+                      <div class="flex items-center gap-3">
+                        <span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+                        <span class="text-[10px] font-black tracking-[0.25em] text-slate-600 uppercase">Feasibility</span>
+                      </div>
+                      <h3 class="mt-3 max-w-2xl text-2xl leading-snug font-semibold tracking-tight text-slate-900 md:text-3xl">Technical, Economic, and Legal Feasibility</h3>
+                      <p class="mt-3 max-w-2xl text-sm leading-relaxed font-light text-slate-600 md:text-base">Check project feasibility through simulations, automated legal checks, and technical research, before moving forward.</p>
+                    </div>
+                    <div class="dot-nav hidden shrink-0 flex-col items-end gap-2 md:flex">
+                      <div class="module-label text-[10px] font-black tracking-widest text-slate-600 uppercase">Module 2</div>
+                      <div class="flex gap-1.5">
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="min-h-0 pb-10">
+                    <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="circle-dollar-sign" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Economic Simulation</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">Run Monte Carlo simulations to predict cost and schedule risks before code is written.</p></div>
+                        </div>
+                      </div>
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="scale" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Legal Engine</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">Check requirements against legal frameworks for instant compliance feedback.</p></div>
+                        </div>
+                      </div>
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="search" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Technical Validation</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">Deep-dive into tech stacks with AI research agents to find constraints early.</p></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 3 -->
+              <div class="feature-slide relative h-full p-6 sm:p-8 lg:p-10 hidden">
+                <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-400/25 via-fuchsia-400/15 to-rose-400/15"></div>
+                <div class="pointer-events-none absolute inset-0 [mask-image:radial-gradient(60%_60%_at_60%_10%,black,transparent)]">
+                  <div class="absolute -top-28 right-10 h-[520px] w-[520px] rounded-full bg-white/20 blur-[90px]"></div>
+                </div>
+                
+                <div class="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-6">
+                  <div class="flex items-start justify-between gap-6">
+                    <div>
+                      <div class="flex items-center gap-3">
+                        <span class="h-2.5 w-2.5 rounded-full bg-violet-400"></span>
+                        <span class="text-[10px] font-black tracking-[0.25em] text-slate-600 uppercase">Prototyping</span>
+                      </div>
+                      <h3 class="mt-3 max-w-2xl text-2xl leading-snug font-semibold tracking-tight text-slate-900 md:text-3xl">Visualize and Validate</h3>
+                      <p class="mt-3 max-w-2xl text-sm leading-relaxed font-light text-slate-600 md:text-base">Build visual flows that map to specific requirements for crystal clear alignment.</p>
+                    </div>
+                    <div class="dot-nav hidden shrink-0 flex-col items-end gap-2 md:flex">
+                      <div class="module-label text-[10px] font-black tracking-widest text-slate-600 uppercase">Module 3</div>
+                      <div class="flex gap-1.5">
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="min-h-0 pb-10">
+                    <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="layout" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Interactive Boards</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">Design screen layouts and user flows within the project workspace.</p></div>
+                        </div>
+                      </div>
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="network" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Requirement Mapping</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">Tag screens to specific requirements for traceability.</p></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 4 -->
+              <div class="feature-slide relative h-full p-6 sm:p-8 lg:p-10 hidden">
+                <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-400/20 via-indigo-500/15 to-emerald-400/10"></div>
+                <div class="pointer-events-none absolute inset-0 [mask-image:radial-gradient(60%_60%_at_60%_10%,black,transparent)]">
+                  <div class="absolute -top-28 right-10 h-[520px] w-[520px] rounded-full bg-white/20 blur-[90px]"></div>
+                </div>
+                
+                <div class="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-6">
+                  <div class="flex items-start justify-between gap-6">
+                    <div>
+                      <div class="flex items-center gap-3">
+                        <span class="h-2.5 w-2.5 rounded-full bg-sky-500"></span>
+                        <span class="text-[10px] font-black tracking-[0.25em] text-slate-600 uppercase">Verification</span>
+                      </div>
+                      <h3 class="mt-3 max-w-2xl text-2xl leading-snug font-semibold tracking-tight text-slate-900 md:text-3xl">IEEE Analysis and Ambiguity Detection</h3>
+                      <p class="mt-3 max-w-2xl text-sm leading-relaxed font-light text-slate-600 md:text-base">Use AI to score requirements against global IEEE benchmarks and ARM metrics.</p>
+                    </div>
+                    <div class="dot-nav hidden shrink-0 flex-col items-end gap-2 md:flex">
+                      <div class="module-label text-[10px] font-black tracking-widest text-slate-600 uppercase">Module 4</div>
+                      <div class="flex gap-1.5">
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="min-h-0 pb-10">
+                    <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="badge-check" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">IEEE AI Analysis</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">Check requirements against IEEE requirements standards instantly, using AI.</p></div>
+                        </div>
+                      </div>
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="message-circle-warning" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Ambiguity Scoring</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">Identify weak language and hidden complexity with Specora's ARM engine.</p></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 5 -->
+              <div class="feature-slide relative h-full p-6 sm:p-8 lg:p-10 hidden">
+                <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-400/15 via-emerald-400/10 to-indigo-500/10"></div>
+                <div class="pointer-events-none absolute inset-0 [mask-image:radial-gradient(60%_60%_at_60%_10%,black,transparent)]">
+                  <div class="absolute -top-28 right-10 h-[520px] w-[520px] rounded-full bg-white/20 blur-[90px]"></div>
+                </div>
+                
+                <div class="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_1fr] gap-6">
+                  <div class="flex items-start justify-between gap-6">
+                    <div>
+                      <div class="flex items-center gap-3">
+                        <span class="h-2.5 w-2.5 rounded-full bg-slate-700"></span>
+                        <span class="text-[10px] font-black tracking-[0.25em] text-slate-600 uppercase">Specification</span>
+                      </div>
+                      <h3 class="mt-3 max-w-2xl text-2xl leading-snug font-semibold tracking-tight text-slate-900 md:text-3xl">Diagram & Document</h3>
+                      <p class="mt-3 max-w-2xl text-sm leading-relaxed font-light text-slate-600 md:text-base">Generate project documents and diagrams with AI.</p>
+                    </div>
+                    <div class="dot-nav hidden shrink-0 flex-col items-end gap-2 md:flex">
+                      <div class="module-label text-[10px] font-black tracking-widest text-slate-600 uppercase">Module 5</div>
+                      <div class="flex gap-1.5">
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                        <button class="dot-btn h-2.5 w-10 rounded-full transition-all duration-500"></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="min-h-0 pb-10">
+                    <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="scroll-text" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Documentation</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">Automatically compile requirements into professional, industry-standard documents such as SRS, Textual Use Case, etc.</p></div>
+                        </div>
+                      </div>
+                      <div class="group rounded-[2rem] border border-white/30 bg-white/70 p-5 backdrop-blur-sm transition-all duration-500 hover:bg-white/85 hover:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] sm:p-6">
+                        <div class="flex items-start gap-4">
+                          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm transition-transform duration-500 group-hover:scale-[1.06]"><i data-lucide="git-graph" class="h-4 w-4"></i></div>
+                          <div class="flex-1"><h4 class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Diagrams</h4><p class="mt-2 text-sm leading-relaxed font-light text-slate-600">Generate and edit system diagrams with AI to visualize complex logic.</p></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <div class="mt-12 mb-4 rounded-t-3xl bg-[oklch(0.15_0.02_285)] px-4 pt-12 pb-4 md:mx-4 md:rounded-3xl">
+    <div class="mx-auto mb-16 flex max-w-7xl flex-col items-center justify-between border-b border-white/10 px-6 pb-12 md:flex-row">
+      <h2 class="text-2xl font-medium text-white md:text-3xl">
+        Ready to Transform Your <br /> Requirements Process?
+      </h2>
+      <div class="mt-6 flex gap-4 md:mt-0">
+        <a
+          href="#"
+          class="rounded-full bg-[oklch(0.85_0.20_130)] px-6 py-2.5 text-sm font-semibold text-[oklch(0.15_0.02_285)] transition-all hover:brightness-95"
+        >
+          Get Started
+        </a>
+      </div>
+    </div>
+
+    <footer class="text-sm text-slate-400">
+      <div class="mx-auto mb-12 grid max-w-7xl grid-cols-2 gap-8 px-6 md:grid-cols-4 lg:grid-cols-5">
+        <div class="col-span-2">
+          <div class="group mb-6 flex cursor-default items-center gap-3">
+            <img
+              src="specora-logo.svg"
+              alt="Specora Logo"
+              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWdvbiBwb2ludHM9IjEyIDIgMiAyMiAxMiAxNSAyMiAyMiAxMiAyIi8+PC9zdmc+'"
+              class="h-8 w-8 opacity-90 transition-opacity group-hover:opacity-100"
+            />
+            <span class="text-xl font-bold tracking-tight text-white">Specora</span>
+          </div>
+          <p class="mb-4 max-w-xs text-xs leading-relaxed">
+            AI-powered requirements engineering platform. Collaborate, communicate, and create better software
+            specifications.
+          </p>
+        </div>
+      </div>
+
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-6 pb-4 text-[10px] text-slate-500">
+        <p>&copy; 2026 Specora. All rights reserved.</p>
+        <div class="flex gap-4">
+          <button id="terms-btn" class="cursor-pointer transition-colors hover:text-white">Terms</button>
+          <button id="privacy-btn" class="cursor-pointer transition-colors hover:text-white">Privacy</button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modals -->
+  <div id="modal-container" class="fixed inset-0 z-[100] flex items-center justify-center p-4 hidden">
+    <div id="modal-backdrop" class="animate-in fade-in absolute inset-0 bg-slate-950/80 backdrop-blur-sm duration-300"></div>
+    <div class="animate-in zoom-in-95 fade-in relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[oklch(0.20_0.02_285)] shadow-2xl duration-300">
+      <div class="flex items-center justify-between border-b border-white/10 px-6 py-4">
+        <h3 id="modal-title" class="text-lg font-semibold tracking-tight text-white">Modal Title</h3>
+        <button class="modal-close flex items-center justify-center rounded-full p-1 text-slate-400 transition-all hover:bg-white/10 hover:text-white">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+      <div class="custom-scrollbar max-h-[70vh] overflow-y-auto px-6 py-8">
+        <div id="terms-content" class="text-slate-300 hidden">
+          <p class="mb-4">These are the terms of service.</p>
+          <p>By using Specora, you agree to transform your requirements engineering process significantly.</p>
+        </div>
+        <div id="privacy-content" class="text-slate-300 hidden">
+          <p class="mb-4">This is the privacy policy.</p>
+          <p>We keep your specifications and data safe.</p>
+        </div>
+      </div>
+      <div class="flex justify-end border-t border-white/10 bg-white/5 px-6 py-4">
+        <button class="modal-close rounded-full bg-[oklch(0.85_0.20_130)] px-6 py-2 text-xs font-bold text-[oklch(0.15_0.02_285)] shadow-sm transition-all hover:brightness-95">
+          I understand
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
