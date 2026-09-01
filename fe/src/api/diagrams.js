@@ -18,8 +18,8 @@ export const updateDiagram = (projectId, diagramId, body) =>
 export const deleteDiagram = (projectId, diagramId) =>
   api.delete(DIAGRAMS.SINGLE(projectId, diagramId));
 
-export const generateDiagram = (projectId, { description }) =>
-  api.post(DIAGRAMS.GENERATE(projectId), { description }, AI_TIMEOUT);
+export const generateDiagram = (projectId, body) =>
+  api.post(DIAGRAMS.GENERATE(projectId), body, AI_TIMEOUT);
 
 export const editDiagram = (projectId, { current_mermaid_code, edit_instruction }) =>
   api.post(DIAGRAMS.EDIT(projectId), { current_mermaid_code, edit_instruction }, AI_TIMEOUT);

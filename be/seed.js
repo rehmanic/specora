@@ -86,8 +86,15 @@ async function main() {
       "view_verification_results",
       "view_specbot_chat_messages",
       "create_prototype",
+      "update_prototype",
+      "delete_prototype",
       "create_diagram",
-      "create_document"
+      "update_diagram",
+      "delete_diagram",
+      "create_document",
+      "update_document",
+      "delete_document",
+      "run_verification_checks"
     ];
 
     const dbPermissions = {};

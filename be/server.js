@@ -28,22 +28,6 @@ io.on("connection", (socket) => {
 
   // Handle Group Message
   socket.on("send_group_message", async (data) => {
-    // data: { chatId, content, senderId, projectId }
-    // Ideally we save to DB here OR via API call. 
-    // Plan said API saves to DB, socket just distributes or we do both here.
-    // Let's assume frontend calls API first, then emits this event OR listens to API response and emits.
-    // Better pattern: Frontend emits -> Server saves -> Server broadcasts. 
-    // BUT my controller has save logic. Let's use that if possible or just broadcast here if frontend handles persistence via API.
-    // User requested "use prisma schema too", implying DB usage.
-    // For simplicity & reliability:
-    // 1. Client calls API to save message.
-    // 2. Client emits 'send_group_message' with the saved message object.
-    // 3. Server broadcasts.
-    // OR:
-    // 1. Client emits 'send_group_message'.
-    // 2. Server saves to DB.
-    // 3. Server broadcasts.
-    // I'll go with option 2 (Socket-first) as it's faster for chat, keeping API as fallback/initial load.
 
     try {
       const { chatId, content, senderId, projectId, metadata } = data;

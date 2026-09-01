@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import prisma from "../../config/db/prismaClient.js";
+import { chatSystemInstructionPrompt, statelessSystemPrompt, statelessContentPrompt } from "./prompts/geminiPrompts.js";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
@@ -97,16 +98,7 @@ async function getChatSession(chatId, instructions = {}) {
     // Create new chat session with history
     const history = await buildChatHistory(chatId);
 
-    const systemInstructionText = `You are a senior software requirements engineer. Stay strictly on requirements analysis: elicit, refine, and validate requirements. If a prompt is off-topic or irrelevant to the product/project scope, politely redirect the user back to requirements gathering.
-
-Context/Instructions:
-${JSON.stringify(instructions, null, 2)}
-
-Guidelines:
-- Keep responses concise and structured
-- Prefer numbered or bulleted requirements with clear acceptance notes
-- Ask for missing constraints, edge cases, and dependencies
-- Do NOT answer generic chit-chat; remind the user you focus only on requirements`;
+    const systemInstructionText = chatSystemInstructionPrompt(JSON.stringify(instructions, null, 2));
 
     const chat = model.startChat({
         history: history,
@@ -180,13 +172,11 @@ export const generateGeminiResponse = async (chatId, content, instructions = {})
  */
 export const generateStatelessResponse = async (content, instructions = {}) => {
     try {
-        const systemPrompt = `You are a senior software requirements engineer performing analysis tasks.
-
-Task: ${instructions.task || "analyze"}
-Expectations: ${instructions.expectations || "Provide a structured response."}
-Output Format: ${instructions.output || "Return structured JSON when possible."}
-
-Important: Analyze the ENTIRE content provided below. Do not treat this as a conversation continuation.`;
+        const systemPrompt = statelessSystemPrompt(
+            instructions.task || "analyze",
+            instructions.expectations || "Provide a structured response.",
+            instructions.output || "Return structured JSON when possible."
+        );
 
         const generationConfig = {
             maxOutputTokens: 6000,
@@ -203,7 +193,7 @@ Important: Analyze the ENTIRE content provided below. Do not treat this as a con
             contents: [
                 {
                     role: "user",
-                    parts: [{ text: `${systemPrompt}\n\n---\n\nCONTENT TO ANALYZE:\n\n${content}` }]
+                    parts: [{ text: statelessContentPrompt(systemPrompt, content) }]
                 }
             ],
             generationConfig

@@ -1,5 +1,15 @@
 import prisma from "../../../config/db/prismaClient.js";
 import { generateStatelessResponse } from "../../utils/gemini.js";
+import {
+    generateDiagramPrompt,
+    generateDiagramTask,
+    generateDiagramExpectations,
+    generateDiagramOutput,
+    editDiagramContent,
+    editDiagramTask,
+    editDiagramExpectations,
+    editDiagramOutput
+} from "../../utils/prompts/diagramPrompts.js";
 
 // ─── Helpers ──────────────────────────────────────────────
 
@@ -166,13 +176,13 @@ export async function generateFromDescription(req, res) {
         }
 
         const reqText = reqs.map(r => `[${r.readable_id}] ${r.title}: ${r.description}`).join("\n");
-        const prompt = `Generate a ${diagram_type.trim()} based on the following requirements:\n\n${reqText}`;
+        const prompt = generateDiagramPrompt(diagram_type, reqText);
 
         const start = Date.now();
         const raw = await generateStatelessResponse(prompt, {
-            task: `Generate a Mermaid.js ${diagram_type.trim()} from the user's requirements.`,
-            expectations: "Output ONLY valid Mermaid diagram syntax. No explanations, no markdown, no code fences. CRITICAL: Always use double quotes around text labels inside nodes (e.g. A[\"Node Text (with special chars)\"]) to prevent parsing errors.",
-            output: "Plain Mermaid code only (e.g. flowchart, sequenceDiagram, etc.).",
+            task: generateDiagramTask(diagram_type),
+            expectations: generateDiagramExpectations,
+            output: generateDiagramOutput,
         });
         const end = Date.now();
         const cycle_time = end - start;
@@ -199,12 +209,12 @@ export async function editDiagram(req, res) {
 
         const currentCode = typeof current_mermaid_code === "string" ? current_mermaid_code : "";
 
-        const content = `CURRENT MERMAID DIAGRAM:\n\`\`\`mermaid\n${currentCode}\n\`\`\`\n\nUSER EDIT REQUEST: ${edit_instruction.trim()}`;
+        const content = editDiagramContent(currentCode, edit_instruction);
 
         const raw = await generateStatelessResponse(content, {
-            task: "Update the Mermaid diagram according to the user's edit request.",
-            expectations: "Return ONLY the complete updated Mermaid code. No explanations, no markdown code fences. CRITICAL: Always use double quotes around text labels inside nodes (e.g. A[\"Node Text (with special chars)\"]) to prevent parsing errors.",
-            output: "Plain Mermaid code only.",
+            task: editDiagramTask,
+            expectations: editDiagramExpectations,
+            output: editDiagramOutput,
         });
 
         const mermaid_code = extractMermaidCode(raw);

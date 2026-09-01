@@ -1,6 +1,16 @@
 import prisma from "../../../config/db/prismaClient.js";
 import { generateStatelessResponse } from "../../utils/gemini.js";
 import { generatePDF, generateDOCX } from "../../utils/docExporter.js";
+import {
+    srsExpectationsPrompt,
+    srsOutputPrompt,
+    useCaseExpectationsPrompt,
+    useCaseOutputPrompt,
+    buildUseCaseContentPrompt,
+    buildSrsContentPrompt,
+    editDocumentContentPrompt,
+    editDocumentExpectationsPrompt
+} from "../../utils/prompts/docPrompts.js";
 
 async function resolveProjectId(projectId) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId);
@@ -319,22 +329,11 @@ export const generateDoc = async (req, res, next) => {
 
             templateInstructions = buildTemplateInstructions("use_case", coveredScenariosText);
 
-            content = `
-ALREADY GENERATED USE CASES (DO NOT duplicate these):
-${coveredScenariosText}
-
-PROJECT REQUIREMENTS (${allRequirements.length} total):
-${requirementsText}
-`;
+            content = buildUseCaseContentPrompt(coveredScenariosText, allRequirements.length, requirementsText);
         } else {
             // SRS — use all requirements
             templateInstructions = buildTemplateInstructions("srs");
-            content = `
-PROJECT REQUIREMENTS (${allRequirements.length} total):
-${requirementsText}
-
-DOCUMENT TITLE: ${doc.title}
-`;
+            content = buildSrsContentPrompt(allRequirements.length, requirementsText, doc.title);
         }
 
         const instructions = {
@@ -387,20 +386,11 @@ export const editDocWithAI = async (req, res, next) => {
 
         const templateInstructions = buildTemplateInstructions(doc.type);
 
-        const content = `
-DOCUMENT TITLE: ${doc.title}
-DOCUMENT TYPE: ${doc.type.toUpperCase()}
-
-EDIT INSTRUCTIONS FROM USER:
-${editInstructions}
-
-CURRENT DOCUMENT CONTENT (HTML):
-${currentContent || "(empty document)"}
-`;
+        const content = editDocumentContentPrompt(doc.title, doc.type.toUpperCase(), editInstructions, currentContent || "(empty document)");
 
         const instructions = {
             task: "edit_document",
-            expectations: `Apply the user's edit instructions to the current document content while strictly maintaining the ${doc.type.toUpperCase()} template structure. ${templateInstructions.expectations}`,
+            expectations: editDocumentExpectationsPrompt(doc.type.toUpperCase(), templateInstructions.expectations),
             output: templateInstructions.output,
             jsonMode: false,
         };
@@ -424,25 +414,15 @@ ${currentContent || "(empty document)"}
 function buildTemplateInstructions(docType, coveredScenariosText = "") {
     if (docType === "srs") {
         return {
-            expectations: `Generate a complete Software Requirements Specification (SRS) document.
-- Must include all standard SRS sections: 1. Introduction (1.1 Purpose, 1.2 Document Conventions, 1.3 Intended Audience, 1.4 Product Scope), 2. Overall Description (2.1 Product Perspective, 2.2 Product Functions, 2.3 User Classes), 3. Specific Requirements (3.1 External Interface Requirements, 3.2 Functional Requirements).
-- Derive content directly from the provided project requirements.
-- Be thorough, precise, and professional.`,
-            output: `Return ONLY valid HTML content (no markdown, no code fences). Use proper heading tags (h1, h2, h3), paragraphs (p), ordered/unordered lists (ol, ul, li), and tables where appropriate. The HTML will be rendered directly in a rich text editor. Do NOT include <!DOCTYPE>, <html>, <head>, or <body> tags — only the inner content.`,
+            expectations: srsExpectationsPrompt,
+            output: srsOutputPrompt,
         };
     }
 
     if (docType === "use_case") {
         return {
-            expectations: `You are generating a Textual Use Case Specification. Your job is to intelligently select ONE specific use case scenario from the project requirements that has NOT yet been covered by the existing use case documents listed above.
-
-Steps to follow:
-1. Analyse all provided project requirements carefully.
-2. Review the already-covered scenarios listed under "ALREADY COVERED USE CASE DOCS". Do NOT generate a use case that overlaps with any of those.
-3. If the current document title hints at a specific scenario (e.g. "User Login", "UC-002"), use that as a guide. Otherwise pick the most important uncovered scenario.
-4. Generate a complete Textual Use Case Specification for that chosen scenario, including: Use Case Name, Primary Actor, Secondary Actors, Goal in Context, Preconditions, Main Success Scenario (step-by-step numbered flow), Extensions/Alternate Flows, Postconditions, and Exceptions.
-5. Use a structured HTML table format for the use case fields.`,
-            output: `Return ONLY valid HTML content (no markdown, no code fences). Use an HTML table with <table>, <tbody>, <tr>, <td>, <th> tags for the use case structure. Use <h1> for the title (the chosen use case name) and <hr> as a separator. The HTML will be rendered directly in a rich text editor. Do NOT include <!DOCTYPE>, <html>, <head>, or <body> tags — only the inner content.`,
+            expectations: useCaseExpectationsPrompt,
+            output: useCaseOutputPrompt,
         };
     }
 

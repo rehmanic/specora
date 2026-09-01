@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import prisma from "../../../config/db/prismaClient.js";
+import { techFeasibilitySystemPrompt } from "../../utils/prompts/techFeasibilityPrompts.js";
 
 // ─── Gemini Client (new SDK for grounding) ───────────────
 
@@ -98,14 +99,7 @@ export const search = async (req, res) => {
             // If requirements fetch fails, proceed without context
         }
 
-        const systemPrompt = `You are a senior software engineer conducting a technical feasibility assessment. 
-Provide thorough, well-researched answers grounded in current industry practices from Software Engineering (SWE), Software Development Life Cycle (SDLC), and Site Reliability Engineering (SRE).
-
-When answering:
-- Cite specific technologies, frameworks, or methodologies
-- Mention trade-offs and risks where relevant
-- Reference industry standards (e.g., ISO/IEC 25010, SRE practices, TELOS framework) when applicable
-- Be specific and actionable, not generic${requirementsContext}`;
+        const systemPrompt = techFeasibilitySystemPrompt(requirementsContext);
 
         // Call Gemini with Google Search grounding
         const startTime = Date.now();
