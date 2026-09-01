@@ -24,6 +24,7 @@ import verificationRoutes from "./src/modules/verification/verificationRoutes.js
 import diagramRoutes from "./src/modules/diagrams/diagramRoutes.js";
 import docRoutes from "./src/modules/docs/docRoutes.js";
 import rbacRoutes from "./src/modules/rbac/rbacRoutes.js";
+import AppError from "./src/utils/AppError.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -81,8 +82,30 @@ app.use("/api/docs/:projectId", docRoutes);
 app.use("/api/rbac", rbacRoutes);
 
 // ----- 404 Handler -----
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
+app.use((req, res, next) => {
+  next(new AppError(`Route not found: ${req.method} ${req.originalUrl}`, 404));
+});
+
+// ----- Global Error Handler -----
+// Must have exactly 4 parameters so Express treats it as error-handling middleware.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  // Default to 500 if no status code is set.
+  const statusCode = err.statusCode || 500;
+  const isOperational = err.isOperational ?? false;
+
+  // Always log the full error in development; only log unexpected errors in production.
+  if (process.env.NODE_ENV === "development") {
+    console.error("❌ [Error]", err);
+  } else if (!isOperational) {
+    console.error("❌ [Unexpected Error]", err);
+  }
+
+  res.status(statusCode).json({
+    message: isOperational ? err.message : "Internal server error",
+    // Include the stack trace only in development for easier debugging.
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+  });
 });
 
 export default app;
