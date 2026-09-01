@@ -1,26 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 import prisma from "../../../config/db/prismaClient.js";
+import { resolveProjectId } from "../../utils/resolveProjectId.js";
 import { techFeasibilitySystemPrompt } from "../../utils/prompts/techFeasibilityPrompts.js";
 
 // ─── Gemini Client (new SDK for grounding) ───────────────
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// ─── Helpers ──────────────────────────────────────────────
 
-/**
- * Resolve a projectId that may be a UUID or a slug.
- */
-async function resolveProjectId(projectId) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId);
-    if (isUuid) return projectId;
-
-    const project = await prisma.project.findFirst({
-        where: { slug: projectId },
-        select: { id: true },
-    });
-    return project?.id ?? null;
-}
 
 /**
  * Parse Gemini grounding metadata into a structured response.

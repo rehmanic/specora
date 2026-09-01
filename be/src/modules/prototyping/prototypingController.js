@@ -1,17 +1,7 @@
 import prisma from "../../../config/db/prismaClient.js";
+import { resolveProjectId } from "../../utils/resolveProjectId.js";
 
-// ─── Helpers ──────────────────────────────────────────────
 
-async function resolveProjectId(projectId) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId);
-    if (isUuid) return projectId;
-
-    const project = await prisma.project.findFirst({
-        where: { slug: projectId },
-        select: { id: true },
-    });
-    return project?.id ?? null;
-}
 
 // ─── Prototype CRUD ───────────────────────────────────────
 

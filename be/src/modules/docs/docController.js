@@ -1,4 +1,5 @@
 import prisma from "../../../config/db/prismaClient.js";
+import { resolveProjectId } from "../../utils/resolveProjectId.js";
 import { generateStatelessResponse } from "../../utils/gemini.js";
 import { generatePDF, generateDOCX } from "../../utils/docExporter.js";
 import {
@@ -12,16 +13,7 @@ import {
     editDocumentExpectationsPrompt
 } from "../../utils/prompts/docPrompts.js";
 
-async function resolveProjectId(projectId) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId);
-    if (isUuid) return projectId;
 
-    const project = await prisma.project.findFirst({
-        where: { slug: projectId },
-        select: { id: true },
-    });
-    return project?.id ?? null;
-}
 
 // CREATE
 export const createDoc = async (req, res, next) => {
