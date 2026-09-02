@@ -165,13 +165,14 @@ Each service migration:
 ## Execution Strategy
 
 ```
-Chunk 1 (Error Handling)
+[x] Chunk 1 (Error Handling)
     ↓ deploy & verify
-Chunk 2 (Shared Helpers)
+[x] Chunk 2 (Shared Helpers)
     ↓ deploy & verify
-Chunk 3 (Service Layer — module by module, 17 sub-steps)
+[x] Chunk 3 (Service Layer — module by module, 17 sub-steps)
+[x] Directory Restructure (nested controllers/services/routes folders)
     ↓ deploy & verify after each module
-Chunk 4 (Validation Schemas)
+[x] Chunk 4 (Validation Schemas)
     ↓ deploy & verify
 Chunk 5 (Repository Layer — optional)
 ```

@@ -2,20 +2,19 @@ import express from "express";
 import * as projectsController from "../controllers/projectsController.js";
 import { verifyToken } from "../../../middlewares/common/verifyToken.js";
 import { requirePermissions } from "../../../middlewares/common/requirePermissions.js";
-import requireFields from "../../../middlewares/common/requireFields.js";
-import { validateProjectDataInput } from "../../../middlewares/projects/inputValidation.js";
+import { validate } from "../../../middlewares/validate.js";
+import { createProjectValidator, updateProjectValidator } from "../validators.js";
 import checkProjectExists from "../../../middlewares/projects/checkProjectExists.js";
 
 const router = express.Router();
-const projectWriteChain = [requireFields(["name", "start_date", "end_date"]),validateProjectDataInput];
 
 router.use(verifyToken);
 
 // --- Core Project CRUD ---
-router.post("/",requirePermissions("create_project"), ...projectWriteChain,checkProjectExists("create"),projectsController.createProject);
+router.post("/",requirePermissions("create_project"), createProjectValidator, validate, checkProjectExists("create"),projectsController.createProject);
 router.get("/all", requirePermissions("view_projects"), projectsController.getAllProjects);
 router.get("/:userId", requirePermissions("view_projects"), projectsController.getSingleUserProjects);
-router.put("/:projectId",requirePermissions("update_project"), ...projectWriteChain,checkProjectExists("update"),projectsController.updateProject);
+router.put("/:projectId",requirePermissions("update_project"), updateProjectValidator, validate, checkProjectExists("update"),projectsController.updateProject);
 router.delete("/:projectId", requirePermissions("delete_project"), projectsController.deleteProject);
 
 // --- Member Management ---
