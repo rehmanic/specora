@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as chatController from '../../../../src/modules/chat/chatController.js';
+import * as chatController from '../../../../src/modules/chat/controllers/chatController.js';
 import prisma from '../../../../config/db/prismaClient.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';
 

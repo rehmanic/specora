@@ -10,7 +10,7 @@ import {
     getUsersByIds,
     updateUser,
     deleteUser,
-} from '../../../../src/modules/users/userController.js';
+} from '../../../../src/modules/users/controllers/userController.js';
 import prisma from '../../../../config/db/prismaClient.js';
 import bcrypt from 'bcrypt';
 import { createMockRequest, createMockResponse } from '../../../setup.js';

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as verificationController from '../../../../src/modules/verification/verificationController.js';
+import * as verificationController from '../../../../src/modules/verification/controllers/verificationController.js';
 import prisma from '../../../../config/db/prismaClient.js';
 import { generateStatelessResponse } from '../../../../src/utils/gemini.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';

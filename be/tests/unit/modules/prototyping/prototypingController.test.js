@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as prototypingController from '../../../../src/modules/prototyping/prototypingController.js';
+import * as prototypingController from '../../../../src/modules/prototyping/controllers/prototypingController.js';
 import prisma from '../../../../config/db/prismaClient.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';
 

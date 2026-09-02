@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as techController from '../../../../src/modules/technicalFeasibility/techFeasibilityController.js';
+import * as techController from '../../../../src/modules/technicalFeasibility/controllers/techFeasibilityController.js';
 import prisma from '../../../../config/db/prismaClient.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as diagramController from '../../../../src/modules/diagrams/diagramController.js';
+import * as diagramController from '../../../../src/modules/diagrams/controllers/diagramController.js';
 import prisma from '../../../../config/db/prismaClient.js';
 import { generateStatelessResponse } from '../../../../src/utils/gemini.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';

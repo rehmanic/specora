@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as feedbacksController from '../../../../src/modules/feedbacks/feedbacksController.js';
+import * as feedbacksController from '../../../../src/modules/feedbacks/controllers/feedbacksController.js';
 import prisma from '../../../../config/db/prismaClient.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';
 

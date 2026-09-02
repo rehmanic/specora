@@ -94,7 +94,12 @@ async function main() {
       "create_document",
       "update_document",
       "delete_document",
-      "run_verification_checks"
+      "run_verification_checks",
+      "manage_prototype_screens",
+      "link_requirements_to_screens",
+      "create_role",
+      "update_role",
+      "delete_role"
     ];
 
     const dbPermissions = {};
@@ -124,6 +129,38 @@ async function main() {
         }
     }
     console.log("Assigned all permissions to manager role");
+
+    // Assign specific permissions to client
+    const clientRoleId = roles['client'];
+    const clientPermissions = [
+        "view_projects",
+        "project_settings",
+        "view_group_chat_messages",
+        "view_specbot_chat",
+        "view_specbot_chat_messages",
+        "view_chat",
+        "view_meetings",
+        "view_feedback_forms",
+        "submit_feedback_response",
+        "view_own_feedback_response",
+        "join_meeting",
+        "send_specbot_chat_message"
+    ];
+    
+    for (const permName of clientPermissions) {
+        const permId = dbPermissions[permName];
+        if (permId) {
+            const existingRp = await prisma.role_permission.findFirst({
+                where: { role_id: clientRoleId, permission_id: permId }
+            });
+            if (!existingRp) {
+                await prisma.role_permission.create({
+                    data: { role_id: clientRoleId, permission_id: permId }
+                });
+            }
+        }
+    }
+    console.log("Assigned specific permissions to client role");
 
     // 2. Create Users
     const usersData = [

@@ -7,23 +7,23 @@ import helmet from "helmet"; // Security middleware for setting HTTP headers
 import cors from "cors"; // Enables Cross-Origin Resource Sharing
 
 // ----- Route Modules -----
-import authRoutes from "./src/modules/auth/authRoutes.js";
-import userRoutes from "./src/modules/users/userRoutes.js";
-import projectRoutes from "./src/modules/projects/projectsRoutes.js";
-import specbotRoutes from "./src/modules/specbot/specbotRoutes.js";
-import chatRoutes from "./src/modules/chat/chatRoutes.js";
-import uploadRoutes from "./src/modules/upload/uploadRoutes.js";
-import feedbacksRoutes from "./src/modules/feedbacks/feedbacksRoutes.js";
-import meetingsRoutes from "./src/modules/meetings/meetingsRoutes.js";
-import requirementsRoutes from "./src/modules/requirements/requirementsRoutes.js";
-import economicFeasibilityRoutes from "./src/modules/economicFeasibility/economicFeasibilityRoutes.js";
-import techFeasibilityRoutes from "./src/modules/technicalFeasibility/techFeasibilityRoutes.js";
-import legalFeasibilityRoutes from "./src/modules/legalFeasibility/legalFeasibilityRoutes.js";
-import prototypingRoutes from "./src/modules/prototyping/prototypingRoutes.js";
-import verificationRoutes from "./src/modules/verification/verificationRoutes.js";
-import diagramRoutes from "./src/modules/diagrams/diagramRoutes.js";
-import docRoutes from "./src/modules/docs/docRoutes.js";
-import rbacRoutes from "./src/modules/rbac/rbacRoutes.js";
+import authRoutes from "./src/modules/auth/routes/authRoutes.js";
+import userRoutes from "./src/modules/users/routes/userRoutes.js";
+import projectRoutes from "./src/modules/projects/routes/projectsRoutes.js";
+import specbotRoutes from "./src/modules/specbot/routes/specbotRoutes.js";
+import chatRoutes from "./src/modules/chat/routes/chatRoutes.js";
+import uploadRoutes from "./src/modules/upload/routes/uploadRoutes.js";
+import feedbacksRoutes from "./src/modules/feedbacks/routes/feedbacksRoutes.js";
+import meetingsRoutes from "./src/modules/meetings/routes/meetingsRoutes.js";
+import requirementsRoutes from "./src/modules/requirements/routes/requirementsRoutes.js";
+import economicFeasibilityRoutes from "./src/modules/economicFeasibility/routes/economicFeasibilityRoutes.js";
+import techFeasibilityRoutes from "./src/modules/technicalFeasibility/routes/techFeasibilityRoutes.js";
+import legalFeasibilityRoutes from "./src/modules/legalFeasibility/routes/legalFeasibilityRoutes.js";
+import prototypingRoutes from "./src/modules/prototyping/routes/prototypingRoutes.js";
+import verificationRoutes from "./src/modules/verification/routes/verificationRoutes.js";
+import diagramRoutes from "./src/modules/diagrams/routes/diagramRoutes.js";
+import docRoutes from "./src/modules/docs/routes/docRoutes.js";
+import rbacRoutes from "./src/modules/rbac/routes/rbacRoutes.js";
 import AppError from "./src/utils/AppError.js";
 import path from "path";
 import { fileURLToPath } from "url";

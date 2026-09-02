@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { signup, login } from '../../../../src/modules/auth/authController.js';
+import { signup, login } from '../../../../src/modules/auth/controllers/authController.js';
 import prisma from '../../../../config/db/prismaClient.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';

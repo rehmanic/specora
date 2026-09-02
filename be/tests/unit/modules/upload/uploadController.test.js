@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as uploadController from '../../../../src/modules/upload/uploadController.js';
+import * as uploadController from '../../../../src/modules/upload/controllers/uploadController.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';
 
 describe('Upload Controller', () => {
