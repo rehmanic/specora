@@ -9,9 +9,9 @@ const { IndexFlatIP } = faiss;
 // -----------------------
 // Config
 // -----------------------
-const INDEX_PATH = resolve(process.env.NORMA_INDEX_PATH || "./data/norma/processed/faiss_index.bin");
-const META_PATH = resolve(process.env.NORMA_META_PATH || "./data/norma/processed/chunk_metadata.json");
-const CHUNKS_PATH = resolve(process.env.NORMA_CHUNKS_PATH || "./data/norma/processed/chunks.json");
+const INDEX_PATH = resolve(process.env.NORMA_INDEX_PATH || "./storage/legal/processed/faiss_index.bin");
+const META_PATH = resolve(process.env.NORMA_META_PATH || "./storage/legal/processed/chunk_metadata.json");
+const CHUNKS_PATH = resolve(process.env.NORMA_CHUNKS_PATH || "./storage/legal/processed/chunks.json");
 const MODEL_NAME = process.env.NORMA_EMBED_MODEL || "sentence-transformers/all-MiniLM-L6-v2";
 const TOP_K = parseInt(process.env.NORMA_TOP_K || "5", 10);
 const SIM_THRESHOLD = parseFloat(process.env.NORMA_SIM_THRESHOLD || "0.25");

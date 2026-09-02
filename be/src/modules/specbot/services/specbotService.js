@@ -3,8 +3,9 @@ import path from "path";
 import * as specbotRepo from "../repositories/specbotRepository.js";
 import AppError from "../../../utils/AppError.js";
 import { generateGeminiResponse, generateStatelessResponse, clearChatSession } from "../../../utils/gemini.js";
+import { storageService } from "../../../lib/storage/index.js";
 
-const ARTIFACT_ROOT = path.join(process.cwd(), "storage", "specbot");
+const ARTIFACT_ROOT = storageService.getDomainPath("specbot");
 
 const ensureDirectory = async (targetPath) => {
     await fs.promises.mkdir(targetPath, { recursive: true });

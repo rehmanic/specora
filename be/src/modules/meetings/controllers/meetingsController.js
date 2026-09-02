@@ -1,39 +1,6 @@
 import asyncHandler from "../../../utils/asyncHandler.js";
 import * as meetingsService from "../services/meetingsService.js";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
-
-// ─── Multer Config ────────────────────────────────────────
-
-const recordingsDir = path.join(process.cwd(), "storage", "recordings");
-if (!fs.existsSync(recordingsDir)) {
-    fs.mkdirSync(recordingsDir, { recursive: true });
-}
-
-const recordingStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, recordingsDir);
-    },
-    filename: (req, file, cb) => {
-        const meetingId = req.params.meetingId;
-        const timestamp = Date.now();
-        const ext = path.extname(file.originalname) || '.webm';
-        cb(null, `${meetingId}-${timestamp}${ext}`);
-    },
-});
-
-export const recordingUpload = multer({
-    storage: recordingStorage,
-    limits: { fileSize: 500 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('video/') || file.mimetype.startsWith('audio/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only video/audio files are allowed'), false);
-        }
-    },
-});
+export { meetingRecordingMiddleware as recordingUpload } from "../../../lib/storage/index.js";
 
 // ─── Controller Methods ───────────────────────────────────
 

@@ -6,6 +6,7 @@ import { processTranscription } from "./transcriptionService.js";
 import { generateStatelessResponse } from "../../../utils/gemini.js";
 import fs from "fs";
 import path from "path";
+import { storageService } from "../../../lib/storage/index.js";
 
 // ─── Helpers ──────────────────────────────────────────────
 
@@ -252,8 +253,8 @@ Do NOT wrap the output in markdown code blocks. Return ONLY the raw JSON string.
     }
 
     const artifactPaths = {
-        dir: path.join(process.cwd(), "storage", "recordings", "requirements"),
-        file: path.join(process.cwd(), "storage", "recordings", "requirements", `${meetingId}-requirements.json`)
+        dir: path.join(storageService.getDomainPath("meetings"), "requirements"),
+        file: path.join(storageService.getDomainPath("meetings"), "requirements", `${meetingId}-requirements.json`)
     };
     
     await fs.promises.mkdir(artifactPaths.dir, { recursive: true });

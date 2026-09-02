@@ -6,11 +6,13 @@ import ffmpeg from "fluent-ffmpeg";
 import ffmpegStatic from "ffmpeg-static";
 import * as meetingsRepo from "../repositories/meetingsRepository.js";
 
+import { storageService } from "../../../lib/storage/index.js";
+
 // Configuration
-const STORAGE_DIR = path.join(process.cwd(), "storage");
-const BIN_DIR = path.join(STORAGE_DIR, "bin");
-const MODELS_DIR = path.join(STORAGE_DIR, "models");
-const RECORDINGS_DIR = path.join(STORAGE_DIR, "recordings");
+const STORAGE_DIR = storageService.baseDir;
+const BIN_DIR = path.join(storageService.getDomainPath("system"), "bin");
+const MODELS_DIR = path.join(storageService.getDomainPath("system"), "models");
+const RECORDINGS_DIR = storageService.getDomainPath("meetings");
 
 // Whisper Configuration
 const WHISPER_EXE = "/usr/local/bin/whisper-cli";
