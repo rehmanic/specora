@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { processTranscription } from '../../../../src/modules/meetings/services/transcriptionService.js';
-import prisma from '../../../../config/db/prismaClient.js';
+import prisma from '../../../../src/config/db/prismaClient.js';
 import fs from 'fs';
 import { execFile } from 'child_process';
 import ffmpeg from 'fluent-ffmpeg';

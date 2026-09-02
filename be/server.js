@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import http from "http"; // Node HTTP module to create server
 import { Server } from "socket.io"; // Socket.IO
 import app from "./app.js"; // Express app instance
-import prisma from "./config/db/prismaClient.js"; // Prisma client for DB access
+import prisma from "./src/config/db/prismaClient.js"; // Prisma client for DB access
 
 dotenv.config(); // Initialize environment variables
 

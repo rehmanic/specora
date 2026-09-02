@@ -14,7 +14,7 @@ import {
     summarizeSpecbotChat,
     extractRequirementsFromChat,
 } from '../../../../src/modules/specbot/controllers/specbotController.js';
-import prisma from '../../../../config/db/prismaClient.js';
+import prisma from '../../../../src/config/db/prismaClient.js';
 import { generateGeminiResponse, generateStatelessResponse, clearChatSession } from '../../../../src/utils/gemini.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';
 

@@ -28,6 +28,8 @@ services:
       context: ./be
       dockerfile: Dockerfile
     container_name: specora-be
+    command: >
+      sh -c "npx prisma generate && npm run dev"
     ports:
       - "127.0.0.1:5000:5000"
     depends_on:

@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import checkUserExists from '../../../../src/middlewares/common/checkUserExists.js';
-import prisma from '../../../../config/db/prismaClient.js';
+import prisma from '../../../../src/config/db/prismaClient.js';
 import { createMockRequest, createMockResponse, createMockNext } from '../../../setup.js';
 
 describe('checkUserExists Middleware', () => {

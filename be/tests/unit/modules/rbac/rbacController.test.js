@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as rbacController from '../../../../src/modules/rbac/controllers/rbacController.js';
-import prisma from '../../../../config/db/prismaClient.js';
+import prisma from '../../../../src/config/db/prismaClient.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';
 
 describe('RBAC Controller', () => {

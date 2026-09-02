@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as ecoController from '../../../../src/modules/economicFeasibility/controllers/economicFeasibilityController.js';
-import prisma from '../../../../config/db/prismaClient.js';
+import prisma from '../../../../src/config/db/prismaClient.js';
 import { runSimulation, computeStatistics } from '../../../../src/modules/economicFeasibility/services/monteCarloEngine.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';
 

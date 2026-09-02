@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import checkProjectExists from '../../../../src/middlewares/projects/checkProjectExists.js';
-import prisma from '../../../../config/db/prismaClient.js';
+import prisma from '../../../../src/config/db/prismaClient.js';
 import { createMockRequest, createMockResponse, createMockNext } from '../../../setup.js';
 
 describe('checkProjectExists Middleware', () => {

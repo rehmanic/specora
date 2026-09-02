@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import prisma from "../../config/db/prismaClient.js";
+import prisma from "../config/db/prismaClient.js";
 import { chatSystemInstructionPrompt, statelessSystemPrompt, statelessContentPrompt } from "./prompts/geminiPrompts.js";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);

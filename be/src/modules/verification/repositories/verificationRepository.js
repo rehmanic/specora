@@ -1,4 +1,4 @@
-import prisma from "../../../../config/db/prismaClient.js";
+import prisma from "../../../config/db/prismaClient.js";
 
 export async function findRequirementsByProject(projectId, options = {}) {
     return await prisma.requirement.findMany({

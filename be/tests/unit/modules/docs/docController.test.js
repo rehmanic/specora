@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as docController from '../../../../src/modules/docs/controllers/docController.js';
-import prisma from '../../../../config/db/prismaClient.js';
+import prisma from '../../../../src/config/db/prismaClient.js';
 import { generateStatelessResponse } from '../../../../src/utils/gemini.js';
 import * as docExporter from '../../../../src/utils/docExporter.js';
 import { createMockRequest, createMockResponse, createMockNext } from '../../../setup.js';

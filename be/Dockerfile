@@ -27,9 +27,8 @@ COPY package*.json ./
 RUN npm install
 
 # Copy Prisma schema and generate client
-COPY config/db/schema.prisma ./config/db/schema.prisma
-RUN npx prisma generate --schema=config/db/schema.prisma
+COPY prisma/schema.prisma ./prisma/schema.prisma
+RUN npx prisma generate
 
 # Default command — generate prisma client then start dev mode
-CMD npx prisma generate --schema=config/db/schema.prisma && npm run dev
-
+CMD npx prisma generate && npm run dev

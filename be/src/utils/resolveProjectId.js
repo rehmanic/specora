@@ -1,4 +1,4 @@
-import prisma from "../../config/db/prismaClient.js";
+import prisma from "../config/db/prismaClient.js";
 
 /**
  * UUID v4 pattern used to distinguish UUIDs from slugs.

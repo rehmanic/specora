@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as meetingsController from '../../../../src/modules/meetings/controllers/meetingsController.js';
-import prisma from '../../../../config/db/prismaClient.js';
+import prisma from '../../../../src/config/db/prismaClient.js';
 import { generateStatelessResponse } from '../../../../src/utils/gemini.js';
 import { processTranscription } from '../../../../src/modules/meetings/services/transcriptionService.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';

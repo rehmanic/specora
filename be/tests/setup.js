@@ -11,7 +11,7 @@ process.env.JWT_EXPIRES_IN = '1h';
 process.env.GEMINI_API_KEY = 'test-gemini-api-key';
 
 // Mock Prisma client
-vi.mock('../config/db/prismaClient.js', () => {
+vi.mock('../src/config/db/prismaClient.js', () => {
     const createCrud = () => ({
         create: vi.fn(),
         createMany: vi.fn(),

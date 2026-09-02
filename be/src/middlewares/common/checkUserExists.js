@@ -1,4 +1,4 @@
-import prisma from "../../../config/db/prismaClient.js";
+import prisma from "../../config/db/prismaClient.js";
 
 export default function checkUserExists(action) {
   return async (req, res, next) => {

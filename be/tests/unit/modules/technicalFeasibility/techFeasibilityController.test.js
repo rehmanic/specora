@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as techController from '../../../../src/modules/technicalFeasibility/controllers/techFeasibilityController.js';
-import prisma from '../../../../config/db/prismaClient.js';
+import prisma from '../../../../src/config/db/prismaClient.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';
 
 // We need to mock the GoogleGenAI client from the module

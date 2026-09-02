@@ -10,7 +10,7 @@ import {
     updateProject,
     deleteProject,
 } from '../../../../src/modules/projects/controllers/projectsController.js';
-import prisma from '../../../../config/db/prismaClient.js';
+import prisma from '../../../../src/config/db/prismaClient.js';
 import { createMockRequest, createMockResponse } from '../../../setup.js';
 
 describe('Projects Controller', () => {
