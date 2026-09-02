@@ -1,5 +1,5 @@
 import { AccessToken, WebhookReceiver } from "livekit-server-sdk";
-import prisma from "../../../../config/db/prismaClient.js";
+import * as meetingsRepo from "../repositories/meetingsRepository.js";
 import AppError from "../../../utils/AppError.js";
 import { resolveProjectId } from "../../../utils/resolveProjectId.js";
 import { processTranscription } from "./transcriptionService.js";
@@ -63,60 +63,26 @@ export async function createMeeting(projectId, data, userId) {
         throw new AppError("Meeting title is required", 400);
     }
 
-    const meeting = await prisma.meeting.create({
-        data: {
-            title: title.trim(),
-            description,
-            start_time: start_time ? new Date(start_time) : new Date(),
-            end_time: end_time ? new Date(end_time) : null,
-            project: { connect: { id: resolvedId } },
-            organizer: { connect: { id: userId } },
-            attendees: {
-                create: attendees?.map((attendeeId) => ({
-                    user: { connect: { id: attendeeId } },
-                    role: "participant",
-                })) || [],
-            },
-        },
-        include: { attendees: true },
+    return await meetingsRepo.createMeetingRecord({
+        title: title.trim(),
+        description,
+        start_time: start_time ? new Date(start_time) : new Date(),
+        end_time: end_time ? new Date(end_time) : null,
+        project_id: resolvedId,
+        organizer_id: userId,
+        attendees: attendees || [],
     });
-
-    await prisma.meeting_attendee.create({
-        data: {
-            meeting_id: meeting.id,
-            user_id: userId,
-            role: "host"
-        }
-    });
-
-    return meeting;
 }
 
 export async function getProjectMeetings(projectId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    return await prisma.meeting.findMany({
-        where: { project_id: resolvedId },
-        include: {
-            attendees: {
-                include: { user: { select: { id: true, display_name: true, profile_pic_url: true } } }
-            },
-            organizer: { select: { id: true, display_name: true } },
-            transcripts: { select: { id: true, content: true } }
-        },
-        orderBy: { start_time: "asc" },
-    });
+    return await meetingsRepo.findMeetingsByProject(resolvedId);
 }
 
 export async function getMeeting(meetingId) {
-    const meeting = await prisma.meeting.findUnique({
-        where: { id: meetingId },
-        include: {
-            attendees: { include: { user: { select: { id: true, display_name: true } } } },
-            transcripts: true
-        }
-    });
+    const meeting = await meetingsRepo.findMeetingById(meetingId);
 
     if (!meeting) throw new AppError("Meeting not found", 404);
     return meeting;
@@ -134,14 +100,11 @@ export async function updateMeeting(meetingId, data) {
     if (description !== undefined) updateData.description = description;
     if (start_time) updateData.start_time = new Date(start_time);
 
-    return await prisma.meeting.update({
-        where: { id: meetingId },
-        data: updateData
-    });
+    return await meetingsRepo.updateMeetingRecord(meetingId, updateData);
 }
 
 export async function deleteMeeting(meetingId) {
-    await prisma.meeting.delete({ where: { id: meetingId } });
+    await meetingsRepo.deleteMeetingRecord(meetingId);
 }
 
 // ─── LiveKit Token ────────────────────────────────────────
@@ -170,10 +133,7 @@ export async function uploadRecording(meetingId, filename, baseUrl) {
     const recordingUrl = `${baseUrl}/recordings/${filename}`;
 
     try {
-        await prisma.meeting.update({
-            where: { id: meetingId },
-            data: { recording_url: recordingUrl }
-        });
+        await meetingsRepo.updateMeetingRecord(meetingId, { recording_url: recordingUrl });
     } catch (dbError) {
         console.log("Note: Could not save recording URL to DB (recording_url field may not exist):", dbError.message);
     }
@@ -182,10 +142,7 @@ export async function uploadRecording(meetingId, filename, baseUrl) {
 }
 
 export async function transcribeMeeting(meetingId) {
-    const meeting = await prisma.meeting.findUnique({
-        where: { id: meetingId },
-        include: { transcripts: true }
-    });
+    const meeting = await meetingsRepo.findMeetingById(meetingId);
 
     if (!meeting) {
         throw new AppError("Meeting not found", 404);
@@ -232,13 +189,7 @@ export async function handleWebhook(body, authHeader) {
 }
 
 export async function extractMeetingRequirements(meetingId) {
-    const meeting = await prisma.meeting.findUnique({
-        where: { id: meetingId },
-        include: {
-            project: { select: { id: true } },
-            transcripts: true
-        },
-    });
+    const meeting = await meetingsRepo.findMeetingById(meetingId);
 
     if (!meeting) {
         throw new AppError("Meeting not found", 404);

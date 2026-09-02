@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import prisma from "../../../../config/db/prismaClient.js";
+import * as techFeasibilityRepo from "../repositories/techFeasibilityRepository.js";
 import AppError from "../../../utils/AppError.js";
 import { resolveProjectId } from "../../../utils/resolveProjectId.js";
 import { techFeasibilitySystemPrompt } from "../../../utils/prompts/techFeasibilityPrompts.js";
@@ -49,8 +49,7 @@ export async function searchTechFeasibility(projectId, query) {
 
     let requirementsContext = "";
     try {
-        const requirements = await prisma.requirement.findMany({
-            where: { project_id: resolvedId },
+        const requirements = await techFeasibilityRepo.findRequirementsByProject(resolvedId, {
             select: { title: true, description: true },
             take: 20,
         });

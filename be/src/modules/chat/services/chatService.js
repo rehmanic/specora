@@ -1,34 +1,21 @@
-import prisma from "../../../../config/db/prismaClient.js";
+import * as chatRepo from "../repositories/chatRepository.js";
 import AppError from "../../../utils/AppError.js";
+import { resolveProjectId } from "../../../utils/resolveProjectId.js";
 
 /**
  * Get or create a group chat for a project.
  */
 export async function getOrCreateGroupChat(projectId) {
-  // Resolve Project ID (Handle Slug vs UUID)
-  let realProjectId = projectId;
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId);
-
-  if (!isUuid) {
-    const project = await prisma.project.findUnique({
-      where: { slug: projectId },
-    });
-    if (!project) {
-      throw new AppError("Project not found", 404);
-    }
-    realProjectId = project.id;
+  const resolvedId = await resolveProjectId(projectId);
+  if (!resolvedId) {
+    throw new AppError("Project not found", 404);
   }
 
   // Check if chat exists
-  let chat = await prisma.group_chat.findFirst({
-    where: { project_id: realProjectId },
-  });
+  let chat = await chatRepo.findGroupChatByProjectId(resolvedId);
 
-  // If not, create it
   if (!chat) {
-    chat = await prisma.group_chat.create({
-      data: { project_id: realProjectId },
-    });
+    chat = await chatRepo.createGroupChat(resolvedId);
   }
 
   return chat;
@@ -40,8 +27,7 @@ export async function getOrCreateGroupChat(projectId) {
 export async function getMessages(chatId, { page = 1, limit = 50 } = {}) {
   const skip = (page - 1) * limit;
 
-  const messages = await prisma.group_message.findMany({
-    where: { group_chat_id: chatId },
+  const messages = await chatRepo.findMessagesByChatId(chatId, {
     skip: parseInt(skip),
     take: parseInt(limit),
     orderBy: { created_at: "asc" },
@@ -50,14 +36,11 @@ export async function getMessages(chatId, { page = 1, limit = 50 } = {}) {
   // Manual join to get sender details (since no schema relation)
   const senderIds = [...new Set(messages.map((m) => m.sender_id))];
 
-  const users = await prisma.app_user.findMany({
-    where: { id: { in: senderIds } },
-    select: {
+  const users = await chatRepo.findUsersByIds(senderIds, {
       id: true,
       username: true,
       display_name: true,
       profile_pic_url: true,
-    },
   });
 
   const userMap = new Map(users.map((u) => [u.id, u]));
@@ -72,29 +55,24 @@ export async function getMessages(chatId, { page = 1, limit = 50 } = {}) {
  * Save a group message and track attachments.
  */
 export async function saveMessage(chatId, { content, senderId, metadata }) {
-  const message = await prisma.group_message.create({
-    data: {
+  const message = await chatRepo.createMessage({
       group_chat_id: chatId,
       content,
       sender_id: senderId,
       metadata: metadata || undefined,
-    },
   });
 
   // Update group_chat attachments if present
   if (metadata?.attachments && Array.isArray(metadata.attachments) && metadata.attachments.length > 0) {
     try {
-      const chat = await prisma.group_chat.findUnique({ where: { id: chatId } });
+      const chat = await chatRepo.findGroupChatById(chatId);
       if (chat) {
         let currentAttachments = chat.attachments || [];
         if (!Array.isArray(currentAttachments)) currentAttachments = [];
 
         const newAttachments = [...currentAttachments, ...metadata.attachments];
 
-        await prisma.group_chat.update({
-          where: { id: chatId },
-          data: { attachments: newAttachments },
-        });
+        await chatRepo.updateGroupChatAttachments(chatId, newAttachments);
       }
     } catch (attachErr) {
       console.error("Failed to update group_chat attachments via API:", attachErr);
@@ -108,9 +86,7 @@ export async function saveMessage(chatId, { content, senderId, metadata }) {
  * Soft-delete a message (ownership enforced).
  */
 export async function deleteMessage(messageId, userId) {
-  const message = await prisma.group_message.findUnique({
-    where: { id: messageId },
-  });
+  const message = await chatRepo.findMessageById(messageId);
 
   if (!message) {
     throw new AppError("Message not found", 404);
@@ -120,23 +96,16 @@ export async function deleteMessage(messageId, userId) {
     throw new AppError("Not authorized to delete this message", 403);
   }
 
-  const updatedMessage = await prisma.group_message.update({
-    where: { id: messageId },
-    data: {
+  const updatedMessage = await chatRepo.updateMessage(messageId, {
       content: "This message was deleted",
       metadata: { is_deleted: true },
-    },
   });
 
-  // Fetch sender details manually to return consistent object
-  const sender = await prisma.app_user.findUnique({
-    where: { id: userId },
-    select: {
+  const sender = await chatRepo.findUserById(userId, {
       id: true,
       username: true,
       display_name: true,
       profile_pic_url: true,
-    },
   });
 
   return { ...updatedMessage, sender: sender || null };

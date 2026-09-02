@@ -4,7 +4,7 @@ import https from "https";
 import { execFile } from "child_process";
 import ffmpeg from "fluent-ffmpeg";
 import ffmpegStatic from "ffmpeg-static";
-import prisma from "../../../../config/db/prismaClient.js";
+import * as meetingsRepo from "../repositories/meetingsRepository.js";
 
 // Configuration
 const STORAGE_DIR = path.join(process.cwd(), "storage");
@@ -99,25 +99,18 @@ export const processTranscription = async (meetingId, audioUrl) => {
         // Save to Database
         console.log("[Transcription] Saving to database...");
 
-        const existing = await prisma.meeting_transcript.findFirst({
-            where: { meeting_id: meetingId }
-        });
+        const existing = await meetingsRepo.findTranscriptByMeetingId(meetingId);
 
         const cycle_time = Date.now() - startTime;
 
         if (existing) {
-            await prisma.meeting_transcript.update({
-                where: { id: existing.id },
-                data: { content: transcriptContent, cycle_time }
-            });
+            await meetingsRepo.updateTranscriptRecord(existing.id, { content: transcriptContent, cycle_time });
             console.log(`[Transcription] Updated transcript (ID: ${existing.id})`);
         } else {
-            await prisma.meeting_transcript.create({
-                data: {
-                    meeting_id: meetingId,
-                    content: transcriptContent,
-                    cycle_time
-                }
+            await meetingsRepo.createTranscriptRecord({
+                meeting_id: meetingId,
+                content: transcriptContent,
+                cycle_time
             });
             console.log("[Transcription] Created new transcript.");
         }

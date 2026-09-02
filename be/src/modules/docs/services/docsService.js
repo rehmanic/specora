@@ -1,4 +1,4 @@
-import prisma from "../../../../config/db/prismaClient.js";
+import * as docsRepo from "../repositories/docsRepository.js";
 import { resolveProjectId } from "../../../utils/resolveProjectId.js";
 import { generateStatelessResponse } from "../../../utils/gemini.js";
 import { generatePDF, generateDOCX } from "../../../utils/docExporter.js";
@@ -41,21 +41,17 @@ export async function createDoc(projectId, data) {
     }
 
     if (normalizedType === "srs") {
-        const existingSrs = await prisma.doc.findFirst({
-            where: { project_id: resolvedId, type: "srs" },
-        });
+        const existingSrs = await docsRepo.findDocumentByType(resolvedId, "srs");
         if (existingSrs) {
             throw new AppError("A project can only have one SRS document.", 400);
         }
     }
 
-    return await prisma.doc.create({
-        data: {
-            project_id: resolvedId,
-            title,
-            content: content || "",
-            type: normalizedType || "use_case",
-        },
+    return await docsRepo.createDocumentRecord({
+        project_id: resolvedId,
+        title: title || "Untitled Document",
+        content: content || "",
+        type: normalizedType || "use_case",
     });
 }
 
@@ -63,20 +59,14 @@ export async function getDocs(projectId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    return await prisma.doc.findMany({
-        where: { project_id: resolvedId },
-        orderBy: { updated_at: "desc" },
-    });
+    return await docsRepo.findDocumentsByProject(resolvedId);
 }
 
 export async function getDocById(projectId, docId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    const doc = await prisma.doc.findFirst({
-        where: { id: docId, project_id: resolvedId },
-        include: { requirement_links: { include: { requirement: true } } }
-    });
+    const doc = await docsRepo.findDocumentById(docId, resolvedId);
 
     if (!doc) throw new AppError("Doc not found", 404);
     return doc;
@@ -89,23 +79,21 @@ export async function updateDoc(projectId, docId, data) {
     const { title, content, type } = data;
     const normalizedType = type?.toLowerCase();
 
-    const doc = await prisma.doc.findFirst({
-        where: { id: docId, project_id: resolvedId },
-    });
+    const doc = await docsRepo.findDocumentById(docId, resolvedId);
     if (!doc) throw new AppError("Doc not found", 404);
 
     if (normalizedType === "srs" && doc.type !== "srs") {
-        const existingSrs = await prisma.doc.findFirst({
-            where: { project_id: resolvedId, type: "srs" },
-        });
+        const existingSrs = await docsRepo.findDocumentByType(resolvedId, "srs");
         if (existingSrs) {
             throw new AppError("A project can only have one SRS document.", 400);
         }
     }
 
-    return await prisma.doc.update({
-        where: { id: docId },
-        data: { title, content, type: normalizedType, updated_at: new Date() },
+    return await docsRepo.updateDocumentRecord(docId, { 
+        title, 
+        content, 
+        type: normalizedType, 
+        updated_at: new Date() 
     });
 }
 
@@ -113,32 +101,20 @@ export async function deleteDoc(projectId, docId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    const doc = await prisma.doc.findFirst({
-        where: { id: docId, project_id: resolvedId },
-    });
+    const doc = await docsRepo.findDocumentById(docId, resolvedId);
     if (!doc) throw new AppError("Doc not found", 404);
 
-    await prisma.doc.delete({ where: { id: docId } });
+    await docsRepo.deleteDocumentRecord(docId);
 }
 
 export async function updateDocRequirements(projectId, docId, requirementIds) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    const doc = await prisma.doc.findFirst({
-        where: { id: docId, project_id: resolvedId },
-    });
+    const doc = await docsRepo.findDocumentById(docId, resolvedId);
     if (!doc) throw new AppError("Doc not found", 404);
 
-    await prisma.$transaction([
-        prisma.doc_requirement.deleteMany({ where: { doc_id: docId } }),
-        prisma.doc_requirement.createMany({
-            data: (requirementIds || []).map(rid => ({
-                doc_id: docId,
-                requirement_id: rid
-            }))
-        })
-    ]);
+    await docsRepo.updateDocumentRequirements(docId, requirementIds);
 }
 
 // ─── AI Generation ────────────────────────────────────────
@@ -147,16 +123,10 @@ export async function generateDoc(projectId, docId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    const doc = await prisma.doc.findFirst({
-        where: { id: docId, project_id: resolvedId },
-    });
+    const doc = await docsRepo.findDocumentById(docId, resolvedId);
     if (!doc) throw new AppError("Doc not found", 404);
 
-    const allRequirements = await prisma.requirement.findMany({
-        where: { project_id: resolvedId },
-        select: { title: true, description: true, priority: true, status: true, category: true },
-        orderBy: { created_at: "asc" },
-    });
+    const allRequirements = await docsRepo.findAllProjectRequirements(resolvedId);
 
     if (allRequirements.length === 0) {
         throw new AppError("No requirements found for this project. Please add requirements before generating a document.", 400);
@@ -176,11 +146,7 @@ export async function generateDoc(projectId, docId) {
     let templateInstructions;
 
     if (doc.type === "use_case") {
-        const siblingDocs = await prisma.doc.findMany({
-            where: { project_id: resolvedId, type: "use_case", id: { not: docId } },
-            select: { title: true, content: true },
-            orderBy: { created_at: "asc" },
-        });
+        const siblingDocs = await docsRepo.findSiblingDocs(resolvedId, "use_case", docId);
 
         const h1Regex = /<h1[^>]*>([^<]+)<\/h1>/i;
         const coveredNames = siblingDocs

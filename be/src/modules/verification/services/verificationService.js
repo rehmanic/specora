@@ -1,4 +1,4 @@
-import prisma from "../../../../config/db/prismaClient.js";
+import * as verificationRepo from "../repositories/verificationRepository.js";
 import AppError from "../../../utils/AppError.js";
 import { resolveProjectId } from "../../../utils/resolveProjectId.js";
 import { generateStatelessResponse } from "../../../utils/gemini.js";
@@ -48,10 +48,7 @@ export async function verifyARM(projectId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    const requirements = await prisma.requirement.findMany({
-        where: { project_id: resolvedId },
-        orderBy: { created_at: 'asc' }
-    });
+    const requirements = await verificationRepo.findRequirementsByProject(resolvedId);
 
     if (!requirements || requirements.length === 0) {
         return {
@@ -97,10 +94,7 @@ export async function verifyARMRequirement(projectId, requirementId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    const requirement = await prisma.requirement.findFirst({
-        where: { id: requirementId, project_id: resolvedId }
-    });
-
+    const requirement = await verificationRepo.findRequirementByIdAndProject(requirementId, resolvedId);
     if (!requirement) throw new AppError("Requirement not found", 404);
 
     const runAnalysis = (reqText) => {
@@ -128,10 +122,7 @@ export async function verifyAI(projectId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    const requirements = await prisma.requirement.findMany({
-        where: { project_id: resolvedId },
-        orderBy: { created_at: 'asc' }
-    });
+    const requirements = await verificationRepo.findRequirementsByProject(resolvedId);
 
     if (!requirements || requirements.length === 0) {
         return { results: [], cycle_time: 0 };
@@ -200,9 +191,7 @@ export async function verifyAIRequirement(projectId, requirementId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    const requirement = await prisma.requirement.findFirst({
-        where: { id: requirementId, project_id: resolvedId }
-    });
+    const requirement = await verificationRepo.findRequirementByIdAndProject(requirementId, resolvedId);
 
     if (!requirement) throw new AppError("Requirement not found", 404);
 

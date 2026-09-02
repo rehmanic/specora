@@ -1,4 +1,4 @@
-import prisma from "../../../../config/db/prismaClient.js";
+import * as diagramRepo from "../repositories/diagramRepository.js";
 import AppError from "../../../utils/AppError.js";
 import { resolveProjectId } from "../../../utils/resolveProjectId.js";
 import { generateStatelessResponse } from "../../../utils/gemini.js";
@@ -28,22 +28,17 @@ export async function listDiagrams(projectId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    return await prisma.diagram.findMany({
-        where: { project_id: resolvedId },
-        orderBy: { updated_at: "desc" },
-    });
+    return await diagramRepo.findDiagramsByProject(resolvedId);
 }
 
 export async function createDiagram(projectId, title) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    return await prisma.diagram.create({
-        data: {
-            project_id: resolvedId,
-            title: title?.trim() || "Untitled diagram",
-            mermaid_code: "",
-        },
+    return await diagramRepo.createDiagram({
+        project_id: resolvedId,
+        title: title?.trim() || "Untitled diagram",
+        mermaid_code: "",
     });
 }
 
@@ -51,18 +46,7 @@ export async function getDiagram(projectId, diagramId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    const diagram = await prisma.diagram.findFirst({
-        where: { id: diagramId, project_id: resolvedId },
-        include: {
-            requirement_links: {
-                include: {
-                    requirement: {
-                        select: { id: true, readable_id: true, title: true }
-                    }
-                }
-            }
-        }
-    });
+    const diagram = await diagramRepo.findDiagramById(diagramId, resolvedId);
 
     if (!diagram) throw new AppError("Diagram not found", 404);
     return diagram;
@@ -75,29 +59,23 @@ export async function updateDiagram(projectId, diagramId, data) {
     const { title, mermaid_code } = data;
     const mermaidCode = typeof mermaid_code === "string" ? mermaid_code : "";
 
-    const diagram = await prisma.diagram.updateMany({
-        where: { id: diagramId, project_id: resolvedId },
-        data: {
-            ...(title !== undefined && { title: title?.trim() ?? null }),
-            ...(mermaid_code !== undefined && { mermaid_code: mermaidCode }),
-            updated_at: new Date(),
-        },
+    const count = await diagramRepo.updateDiagramRecord(diagramId, resolvedId, {
+        ...(title !== undefined && { title: title?.trim() ?? null }),
+        ...(mermaid_code !== undefined && { mermaid_code: mermaidCode }),
     });
 
-    if (diagram.count === 0) throw new AppError("Diagram not found", 404);
+    if (count === 0) throw new AppError("Diagram not found", 404);
 
-    return await prisma.diagram.findUnique({ where: { id: diagramId } });
+    return await diagramRepo.findDiagramByIdSimple(diagramId);
 }
 
 export async function deleteDiagram(projectId, diagramId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    const result = await prisma.diagram.deleteMany({
-        where: { id: diagramId, project_id: resolvedId },
-    });
+    const count = await diagramRepo.deleteDiagramRecord(diagramId, resolvedId);
 
-    if (result.count === 0) throw new AppError("Diagram not found", 404);
+    if (count === 0) throw new AppError("Diagram not found", 404);
 }
 
 // ─── AI Generation ────────────────────────────────────────
@@ -114,10 +92,7 @@ export async function generateFromDescription(projectId, data) {
         throw new AppError("At least one requirement must be selected", 400);
     }
 
-    const reqs = await prisma.requirement.findMany({
-        where: { id: { in: requirement_ids }, project_id: resolvedId },
-        select: { readable_id: true, title: true, description: true }
-    });
+    const reqs = await diagramRepo.findRequirementsForDiagram(requirement_ids, resolvedId);
 
     if (reqs.length === 0) {
         throw new AppError("Selected requirements not found", 400);
@@ -168,18 +143,5 @@ export async function updateDiagramRequirements(projectId, diagramId, requiremen
         throw new AppError("requirement_ids must be an array", 400);
     }
 
-    await prisma.$transaction(async (tx) => {
-        await tx.diagram_requirement.deleteMany({
-            where: { diagram_id: diagramId }
-        });
-
-        if (requirement_ids.length > 0) {
-            await tx.diagram_requirement.createMany({
-                data: requirement_ids.map(rid => ({
-                    diagram_id: diagramId,
-                    requirement_id: rid
-                }))
-            });
-        }
-    });
+    await diagramRepo.updateDiagramRequirementsTransaction(diagramId, requirement_ids);
 }

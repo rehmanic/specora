@@ -6,38 +6,7 @@ export const validateUserDataInput = (req, res, next) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const urlRegex = /^https?:\/\/[^\s]+$/i;
 
-  const rolesList = ["manager", "client", "requirements_engineer"];
 
-  const permissionsList = [
-    // User permissions
-    "add_user",
-    "view_users",
-    "update_user",
-    "delete_user",
-
-    // Project permissions
-    "create_project",
-    "view_projects",
-    "view_all_projects",
-    "update_project",
-    "delete_project",
-
-    // Specbot permissions
-    "create_new_chat_bot",
-    "delete_chat_bot",
-    "view_chat_bot",
-    "view_all_chats_bot",
-    "send_message_bot",
-    "edit_message_bot",
-    "view_all_messages_bot",
-    "delete_message_bot",
-
-    // Chat permissions
-    "send_message_group",
-    "edit_message_group",
-    "view_all_messages_group",
-    "delete_message_group",
-  ];
 
   // USERNAME
   if (!usernameRegex.test(user.username)) {
@@ -69,26 +38,7 @@ export const validateUserDataInput = (req, res, next) => {
     }
   }
 
-  // ROLE
-  if (!rolesList.includes(user.role)) {
-    return res.status(400).json({
-      message: `Invalid role. Allowed roles: ${rolesList.join(", ")}`,
-    });
-  }
 
-  // PERMISSIONS (only if provided)
-  if (user.permissions) {
-    if (
-      !Array.isArray(user.permissions) ||
-      !user.permissions.every((p) => permissionsList.includes(p))
-    ) {
-      return res.status(400).json({
-        message: `Invalid permissions. Allowed permissions: ${permissionsList.join(
-          ", "
-        )}`,
-      });
-    }
-  }
 
   // PROFILE PIC URL (only if provided)
   if (user.profile_pic_url) {

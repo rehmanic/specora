@@ -48,6 +48,7 @@ export default function ProfilePage() {
     const data = new FormData(e.currentTarget);
 
     let userData = {
+      username: user.username,
       display_name: data.get("displayname"),
       email: data.get("email"),
     };

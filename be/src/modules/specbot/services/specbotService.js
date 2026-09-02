@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import prisma from "../../../../config/db/prismaClient.js";
+import * as specbotRepo from "../repositories/specbotRepository.js";
 import AppError from "../../../utils/AppError.js";
 import { generateGeminiResponse, generateStatelessResponse, clearChatSession } from "../../../utils/gemini.js";
 
@@ -69,17 +69,7 @@ const stripMarkdownCodeBlock = (text) => {
 };
 
 export async function checkAccess(chatId, userId) {
-    const chat = await prisma.specbot_chat.findUnique({
-        where: { id: chatId },
-        include: {
-            project: {
-                include: {
-                    project_member: { where: { member_id: userId } },
-                    app_user: true
-                }
-            }
-        }
-    });
+    const chat = await specbotRepo.findChatById(chatId);
     if (!chat) throw new AppError("Chat not found", 404);
     const isCreator = chat.project.created_by === userId;
     const isMember = chat.project.project_member.length > 0;
@@ -88,27 +78,21 @@ export async function checkAccess(chatId, userId) {
 }
 
 export async function createChat(projectId, title) {
-    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    const project = await specbotRepo.findProjectById(projectId);
     if (!project) throw new AppError("Project not found", 404);
-    return await prisma.specbot_chat.create({ data: { title, project_id: projectId } });
+    return await specbotRepo.createChat(projectId, title);
 }
 
 export async function deleteChat(chatId, userId) {
     await checkAccess(chatId, userId);
-    await prisma.$transaction([
-        prisma.specbot_message.deleteMany({ where: { specbot_chat_id: chatId } }),
-        prisma.specbot_chat.delete({ where: { id: chatId } }),
-    ]);
+    await specbotRepo.deleteChat(chatId);
     clearChatSession(chatId);
 }
 
 export async function getAllChats(projectId, userId) {
     if (!projectId) throw new AppError("Project ID is required", 400);
 
-    const project = await prisma.project.findUnique({
-        where: { id: projectId },
-        include: { project_member: { where: { member_id: userId } } },
-    });
+    const project = await specbotRepo.findProjectWithMember(projectId, userId);
 
     if (!project) throw new AppError("Project not found", 404);
 
@@ -116,16 +100,10 @@ export async function getAllChats(projectId, userId) {
     const isMember = project.project_member.length > 0;
     if (!isCreator && !isMember) throw new AppError("Access denied", 403);
 
-    let chat = await prisma.specbot_chat.findFirst({
-        where: { project_id: projectId, title: "Default Specbot Chat" },
-        include: { project: { select: { name: true, slug: true } } }
-    });
+    let chat = await specbotRepo.findDefaultChat(projectId);
 
     if (!chat) {
-        chat = await prisma.specbot_chat.create({
-            data: { title: "Default Specbot Chat", project_id: projectId },
-            include: { project: { select: { name: true, slug: true } } }
-        });
+        chat = await specbotRepo.createChat(projectId, "Default Specbot Chat");
     }
 
     return [chat];
@@ -133,47 +111,39 @@ export async function getAllChats(projectId, userId) {
 
 export async function clearMessages(chatId, userId) {
     await checkAccess(chatId, userId);
-    await prisma.specbot_message.deleteMany({ where: { specbot_chat_id: chatId } });
+    await specbotRepo.deleteMessagesByChatId(chatId);
     clearChatSession(chatId);
 }
 
 export async function updateChat(chatId, title, userId) {
     await checkAccess(chatId, userId);
-    return await prisma.specbot_chat.update({
-        where: { id: chatId },
-        data: { title, updated_at: new Date() },
-    });
+    return await specbotRepo.updateChat(chatId, title);
 }
 
 export async function createMessageCore(data) {
     const { chat_type, chat_id, content, sender_type, sender_id } = data;
     if (chat_type === 'specbot') {
-        const chat = await prisma.specbot_chat.findUnique({ where: { id: chat_id } });
+        const chat = await specbotRepo.findChatById(chat_id);
         if (!chat) throw new AppError("Specbot chat not found", 404);
-        await prisma.specbot_chat.update({ where: { id: chat_id }, data: { updated_at: new Date() } });
-        return await prisma.specbot_message.create({
-            data: {
-                specbot_chat_id: chat_id,
-                content,
-                sender_type,
-                metadata: sender_type === 'user' ? { sender_id } : {}, 
-                sender_id: sender_type === 'user' ? sender_id : null,
-            },
-            include: { sender: { select: { id: true, username: true, display_name: true, profile_pic_url: true } } },
+        await specbotRepo.updateChatTimestamp(chat_id);
+        return await specbotRepo.createMessage({
+            chat_id,
+            content,
+            sender_type,
+            metadata: sender_type === 'user' ? { sender_id } : {}, 
+            sender_id: sender_type === 'user' ? sender_id : null,
         });
     } else if (chat_type === 'group') {
-        const chat = await prisma.group_chat.findUnique({ where: { id: chat_id } });
+        const chat = await specbotRepo.findGroupChatById(chat_id);
         if (!chat) throw new AppError("Group chat not found", 404);
         if (sender_type === 'user') {
-            const user = await prisma.app_user.findUnique({ where: { id: sender_id } });
+            const user = await specbotRepo.findUserById(sender_id);
             if (!user) throw new AppError("Sender not found", 404);
         }
-        return await prisma.group_message.create({
-            data: {
-                group_chat_id: chat_id,
-                content,
-                metadata: sender_type === 'user' ? { sender_type, sender_id } : { sender_type },
-            },
+        return await specbotRepo.createGroupMessage({
+            chat_id,
+            content,
+            metadata: sender_type === 'user' ? { sender_type, sender_id } : { sender_type },
         });
     }
     throw new AppError("Invalid chat_type", 400);
@@ -196,20 +166,12 @@ export async function createMessage(data) {
 
 export async function getAllMessages(chatId, userId) {
     await checkAccess(chatId, userId);
-    return await prisma.specbot_message.findMany({
-        where: { specbot_chat_id: chatId },
-        orderBy: { created_at: 'asc' },
-        include: { sender: { select: { id: true, username: true, display_name: true, profile_pic_url: true } } }
-    });
+    return await specbotRepo.findMessagesByChatId(chatId);
 }
 
 export async function downloadChat(chatId, userId) {
     const chat = await checkAccess(chatId, userId);
-    const messages = await prisma.specbot_message.findMany({
-        where: { specbot_chat_id: chatId },
-        orderBy: { created_at: "asc" },
-        include: { sender: { select: { id: true, username: true, display_name: true, profile_pic_url: true } } },
-    });
+    const messages = await specbotRepo.findMessagesByChatId(chatId);
 
     const artifactPaths = buildArtifactPaths(chat.project_id, chatId);
     await ensureDirectory(artifactPaths.base);
@@ -223,7 +185,7 @@ export async function downloadChat(chatId, userId) {
     const exportedAt = new Date().toISOString();
     const payload = { chat, project: chat.project, owner: chat.project.app_user, messages, exported_at: exportedAt };
     await fs.promises.writeFile(artifactPaths.chat, JSON.stringify(payload, null, 2), "utf8");
-    await prisma.specbot_chat.update({ where: { id: chatId }, data: { last_downloaded_at: new Date() } });
+    await specbotRepo.updateChatDownloadTimestamp(chatId);
 
     return { type: "chat", path: artifactPaths.chat, exported_at: exportedAt, downloaded: true };
 }
@@ -257,7 +219,7 @@ export async function summarizeChat(chatId, userId) {
 
     const payload = { chat_id: chatId, project_id: chat.project_id, generated_at: new Date().toISOString(), summary_text: summaryText, key_points: extractBulletPoints(summaryText), cycle_time };
     await fs.promises.writeFile(artifactPaths.summary, JSON.stringify(payload, null, 2), "utf8");
-    await prisma.specbot_chat.update({ where: { id: chatId }, data: { last_summarized_at: new Date() } });
+    await specbotRepo.updateChatSummaryTimestamp(chatId);
 
     return { type: "summary", path: artifactPaths.summary, data: payload, cycle_time };
 }
@@ -300,7 +262,7 @@ export async function extractRequirements(chatId, userId) {
     }
 
     await fs.promises.writeFile(artifactPaths.requirements, JSON.stringify(payload, null, 2), "utf8");
-    await prisma.specbot_chat.update({ where: { id: chatId }, data: { last_extracted_at: new Date() } });
+    await specbotRepo.updateChatExtractionTimestamp(chatId);
 
     return { type: "requirements", path: artifactPaths.requirements, data: payload, cycle_time };
 }

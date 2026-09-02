@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import prisma from "../../../../config/db/prismaClient.js";
+import * as userRepo from "../repositories/userRepository.js";
 import AppError from "../../../utils/AppError.js";
 
 // ─── Helpers ──────────────────────────────────────────────
@@ -14,18 +14,6 @@ const formatUser = (u) => {
   };
 };
 
-const USER_INCLUDES = {
-  role: {
-    include: {
-      role_permission: {
-        include: {
-          permission: true,
-        },
-      },
-    },
-  },
-};
-
 // ─── Service Functions ────────────────────────────────────
 
 export async function createUser(userData) {
@@ -33,35 +21,23 @@ export async function createUser(userData) {
 
   const password_hash = await bcrypt.hash(password, 10);
 
-  const roleRecord = await prisma.role.findUnique({
-    where: { name: role || "client" },
-  });
+  const roleRecord = await userRepo.findRoleByName(role || "client");
 
   if (!roleRecord) {
     throw new AppError("Role not found", 404);
   }
 
-  const newUser = await prisma.app_user.create({
-    data: {
+  const newUser = await userRepo.createUserRecord({
       ...rest,
       password_hash,
       role_id: roleRecord.id,
-    },
-    include: USER_INCLUDES,
   });
 
   return formatUser(newUser);
 }
 
 export async function getAllUsers() {
-  const users = await prisma.app_user.findMany({
-    include: {
-      ...USER_INCLUDES,
-      _count: {
-        select: { project_member: true },
-      },
-    },
-  });
+  const users = await userRepo.findAllUsers();
 
   if (!users || users.length === 0) {
     throw new AppError("No users found", 404);
@@ -71,10 +47,7 @@ export async function getAllUsers() {
 }
 
 export async function getUserByUsername(username) {
-  const user = await prisma.app_user.findUnique({
-    where: { username },
-    include: USER_INCLUDES,
-  });
+  const user = await userRepo.findUserByUsername(username);
 
   if (!user) {
     throw new AppError("User not found", 404);
@@ -88,10 +61,7 @@ export async function getUsersByIds(userIds) {
     throw new AppError("userIds array is required", 400);
   }
 
-  const users = await prisma.app_user.findMany({
-    where: { id: { in: userIds } },
-    include: USER_INCLUDES,
-  });
+  const users = await userRepo.findUsersByIds(userIds);
 
   return users.map(formatUser);
 }
@@ -102,7 +72,7 @@ export async function updateUser(userData) {
   const updateData = { ...rest };
 
   if (role) {
-    const roleRecord = await prisma.role.findUnique({ where: { name: role } });
+    const roleRecord = await userRepo.findRoleByName(role);
     if (!roleRecord) {
       throw new AppError("Role not found", 404);
     }
@@ -114,11 +84,7 @@ export async function updateUser(userData) {
   }
 
   try {
-    const updatedUser = await prisma.app_user.update({
-      where: { username },
-      data: updateData,
-      include: USER_INCLUDES,
-    });
+    const updatedUser = await userRepo.updateUserRecord(username, updateData);
     return formatUser(updatedUser);
   } catch (error) {
     if (error.code === 'P2025') {
@@ -130,7 +96,7 @@ export async function updateUser(userData) {
 
 export async function deleteUser(username) {
   try {
-    await prisma.app_user.delete({ where: { username } });
+    await userRepo.deleteUserRecord(username);
   } catch (error) {
     if (error.code === 'P2025') {
       throw new AppError("User not found", 404);

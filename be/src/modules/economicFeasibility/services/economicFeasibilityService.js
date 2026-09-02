@@ -1,4 +1,4 @@
-import prisma from "../../../../config/db/prismaClient.js";
+import * as econRepo from "../repositories/economicFeasibilityRepository.js";
 import AppError from "../../../utils/AppError.js";
 import { resolveProjectId } from "../../../utils/resolveProjectId.js";
 import { runSimulation, computeStatistics } from "./monteCarloEngine.js";
@@ -9,9 +9,7 @@ export async function getConfig(projectId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    let config = await prisma.economic_config.findUnique({
-        where: { project_id: resolvedId },
-    });
+    let config = await econRepo.findConfigByProject(resolvedId);
 
     if (!config) {
         config = {
@@ -37,20 +35,10 @@ export async function upsertConfig(projectId, data) {
         throw new AppError("hourly_rate must be > 0 and num_developers must be >= 1", 400);
     }
 
-    return await prisma.economic_config.upsert({
-        where: { project_id: resolvedId },
-        update: {
-            hourly_rate: parseFloat(hourly_rate),
-            currency: currency.toUpperCase(),
-            num_developers: parseInt(num_developers),
-            updated_at: new Date(),
-        },
-        create: {
-            project_id: resolvedId,
-            hourly_rate: parseFloat(hourly_rate),
-            currency: currency.toUpperCase(),
-            num_developers: parseInt(num_developers),
-        },
+    return await econRepo.upsertConfig(resolvedId, {
+        hourly_rate: parseFloat(hourly_rate),
+        currency: currency.toUpperCase(),
+        num_developers: parseInt(num_developers),
     });
 }
 
@@ -60,8 +48,7 @@ export async function getEstimates(projectId) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    return await prisma.economic_estimate.findMany({
-        where: { requirement: { project_id: resolvedId } },
+    return await econRepo.findEstimatesByProject(resolvedId, {
         include: {
             requirement: { select: { id: true, title: true, description: true, priority: true } },
         },
@@ -89,25 +76,13 @@ export async function upsertEstimates(projectId, estimates) {
         }
     }
 
-    const results = await prisma.$transaction(
-        estimates.map((est) =>
-            prisma.economic_estimate.upsert({
-                where: { requirement_id: est.requirement_id },
-                update: {
-                    optimistic_hours: parseFloat(est.optimistic_hours),
-                    most_likely_hours: parseFloat(est.most_likely_hours),
-                    pessimistic_hours: parseFloat(est.pessimistic_hours),
-                    updated_at: new Date(),
-                },
-                create: {
-                    requirement_id: est.requirement_id,
-                    optimistic_hours: parseFloat(est.optimistic_hours),
-                    most_likely_hours: parseFloat(est.most_likely_hours),
-                    pessimistic_hours: parseFloat(est.pessimistic_hours),
-                },
-            })
-        )
-    );
+    const parsed = estimates.map((est) => ({
+        requirement_id: est.requirement_id,
+        optimistic_hours: parseFloat(est.optimistic_hours),
+        most_likely_hours: parseFloat(est.most_likely_hours),
+        pessimistic_hours: parseFloat(est.pessimistic_hours),
+    }));
+    const results = await econRepo.upsertEstimatesTransaction(parsed);
     return results.length;
 }
 
@@ -117,16 +92,12 @@ export async function simulate(projectId, iterationsInput = 10000) {
     const resolvedId = await resolveProjectId(projectId);
     if (!resolvedId) throw new AppError("Project not found", 404);
 
-    const config = await prisma.economic_config.findUnique({
-        where: { project_id: resolvedId },
-    });
+    const config = await econRepo.findConfigByProject(resolvedId);
     if (!config) {
         throw new AppError("Please configure project economic settings first", 400);
     }
 
-    const estimates = await prisma.economic_estimate.findMany({
-        where: { requirement: { project_id: resolvedId } },
-    });
+    const estimates = await econRepo.findEstimatesByProject(resolvedId);
     if (estimates.length === 0) {
         throw new AppError("No estimates found. Please enter duration estimates for requirements first.", 400);
     }
