@@ -1,111 +1,11 @@
-// ----- Core Libraries -----
-import express from "express"; // Web framework for building REST APIs
-import dotenv from "dotenv";
-// ----- Middleware -----
-import morgan from "morgan"; // HTTP request logger
-import helmet from "helmet"; // Security middleware for setting HTTP headers
-import cors from "cors"; // Enables Cross-Origin Resource Sharing
-
-// ----- Route Modules -----
-import authRoutes from "./src/modules/auth/routes/authRoutes.js";
-import userRoutes from "./src/modules/users/routes/userRoutes.js";
-import projectRoutes from "./src/modules/projects/routes/projectsRoutes.js";
-import specbotRoutes from "./src/modules/specbot/routes/specbotRoutes.js";
-import chatRoutes from "./src/modules/chat/routes/chatRoutes.js";
-import uploadRoutes from "./src/modules/upload/routes/uploadRoutes.js";
-import feedbacksRoutes from "./src/modules/feedbacks/routes/feedbacksRoutes.js";
-import meetingsRoutes from "./src/modules/meetings/routes/meetingsRoutes.js";
-import requirementsRoutes from "./src/modules/requirements/routes/requirementsRoutes.js";
-import economicFeasibilityRoutes from "./src/modules/economicFeasibility/routes/economicFeasibilityRoutes.js";
-import techFeasibilityRoutes from "./src/modules/technicalFeasibility/routes/techFeasibilityRoutes.js";
-import legalFeasibilityRoutes from "./src/modules/legalFeasibility/routes/legalFeasibilityRoutes.js";
-import prototypingRoutes from "./src/modules/prototyping/routes/prototypingRoutes.js";
-import verificationRoutes from "./src/modules/verification/routes/verificationRoutes.js";
-import diagramRoutes from "./src/modules/diagrams/routes/diagramRoutes.js";
-import docRoutes from "./src/modules/docs/routes/docRoutes.js";
-import rbacRoutes from "./src/modules/rbac/routes/rbacRoutes.js";
-import AppError from "./src/utils/AppError.js";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import express from "express";
+import { registerMiddlewares } from "./src/middlewares/global.js";
+import { registerRoutes } from "./src/config/routes/index.js";
+import { registerErrorHandlers } from "./src/middlewares/errorHandler.js";
 
 const app = express();
-
-dotenv.config();
-
-// ----- CORS Configuration -----
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN, // Allow requests from specified origin
-    credentials: true,  // cookies/auth headers are allowed for that site
-  })
-);
-
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
-app.use(express.json());
-
-// ----- Static Files -----
-app.use("/uploads", express.static(path.join(__dirname, "storage", "uploads")));
-app.use("/recordings", express.static(path.join(__dirname, "storage", "recordings")));
-
-// ----- Development Logging -----
-if (process.env.NODE_ENV === "development") {
-  app.use(morgan("dev"));
-}
-
-// ----- Base Route -----
-app.get("/", (req, res) => {
-  res.json({ message: "root" });
-});
-
-// ----- API Routes -----
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/projects", projectRoutes);
-app.use("/api/specbot", specbotRoutes);
-app.use("/api/chat", chatRoutes);
-app.use("/api/upload", uploadRoutes);
-app.use("/api/feedbacks", feedbacksRoutes);
-app.use("/api/meetings", meetingsRoutes);
-app.use("/api/requirements", requirementsRoutes);
-app.use("/api/economic-feasibility", economicFeasibilityRoutes);
-app.use("/api/tech-feasibility", techFeasibilityRoutes);
-app.use("/api/legal-feasibility", legalFeasibilityRoutes);
-app.use("/api/prototyping", prototypingRoutes);
-app.use("/api/verification", verificationRoutes);
-app.use("/api/diagrams", diagramRoutes);
-app.use("/api/docs/:projectId", docRoutes);
-app.use("/api/rbac", rbacRoutes);
-
-// ----- 404 Handler -----
-app.use((req, res, next) => {
-  next(new AppError(`Route not found: ${req.method} ${req.originalUrl}`, 404));
-});
-
-// ----- Global Error Handler -----
-// Must have exactly 4 parameters so Express treats it as error-handling middleware.
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-  // Default to 500 if no status code is set.
-  const statusCode = err.statusCode || 500;
-  const isOperational = err.isOperational ?? false;
-
-  // Always log the full error in development; only log unexpected errors in production.
-  if (process.env.NODE_ENV === "development") {
-    console.error("❌ [Error]", err);
-  } else if (!isOperational) {
-    console.error("❌ [Unexpected Error]", err);
-  }
-
-  res.status(statusCode).json({
-    message: isOperational ? err.message : "Internal server error",
-    // Include the stack trace only in development for easier debugging.
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
-  });
-});
+registerMiddlewares(app);
+registerRoutes(app);
+registerErrorHandlers(app);
 
 export default app;

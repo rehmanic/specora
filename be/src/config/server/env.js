@@ -21,30 +21,26 @@ const REQUIRED_ENV_VARS = [
   "NORMA_SIM_THRESHOLD",
 ];
 
-/**
- * Loads and strictly validates all environment variables.
- * Exits process with code 1 if any required variables are missing.
- * @returns {Readonly<Record<string, any>>} Validated environment configuration object
- */
 export function loadEnv() {
   const missing = [];
 
+  // checks if a key is missing
   for (const key of REQUIRED_ENV_VARS) {
     if (!process.env[key] || process.env[key].trim() === "") {
       missing.push(key);
     }
   }
 
+  // exit process on missing key
   if (missing.length > 0) {
-    console.error("❌ Fatal Environment Error: Missing required environment variables:");
-    missing.forEach((key) => console.error(`   - ${key}`));
-    console.error("Please check your .env file and ensure all required keys are defined.");
+    missing.forEach((key) => console.error(` MISSING ENV - ${key}`));
     process.exit(1);
   }
 
+  // 
   return Object.freeze({
-    PORT: parseInt(process.env.PORT || "5000", 10),
-    NODE_ENV: process.env.NODE_ENV || "development",
+    PORT: parseInt(process.env.PORT, 10),
+    NODE_ENV: process.env.NODE_ENV,
     DATABASE_URL: process.env.DATABASE_URL,
     JWT_SECRET: process.env.JWT_SECRET,
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
@@ -57,7 +53,7 @@ export function loadEnv() {
     NORMA_META_PATH: process.env.NORMA_META_PATH,
     NORMA_CHUNKS_PATH: process.env.NORMA_CHUNKS_PATH,
     NORMA_EMBED_MODEL: process.env.NORMA_EMBED_MODEL,
-    NORMA_TOP_K: parseInt(process.env.NORMA_TOP_K || "5", 10),
-    NORMA_SIM_THRESHOLD: parseFloat(process.env.NORMA_SIM_THRESHOLD || "0.25"),
+    NORMA_TOP_K: parseInt(process.env.NORMA_TOP_K, 10),
+    NORMA_SIM_THRESHOLD: parseFloat(process.env.NORMA_SIM_THRESHOLD),
   });
 }
